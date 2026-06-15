@@ -540,7 +540,36 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
 </div>
 
 <div class="card">
-  <h3>3 · The buildable design <span class="chip c-amber">concept · ≈$180</span></h3>
+  <h3>3 · N spins: solving Max-Cut <span class="chip c-blue">ngspice · verified</span></h3>
+  <p>Wire N of those oscillators together with an antiferro link on every edge of a graph, and the
+  network settles where the two ends of each edge sit in opposite phase — which <i>is</i> a
+  <b>Max-Cut</b> (split the nodes to cut as many edges as possible). Run in ngspice across five
+  graphs, eight random starts each, the circuit finds the brute-force optimum <b>39 / 40</b> times —
+  including a frustrated 5-cycle and a fully-connected K5:</p>
+  <svg viewBox="0 0 300 332" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="OIM Max-Cut solution for the 5-cycle (frustrated)">
+<rect width="300" height="320" fill="#ffffff"/>
+<text x="150" y="20" text-anchor="middle" font-size="12" font-family="sans-serif" font-weight="700" fill="#16233a">5-cycle (frustrated) — OIM solution</text>
+<line x1="150.0" y1="55.0" x2="240.4" y2="120.6" stroke="#0f6e56" stroke-width="2.4"/>
+<line x1="240.4" y1="120.6" x2="205.8" y2="226.9" stroke="#0f6e56" stroke-width="2.4"/>
+<line x1="205.8" y1="226.9" x2="94.2" y2="226.9" stroke="#cdd4de" stroke-width="1.3" stroke-dasharray="3 4"/>
+<line x1="94.2" y1="226.9" x2="59.6" y2="120.6" stroke="#0f6e56" stroke-width="2.4"/>
+<line x1="59.6" y1="120.6" x2="150.0" y2="55.0" stroke="#0f6e56" stroke-width="2.4"/>
+<circle cx="150.0" cy="55.0" r="13" fill="#1f5fae"/><text x="150.0" y="59.0" text-anchor="middle" font-size="11" font-family="sans-serif" font-weight="700" fill="#fff">0</text>
+<circle cx="240.4" cy="120.6" r="13" fill="#7a2638"/><text x="240.4" y="124.6" text-anchor="middle" font-size="11" font-family="sans-serif" font-weight="700" fill="#fff">1</text>
+<circle cx="205.8" cy="226.9" r="13" fill="#1f5fae"/><text x="205.8" y="230.9" text-anchor="middle" font-size="11" font-family="sans-serif" font-weight="700" fill="#fff">2</text>
+<circle cx="94.2" cy="226.9" r="13" fill="#1f5fae"/><text x="94.2" y="230.9" text-anchor="middle" font-size="11" font-family="sans-serif" font-weight="700" fill="#fff">3</text>
+<circle cx="59.6" cy="120.6" r="13" fill="#7a2638"/><text x="59.6" y="124.6" text-anchor="middle" font-size="11" font-family="sans-serif" font-weight="700" fill="#fff">4</text>
+<text x="150" y="296" text-anchor="middle" font-size="11" font-family="sans-serif" fill="#0f6e56">cut = 4 · brute-force optimum = 4 · teal edges cut</text>
+<text x="150" y="314" text-anchor="middle" font-size="10.5" font-family="sans-serif" fill="#5b6675"><tspan fill="#1f5fae">blue</tspan> / <tspan fill="#7a2638">maroon</tspan> = spin ±1</text>
+</svg>
+  <p class="muted" style="margin-bottom:0">4-cycle 8/8 · 5-cycle 8/8 · K4 8/8 · K5 7/8 · random-6 8/8.
+  Honest: it's a <i>heuristic</i> (the single K5 miss is shown, not hidden) with no SHIL drive yet, so
+  it's small-N for now — but it's a real circuit settling a real combinatorial problem, not a numpy
+  model. <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_oim_ngspice.py">Reproduce it</a> (ngspice + numpy).</p>
+</div>
+
+<div class="card">
+  <h3>4 · The buildable design <span class="chip c-amber">concept · ≈$180</span></h3>
   <p>Scaled up: a ring of those oscillators, a resistor coupling mesh that encodes the problem,
   a sub-harmonic (SHIL) drive that binarises every phase to 0 or π, and a microcontroller readout
   — the Build A prototype, from real parts.</p>
