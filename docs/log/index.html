@@ -33,6 +33,14 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-15 · later still</div>
+  <h2>Big-n scaling — the tie is a small-n result <span class="tag miss">preliminary · headline narrowed</span></h2>
+  <p>Extending OIM vs SA to bigger random Max-Cut (p=0.5): OIM/best falls from 99.75% at n=120 to 97.4% (n=160), 94.3% (n=200), 93.6% (n=250), while SA holds 100% and OIM never reaches the exact optimum (exact-optimum hit-rate 0% at every tested n above 120). So the earlier "ties SA on cut quality to n=120" looks like a small-n phenomenon: beyond ~n=120, OIM's cut quality — not only its exact-optimum rate — appears to degrade relative to SA.</p>
+  <p><b>The load-bearing confound:</b> this was NOT a matched-effort run. The solvers used different restart counts (OIM 20, SA 12), and one OIM restart is not the same unit of computation as one SA restart — so we cannot yet attribute the gap to the method rather than the budget. That confound is the primary reason we are NOT calling the degradation intrinsic. These figures are preliminary and should not be treated as final until a matched-effort recheck is logged.</p>
+  <p class="muted">This is the harness working: a headline that held at small n does not obviously survive to bigger instances — and we flag both the result and its confound out loud. See the <a href="../build/">animated build model</a> for why restart count drives the energy question.</p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-15 · later</div>
   <h2>Reliability has a lever — and a low ceiling <span class="tag miss">correction on the record</span></h2>
   <p>New ablation (n=80) — exact-optimum hit-rate vs lock strength: a weak sub-harmonic injection lock (Ks=0.6) gives ~0%; the standard lock (Ks=1.8) ~9%; the strongest tested (Ks=2.4) ~10%. The gain from Ks=1.8 to 2.4 is within sampling margin at this n and should not be read as confirmed headroom above the standard lock — the real lever is the weak→standard jump. So reliability is partly tunable, but bounded. The ceiling is the result: even at the strongest lock the machine still misses the exact optimum ~90% of the time at this scale. Our earlier read — "reliability is structural, not tunable" — was too strong; the corrected position is that lock strength gives a modest, real uplift while problem size stays the dominant governor. We post it because it refines an earlier claim in the open — that correction, on the record, is the point.</p>
