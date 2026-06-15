@@ -507,9 +507,11 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
 <text x="40" y="14" font-size="11" font-family="sans-serif" fill="#16233a"><tspan font-weight="700">Stage 1 · single LC oscillator</tspan>  —  ngspice transient, v(out)</text>
 <text x="540" y="165" text-anchor="end" font-size="10" font-family="sans-serif" fill="#0f6e56">target 5000 Hz · measured 5000 Hz · 0.0% error</text>
 </svg>
-  <p class="muted" style="margin-bottom:0">A single LC tank (L 1 mH, C 1.013 µF) — proof the
-  propose → simulate → verify loop works end to end. One oscillator: the mechanism, not yet the
-  full machine.</p>
+  <p class="muted" style="margin-bottom:0">A single LC tank (L 1 mH, C 1.013 µF) — and not a
+  one-off: run as a batch, the loop lands every target from 1 kHz to 50 kHz, <b>7 / 7 in a single
+  round</b> (≤0.01% error). The circuits are stranger-reproducible (the script above); the
+  model-in-the-loop sweep is a <i>logged local result</i> — it needs local models to re-run.
+  One oscillator: the mechanism, not yet the full machine.</p>
 </div>
 
 <div class="card">
