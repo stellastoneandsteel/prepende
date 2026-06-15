@@ -563,9 +563,45 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
 <text x="150" y="314" text-anchor="middle" font-size="10.5" font-family="sans-serif" fill="#5b6675"><tspan fill="#1f5fae">blue</tspan> / <tspan fill="#7a2638">maroon</tspan> = spin ±1</text>
 </svg>
   <p class="muted" style="margin-bottom:0">4-cycle 8/8 · 5-cycle 8/8 · K4 8/8 · K5 7/8 · random-6 8/8.
-  Honest: it's a <i>heuristic</i> (the single K5 miss is shown, not hidden) with no SHIL drive yet, so
-  it's small-N for now — but it's a real circuit settling a real combinatorial problem, not a numpy
+  Honest: it's a <i>heuristic</i> (the single K5 miss is shown, not hidden), small-N for now — but it's a real circuit settling a real combinatorial problem, not a numpy
   model. <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_oim_ngspice.py">Reproduce it</a> (ngspice + numpy).</p>
+  <svg viewBox="0 0 590 220" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="OIM Max-Cut quality vs problem size">
+<rect width="520" height="220" fill="#ffffff"/>
+<text x="50" y="16" font-size="12" font-family="sans-serif" font-weight="700" fill="#16233a">OIM Max-Cut quality vs problem size (ngspice)</text>
+<line x1="50" y1="30" x2="470" y2="30" stroke="#cdd4de" stroke-dasharray="2 4"/>
+<text x="44" y="33" text-anchor="end" font-size="9" fill="#5b6675">1.0</text>
+<line x1="50" y1="100" x2="470" y2="100" stroke="#cdd4de" stroke-dasharray="2 4"/>
+<text x="44" y="103" text-anchor="end" font-size="9" fill="#5b6675">0.5</text>
+<line x1="50" y1="170" x2="470" y2="170" stroke="#cdd4de" stroke-dasharray="2 4"/>
+<text x="44" y="173" text-anchor="end" font-size="9" fill="#5b6675">0</text>
+<text x="50" y="184" text-anchor="middle" font-size="9" fill="#5b6675">N=4</text>
+<text x="155" y="184" text-anchor="middle" font-size="9" fill="#5b6675">N=6</text>
+<text x="260" y="184" text-anchor="middle" font-size="9" fill="#5b6675">N=8</text>
+<text x="365" y="184" text-anchor="middle" font-size="9" fill="#5b6675">N=10</text>
+<text x="470" y="184" text-anchor="middle" font-size="9" fill="#5b6675">N=12</text>
+<polyline points="50,30.0 155,30.0 260,30.0 365,37.7 470,33.4" fill="none" stroke="#0f6e56" stroke-width="2.2"/>
+<polyline points="50,30.0 155,30.0 260,30.0 365,114.0 470,114.0" fill="none" stroke="#1f5fae" stroke-width="2.2" stroke-dasharray="5 3"/>
+<circle cx="50" cy="30.0" r="3.2" fill="#0f6e56"/>
+<circle cx="50" cy="30.0" r="3.2" fill="#1f5fae"/>
+<circle cx="155" cy="30.0" r="3.2" fill="#0f6e56"/>
+<circle cx="155" cy="30.0" r="3.2" fill="#1f5fae"/>
+<circle cx="260" cy="30.0" r="3.2" fill="#0f6e56"/>
+<circle cx="260" cy="30.0" r="3.2" fill="#1f5fae"/>
+<circle cx="365" cy="37.7" r="3.2" fill="#0f6e56"/>
+<circle cx="365" cy="114.0" r="3.2" fill="#1f5fae"/>
+<circle cx="470" cy="33.4" r="3.2" fill="#0f6e56"/>
+<circle cx="470" cy="114.0" r="3.2" fill="#1f5fae"/>
+<text x="476" y="36" font-size="9.5" fill="#0f6e56">approx ratio</text>
+<text x="476" y="117" font-size="9.5" fill="#1f5fae">exact-optimum rate</text>
+<text x="260" y="210" text-anchor="middle" font-size="9.5" font-family="sans-serif" fill="#5b6675">exact optimum is hit through N=8, then falls — but cuts stay near-optimal (heuristic, local minima)</text>
+</svg>
+  <p class="muted" style="margin-bottom:0"><b>How it scales:</b> exact-optimum through N=8,
+  then near-optimal as local minima bite — the approximation ratio holds ~0.93–0.98 even where
+  the exact-optimum rate drops (a heuristic, on small random samples). And a <b>SHIL pump</b>
+  (sub-harmonic injection at 2·f₀) makes it a <i>genuine</i> Ising machine: relative phases
+  settle at exactly 0/π (37.6° → 0° off-binary) instead of a rounded XY relaxation — though it
+  doesn't raise the score at these sizes.
+  <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_oim_scaling_ngspice.py">Reproduce</a> (ngspice + numpy).</p>
 </div>
 
 <div class="card">
