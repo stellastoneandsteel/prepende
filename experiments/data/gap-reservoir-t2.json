@@ -1,0 +1,47 @@
+{
+  "study": "T2-gap-vs-single-reservoir",
+  "N": 60,
+  "c_gap": 0.4,
+  "noises": [
+    0.1,
+    0.3,
+    0.5,
+    0.7
+  ],
+  "seeds": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "rows": [
+    {
+      "noise": 0.1,
+      "gap_r2": 0.5245,
+      "single_matched_r2": 0.9909,
+      "single_full_r2": 0.9949
+    },
+    {
+      "noise": 0.3,
+      "gap_r2": 0.2864,
+      "single_matched_r2": 0.97,
+      "single_full_r2": 0.9808
+    },
+    {
+      "noise": 0.5,
+      "gap_r2": 0.1629,
+      "single_matched_r2": 0.9536,
+      "single_full_r2": 0.969
+    },
+    {
+      "noise": 0.7,
+      "gap_r2": 0.1002,
+      "single_matched_r2": 0.9353,
+      "single_full_r2": 0.9577
+    }
+  ],
+  "gap_mean_r2": 0.2685,
+  "single_matched_mean_r2": 0.9625,
+  "t2_outcome_y": 0
+}

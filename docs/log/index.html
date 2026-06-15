@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prepende — logbook</title>
+<meta name="description" content="Dated experiment log for Prepende. Every run, every result including failures, filed here so the front page stays short.">
+<style>
+  :root{--bg:#f4f3ef;--ink:#16233a;--blue:#1f5fae;--maroon:#7a2638;--teal:#0f6e56;--muted:#5b6675}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:0 18px}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 0 80px}
+  a{color:var(--blue)}
+  h1{font-size:1.7rem;margin:0 0 2px}
+  .sub{color:var(--muted);margin:0 0 26px}
+  .entry{background:#fff;border:1px solid #e4e2db;border-radius:12px;padding:22px 24px;margin:0 0 22px}
+  .entry h2{font-size:1.15rem;margin:0 0 2px}
+  .date{color:var(--muted);font-size:.85rem;letter-spacing:.04em}
+  h3{font-size:1rem;margin:18px 0 4px}
+  .firewall{background:#fbf3f3;border-left:4px solid var(--maroon);padding:8px 14px;margin:10px 0;font-size:.93rem}
+  .est{background:#eef6f3;border-left:4px solid var(--teal);padding:8px 14px;margin:10px 0;font-size:.93rem}
+  .muted{color:var(--muted)}
+  code{background:#eee;padding:1px 5px;border-radius:4px;font-size:.85em}
+  ul{margin:6px 0 6px 0;padding-left:22px}
+  li{margin:3px 0}
+  .tag{display:inline-block;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:20px;vertical-align:middle}
+  .miss{background:#f3dede;color:var(--maroon)}
+  .ok{background:#dcefe6;color:var(--teal)}
+  .back{font-size:.9rem}
+</style></head>
+<body><div class="wrap">
+<p class="back"><a href="../">← Prepende</a></p>
+<h1>Logbook</h1>
+<p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
+
+<div class="entry">
+  <div class="date">2026-06-15</div>
+  <h2>OIM scaling &amp; ablation · gap-reservoir [T2] <span class="tag miss">pre-registered MISS</span> · [T1] estimate</h2>
+
+  <h3>Oscillator Ising machine (Build A) — scaling + ablation <span class="tag ok">software, measured</span></h3>
+  <p class="muted">Method: simulated OIM ODE vs simulated annealing on random Max-Cut (p=0.5), matched restarts. Code: <code>sim_oim_scaling.py</code>; data: <code>data/oim-scaling.json</code>.</p>
+  <ul>
+    <li><b>Best-cut quality ties SA</b> up to n=120 nodes (OIM/best 100% at n≤60 → 99.75% at n=120; SA 100% throughout).</li>
+    <li><b>Single-solve quality and exact-optimum reliability are one finding, not two.</b> Mean <i>per-restart</i> cut ≈ 99% of the best (a per-restart mean, <i>not</i> best-of-k) — while the probability a single restart hits the <i>exact</i> optimum collapses from <b>91.7% of restarts (55/60: 2 graphs × 30 restarts) at n=20 nodes</b> to 5% at n=80 and <b>0% at n≥100 nodes</b>. <span class="muted">(Throughout, <i>n</i> is node count and hit-rate is per-restart.)</span> High per-solve quality with zero exact-optimum reliability at scale means ensemble restarts are required at scale.</li>
+    <li><b>Robustness (quality only):</b> that ≈99% per-restart mean held across 4× SHIL strength (Ks 0.6–2.4) and 4× noise (0.3–1.1) at n=80 — near-optimal cut <i>quality</i> is insensitive to these over the tested range. It does <i>not</i> extend to exact-optimum hit-rate, and the breaking point was not located (a wider sweep is a noted next step).</li>
+  </ul>
+  <div class="firewall"><b>Energy — read first.</b> The OIM ODE in software is <b>slower</b> than SA on the same CPU — a measured result of this study, not a hedge. <b>No energy was measured.</b> Any energy-efficiency case is a hardware argument about projected analog dissipation, not demonstrated here. Wherever "energy win" appears below it means: <i>if</i> a physical bench were built <i>and</i> ran near component limits, it <i>might</i> dissipate less per solution — two unverified conditionals.</div>
+  <ul>
+    <li><b>Restart-cost:</b> because exact-optimum hit-rate collapses, energy must be counted <i>per verified solution</i>, not per run; at n ≳ 40, 3–10× restarts are routine and multiply any per-run figure.</li>
+    <li><b>Scope:</b> results apply to the tested instance classes only (random Max-Cut, p=0.5, n≤120). Generalization to larger or structurally different instances is not established. No general-solver-competitiveness claim is made.</li>
+  </ul>
+
+  <h3>Gap-coupled reservoir [T2] — pre-registered miss</h3>
+  <p>Pre-registered at <b>p=0.45</b> in the ledger, locked <i>before</i> running (git history proves the order). Test: gap-coupled 2×N reservoirs (readout dim N) vs a single 2N reservoir at <i>matched</i> readout dim N; signal-recovery R² across noise {0.1,0.3,0.5,0.7}, 5 seeds. Code: <code>sim_gap_reservoir.py</code>.</p>
+  <p><b>Result:</b> gap mean R² <b>0.269</b> vs single (matched readout) <b>0.962</b>; the gap collapses with noise (0.525 → 0.10). Hypothesis <b>not supported</b>; point estimate contrary. Resolved <b>y=0</b>. The pre-registration leaned against the hypothesis and was correct — this is informative, not null.</p>
+
+  <h3>[T1] physical bench — estimate</h3>
+  <div class="est"><b>This is an estimate, not a measurement.</b> Estimated probability a physical op-amp coupled-oscillator bench shows a real energy-per-solution win vs SA-on-CPU at matched cut quality: <b>≈0.18</b>. (The locked forward prediction stands at p=0.30; restart-cost analysis revises the working estimate down to ~0.18 — but the locked prediction will still be scored as locked, not retrofitted.) Forecast: per-<i>run</i> analog energy looks favorable (mW over µs), but restart multiplicity at scale likely consumes or reverses it on a per-verified-solution basis; a clean, reproducible win against a well-tuned CPU SA baseline is unlikely without a substantial improvement to solution reliability.</div>
+</div>
+
+<p class="muted" style="font-size:.85rem">Ledger and all code/data: <a href="https://github.com/stellastoneandsteel/prepende">github.com/stellastoneandsteel/prepende</a></p>
+</div></body></html>

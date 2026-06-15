@@ -189,10 +189,11 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
       <text x="145" y="206" text-anchor="middle" font-size="11" fill="#5b6675">predicted →</text>
       <text x="20" y="100" text-anchor="middle" font-size="11" fill="#5b6675" transform="rotate(-90 20 100)">observed</text>
       <!--LEDGER:rel-->
-      <polyline points="99,184 141,114 184,70 226,42" fill="none" stroke="#4a3f9e" stroke-width="2"/>
-      <circle cx="99" cy="184" r="4" fill="#4a3f9e"/><circle cx="141" cy="114" r="5" fill="#4a3f9e"/>
-      <circle cx="184" cy="70" r="6" fill="#4a3f9e"/><circle cx="226" cy="42" r="6" fill="#4a3f9e"/>
-      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.13 · skill +0.41</text>
+      <polyline points="134,184 166,184 224,14" fill="none" stroke="#4a3f9e" stroke-width="2"/>
+      <circle cx="134" cy="184" r="4" fill="#4a3f9e"/>
+      <circle cx="166" cy="184" r="4" fill="#4a3f9e"/>
+      <circle cx="224" cy="14" r="5" fill="#4a3f9e"/>
+      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.15 · skill +0.41</text>
       <!--/LEDGER:rel-->
     </svg>
     <svg viewBox="0 0 270 220" role="img" aria-label="conviction vs resolvability">
@@ -204,7 +205,9 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
       <circle cx="240" cy="150" r="6" fill="#9a2d2d"/><text x="120" y="168" font-size="10" fill="#9a2d2d">"singularity" → flagged WEAK</text>
     </svg>
   </div>
-  <p class="muted" style="font-size:.82rem;margin-top:.5rem"><!--LEDGER:stamp-->ledger + every number here live in the repo · auto-rebuilt weekly<!--/LEDGER:stamp--></p>
+  <p class="muted" style="font-size:.82rem;margin-top:.5rem"><!--LEDGER:stamp-->
+      ledger: 5 resolved · Brier 0.15 · skill +0.41 · auto-rebuilt 2026-06-15T12:55:02+00:00 (UTC)
+      <!--/LEDGER:stamp--></p>
   <p><b>Why it matters:</b> a claim can be supremely confident and still <i>uncheckable</i>.
   Those aren't miscalibrated — they're off the plane entirely. The ledger auto-flags them
   (a high-conviction "we will achieve the singularity" scores 0.30 and is refused), so the
@@ -276,23 +279,18 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
 </div>
 
 <h2>Follow the experiments</h2>
-<p class="muted">A running log — each entry dated, with what we tried, the real result,
-and what it does (and does not) show. New entries are appended as experiments run.</p>
+<p class="muted">A dated log of every run — what we tried, the real result, and what it does
+(and does not) show. To keep this page short, full entries live in the logbook; only the
+latest is summarized here.</p>
 <div class="card log">
-  <h3><span class="date">2026-06-15</span> · Resolvability axis shipped</h3>
-  <p>The night cycle surfaced a real idea — "falsifiability is orthogonal to calibration."
-  Built it into the tool; it now auto-flags unresolvable claims (a "we'll achieve the
-  singularity" claim scores 0.30 and is refused). <span class="muted">Result: feature live + tested.</span></p>
-  <h3><span class="date">2026-06-14</span> · Calibration ledger (n=8)</h3>
-  <p>Locked 8 predictions; 4 resolved, including an honest miss kept on the record.
-  Brier 0.13, skill +0.41. <span class="muted">Result: the tool works; calibration only means much at n≥30.</span></p>
-  <h3><span class="date">2026-06-14</span> · Gap reservoir + hard regime</h3>
-  <p>A signal shown only to A is recovered from B alone — but only when the gap is open
-  (closed → R²≈0). With noise added, recovery climbs gradually; a pre-registered shape
-  prediction scored ~4/5. <span class="muted">Result: real transfer, not telepathy.</span></p>
-  <h3><span class="date">2026-06-14</span> · Ising machine benchmark (n=12→120)</h3>
-  <p>Finds 99.6–100% of the best-known cut at every size, but ties simulated annealing
-  (SA edges it at n≥80). <span class="muted">Result: a valid solver, no quality edge; hardware energy-per-solution is the open question.</span></p>
+  <h3><span class="date">2026-06-15</span> · OIM scaling + gap-reservoir [T2] miss</h3>
+  <p>The oscillator Ising machine ties simulated annealing on cut quality to n=120, but its
+  exact-optimum per-restart hit-rate collapses with size (91.7% → 0%), and in software it is
+  slower than SA — so the energy case stays a hardware question, not a result. The gap-coupled
+  reservoir [T2] was pre-registered at p=0.45 and resolved a clean miss (gap R² 0.27 vs a
+  single reservoir's 0.96 at matched readout). <span class="muted">Full detail and the [T1]
+  hardware estimate → <a href="log/">the logbook</a>.</span></p>
+  <p style="margin:8px 0 0"><a href="log/"><b>Full logbook →</b></a></p>
 </div>
 
 <h2>Concept art</h2>
