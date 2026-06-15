@@ -1,0 +1,119 @@
+{
+  "study": "oim-scaling+ablation",
+  "p": 0.5,
+  "seeds": [
+    1,
+    2
+  ],
+  "scaling": [
+    {
+      "n": 20,
+      "edges": 98,
+      "ref": 66,
+      "oim_ratio": 1.0,
+      "sa_ratio": 1.0,
+      "oim_hitpct": 91.7,
+      "oim_sec": 0.127,
+      "sa_sec": 0.033
+    },
+    {
+      "n": 40,
+      "edges": 393,
+      "ref": 246,
+      "oim_ratio": 1.0,
+      "sa_ratio": 1.0,
+      "oim_hitpct": 73.3,
+      "oim_sec": 0.271,
+      "sa_sec": 0.06
+    },
+    {
+      "n": 60,
+      "edges": 911,
+      "ref": 534,
+      "oim_ratio": 1.0,
+      "sa_ratio": 1.0,
+      "oim_hitpct": 30.0,
+      "oim_sec": 0.283,
+      "sa_sec": 0.09
+    },
+    {
+      "n": 80,
+      "edges": 1559,
+      "ref": 929,
+      "oim_ratio": 0.9995,
+      "sa_ratio": 1.0,
+      "oim_hitpct": 5.0,
+      "oim_sec": 0.301,
+      "sa_sec": 0.12
+    },
+    {
+      "n": 100,
+      "edges": 2485,
+      "ref": 1429,
+      "oim_ratio": 0.9986,
+      "sa_ratio": 1.0,
+      "oim_hitpct": 0.0,
+      "oim_sec": 0.317,
+      "sa_sec": 0.169
+    },
+    {
+      "n": 120,
+      "edges": 3579,
+      "ref": 2030,
+      "oim_ratio": 0.9975,
+      "sa_ratio": 1.0,
+      "oim_hitpct": 0.0,
+      "oim_sec": 0.332,
+      "sa_sec": 0.183
+    }
+  ],
+  "ablation": {
+    "n": 80,
+    "metric": "mean_per_restart_cut_over_ref",
+    "Ks_list": [
+      0.6,
+      1.2,
+      1.8,
+      2.4
+    ],
+    "noise_list": [
+      0.3,
+      0.7,
+      1.1
+    ],
+    "grid": [
+      {
+        "Ks_max": 0.6,
+        "by_noise": {
+          "0.3": 99.1,
+          "0.7": 99.1,
+          "1.1": 99.1
+        }
+      },
+      {
+        "Ks_max": 1.2,
+        "by_noise": {
+          "0.3": 99.4,
+          "0.7": 99.4,
+          "1.1": 99.4
+        }
+      },
+      {
+        "Ks_max": 1.8,
+        "by_noise": {
+          "0.3": 99.4,
+          "0.7": 99.4,
+          "1.1": 99.4
+        }
+      },
+      {
+        "Ks_max": 2.4,
+        "by_noise": {
+          "0.3": 99.5,
+          "0.7": 99.5,
+          "1.1": 99.4
+        }
+      }
+    ]
+  }
+}
