@@ -1,0 +1,41 @@
+name: weekly-rebuild
+
+# Re-runs the experiment sims and regenerates the data-driven calibration numbers on
+# the site once a week. Triggered by schedule (not on push) so it can't loop, plus a
+# manual button. Commits back to the repo only when something actually changed.
+
+on:
+  schedule:
+    - cron: "17 9 * * 1"   # Mondays 09:17 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: weekly-rebuild
+  cancel-in-progress: false
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install deps
+        run: pip install --quiet numpy
+      - name: Rebuild data-driven site numbers
+        run: python experiments/rebuild.py
+      - name: Commit refreshed numbers if changed
+        run: |
+          git config user.name "prepende-bot"
+          git config user.email "stellastoneandsteel@users.noreply.github.com"
+          if git diff --quiet && git diff --cached --quiet; then
+            echo "no changes - nothing to commit"
+          else
+            git add -A
+            git commit -m "chore: weekly rebuild (auto) [skip ci]"
+            git push
+          fi
