@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prepende — the most-likely build, animated</title>
+<meta name="description" content="An animated model of the most-likely physical build (a coupled-oscillator Ising machine) and the order-of-magnitude calculations it lets us draw. Concept + estimates, not a measurement.">
+<style>
+  :root{--bg:#f4f3ef;--surface:#fff;--ink:#16233a;--muted:#5b6675;--line:#e3e0d8;--blue:#1f5fae;--maroon:#7a2638;--teal:#0f6e56;--amber:#8a5a0b}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:0 18px}
+  .wrap{max-width:780px;margin:0 auto;padding:40px 0 70px}
+  a{color:var(--blue)} .back{font-size:.9rem}
+  h1{font-size:1.7rem;margin:0 0 2px}
+  .sub{color:var(--muted);margin:0 0 22px}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px 22px;margin:16px 0}
+  h2{font-size:1.15rem;margin:0 0 6px}
+  .muted{color:var(--muted)} code{background:#eef0ee;border-radius:5px;padding:1px 6px;font-size:.85em}
+  .est{background:#eef6f3;border-left:4px solid var(--teal);padding:8px 14px;margin:10px 0;font-size:.92rem}
+  .eq{font-family:ui-monospace,Menlo,monospace;font-size:.92rem;background:#f7f6f2;border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto}
+  ul{padding-left:22px} li{margin:4px 0}
+  .legend{font-size:.82rem;color:var(--muted);margin-top:6px}
+  .dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle;margin:0 3px}
+  /* settling animation: nodes resolve from grey toward two phase groups */
+  @keyframes settleA{0%{fill:#b9b6ad}55%{fill:#b9b6ad}100%{fill:var(--teal)}}
+  @keyframes settleB{0%{fill:#b9b6ad}55%{fill:#b9b6ad}100%{fill:var(--maroon)}}
+  @keyframes flow{to{stroke-dashoffset:-16}}
+  .nA{animation:settleA 2.6s ease-in-out infinite alternate}
+  .nB{animation:settleB 2.6s ease-in-out infinite alternate}
+  .edge{stroke:#c7c3b8;stroke-width:1.5;stroke-dasharray:4 4;animation:flow 1.2s linear infinite}
+  .rd{opacity:0;animation:rdshow 2.6s ease-in-out infinite alternate}
+  @keyframes rdshow{0%,55%{opacity:0}100%{opacity:1}}
+</style></head>
+<body><div class="wrap">
+<p class="back"><a href="../">← Prepende</a> · <a href="../log/">logbook</a></p>
+<h1>The most-likely build, animated</h1>
+<p class="sub">A coupled-oscillator Ising machine — the cheapest physical realization of the
+mechanism. This is a <b>concept animation</b> and an <b>order-of-magnitude estimate</b>, not a
+photograph of a working device and not a measurement.</p>
+
+<div class="card">
+  <h2>What the bench does (each "solve")</h2>
+  <svg viewBox="0 0 560 260" role="img" aria-label="coupled oscillators settling into two phases, then a readout">
+    <!-- coupling mesh -->
+    <g class="edge" fill="none">
+      <line x1="110" y1="70" x2="250" y2="60"/><line x1="250" y1="60" x2="390" y2="80"/>
+      <line x1="110" y1="70" x2="180" y2="160"/><line x1="250" y1="60" x2="320" y2="165"/>
+      <line x1="390" y1="80" x2="450" y2="160"/><line x1="180" y1="160" x2="320" y2="165"/>
+      <line x1="320" y1="165" x2="450" y2="160"/><line x1="180" y1="160" x2="110" y2="70"/>
+    </g>
+    <!-- oscillator nodes: settle to phase 0 (teal) or pi (maroon) -->
+    <circle class="nA" cx="110" cy="70" r="13"/><circle class="nB" cx="250" cy="60" r="13"/>
+    <circle class="nA" cx="390" cy="80" r="13"/><circle class="nB" cx="180" cy="160" r="13"/>
+    <circle class="nA" cx="320" cy="165" r="13"/><circle class="nB" cx="450" cy="160" r="13"/>
+    <text x="40" y="120" font-size="12" fill="#5b6675">phases</text>
+    <text x="40" y="136" font-size="12" fill="#5b6675">settle…</text>
+    <!-- readout appears after settling -->
+    <g class="rd">
+      <text x="120" y="225" font-size="13" fill="#16233a">read the two groups → that partition is the cut</text>
+      <rect x="120" y="232" width="150" height="12" rx="3" fill="#0f6e56"/>
+      <rect x="270" y="232" width="120" height="12" rx="3" fill="#7a2638"/>
+    </g>
+  </svg>
+  <div class="legend"><span class="dot" style="background:#0f6e56"></span>phase 0 &nbsp;
+    <span class="dot" style="background:#7a2638"></span>phase π &nbsp; — anti-phase across an edge = that edge is cut.
+    The sub-harmonic injection lock pins phases to {0, π}; the coupling drives edges to anti-phase.</div>
+  <p class="muted" style="font-size:.9rem;margin-top:10px">One settle ≈ one restart. Most settles
+  land a <i>good</i> cut; the <i>exact</i> optimum is rare and gets rarer with size (measured:
+  hit-rate ~9% at n=80, → 0% by n≈100). So a real bench must run many restarts per verified
+  solution — and that restart count is the crux of the calculation below.</p>
+</div>
+
+<div class="card">
+  <h2>What we can calculate from this model (estimates)</h2>
+  <p>The animation makes the energy question concrete. Per verified solution:</p>
+  <div class="eq">E_solution  ≈  N · P_osc · t_settle · R<br>
+    &nbsp;&nbsp;N = oscillators · P_osc = power each · t_settle = settle time · R = restarts per exact-optimum hit</div>
+  <div class="est"><b>These are order-of-magnitude estimates with wide error bars, not measurements.</b>
+  Plausible analog values (N≈80, P_osc≈1 mW, t_settle≈10 µs) give ~0.8 µJ per <i>settle</i> (R=1).
+  At R≈10–20 restarts per verified solution, the per-<i>solution</i> cost is ~8–16 µJ — about an
+  order of magnitude higher. R is the deciding term: our measured hit-rate (~9% at n=80, falling toward 0% by n≈100)
+  implies R ≈ 10–20 at n=80 and <b>growing with size</b>. So energy per <i>verified</i> solution
+  isn't a fixed per-settle figure — it scales with a restart count we have measured to climb.</div>
+  <h2 style="margin-top:18px">The theoretical conclusion (and the next question it forces)</h2>
+  <p>A fixed per-settle analog advantage over CPU simulated annealing is eroded — and at some
+  size reversed — by the growing restart multiplier R. That implies a <b>crossover size n*</b>:
+  below it the bench may win on energy per solution; above it the restart cost dominates and SA
+  wins. We do not yet know n* (or whether it exists above trivial sizes). That is the next
+  pre-registered question — drawn directly from this model, fed back into the ledger. The loop is
+  the point: a model yields a calculation, the calculation yields a falsifiable question, the
+  question goes on the record before we answer it.</p>
+  <p class="muted" style="font-size:.85rem">Honest scope: every number here is an estimate from a
+  software model; nothing on this page is a hardware measurement. The energy claim remains
+  pre-registered prediction [T1], unresolved until a physical bench is built and metered.</p>
+</div>
+</div></body></html>

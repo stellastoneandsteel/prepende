@@ -2,7 +2,7 @@ __pycache__/
 *.pyc
 *.egg-info/
 .eggs/
-build/
+/build/
 dist/
 # local run artifacts (the real public ledger should be committed deliberately, by name)
 demo_ledger.jsonl
