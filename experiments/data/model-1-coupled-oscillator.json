@@ -1,0 +1,17 @@
+{
+  "name": "Coupled-oscillator Ising machine",
+  "status": "mechanism real; buildable (~$180 bench)",
+  "data": {
+    "maxcut_hitrate_n5": 1.0,
+    "quality_vs_best_known": {
+      "n12": 1.0,
+      "n20": 1.0,
+      "n40": 1.0,
+      "n80": 0.999,
+      "n120": 0.997
+    },
+    "vs_simulated_annealing": "ties; SA marginally ahead at n>=80"
+  },
+  "honest_score": 4.5,
+  "verdict": "valid Max-Cut solver; no quality edge over classical; value would be hardware energy/latency only"
+}

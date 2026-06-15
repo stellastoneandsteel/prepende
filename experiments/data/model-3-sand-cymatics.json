@@ -1,0 +1,10 @@
+{
+  "name": "Sand 'sandbox' (Faraday / cymatics)",
+  "status": "concept illustration; fails reservoir requirements",
+  "data": {
+    "echo_state_property": "violated (force chains + jamming + hysteresis = non-fading memory)",
+    "viable_route": "water-bucket reservoir, or a BONDED granular array (fixed geometry)"
+  },
+  "honest_score": 3.0,
+  "verdict": "evocative and on-thesis as intuition, but loose sand is the hardest material to control it in"
+}

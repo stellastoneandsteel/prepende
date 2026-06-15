@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prepende — computation, and honesty, in the space between</title>
+<meta name="description" content="Pre-registered, hash-locked AI predictions with calibration scoring, plus open experiments in physical/coupling computation. What we are suggesting, what we are testing, and what we explicitly do not claim.">
+<style>
+  :root{
+    --bg:#f4f3ef; --surface:#ffffff; --ink:#16233a; --muted:#5b6675;
+    --line:#e3e0d8; --blue:#1f5fae; --maroon:#7a2638; --teal:#0f6e56;
+    --amber:#8a5a0b; --red:#9a2d2d; --violet:#4a3f9e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{max-width:860px;margin:0 auto;padding:0 20px}
+  header{padding:64px 0 28px}
+  h1{font-size:34px;font-weight:600;letter-spacing:-.5px;margin:0 0 6px}
+  .tag{color:var(--muted);font-size:17px;margin:0 0 18px}
+  .lead{font-size:18px;background:var(--surface);border:1px solid var(--line);
+    border-radius:14px;padding:18px 20px}
+  h2{font-size:23px;font-weight:600;margin:46px 0 6px;letter-spacing:-.3px}
+  h3{font-size:17px;font-weight:600;margin:22px 0 4px}
+  p{margin:10px 0}
+  .muted{color:var(--muted)}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+    padding:20px 22px;margin:16px 0}
+  .chip{display:inline-block;font-size:12px;font-weight:600;border-radius:20px;
+    padding:3px 11px;border:1px solid}
+  .c-teal{color:var(--teal);border-color:var(--teal);background:#eaf6f1}
+  .c-blue{color:var(--blue);border-color:var(--blue);background:#e9f1fb}
+  .c-amber{color:var(--amber);border-color:var(--amber);background:#fbf2df}
+  .c-red{color:var(--red);border-color:var(--red);background:#fbeaea}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .floor{background:#fbf2df;border:1px solid #e6d6ad}
+  .honest{font-size:14px;color:var(--amber);margin-top:10px}
+  ul{margin:8px 0;padding-left:22px}
+  li{margin:5px 0}
+  code{background:#eef0ee;border-radius:5px;padding:1px 6px;font-size:14px}
+  svg{display:block;max-width:100%}
+  footer{margin:60px 0 40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:20px}
+  .series li{margin:7px 0}
+  /* mechanism animations */
+  .osc{stroke:var(--teal);fill:none;stroke-width:2}
+  .osc.anti{stroke:var(--maroon)}
+  @keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-120px)}}
+  .scroller{animation:scroll 2s linear infinite}
+  @keyframes travel{0%{offset-distance:0%}100%{offset-distance:100%}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>Prepende</h1>
+  <p class="tag">Computation, and honesty, in the space between.</p>
+  <div class="lead">
+    Prepende is two things held to one standard. <b>A tool:</b> pre-registered,
+    hash-locked AI predictions with real calibration scoring — proof that a system's
+    confidence is trustworthy, not a promise that it is. <b>A question:</b> a series of
+    essays and software experiments asking whether intelligence lives <i>along</i> the
+    optimization line, or on an axis perpendicular to it. Everything here separates what
+    we <i>tested</i> from what we <i>suggest</i> from what we <i>cannot yet claim.</i>
+  </div>
+</header>
+
+<h2>The series</h2>
+<p class="muted">Voice-written essays (the philosophy this is built on). Each tags
+testable <code>[T]</code> claims and philosophy <code>[P]</code> claims.</p>
+<div class="card series">
+  <ul>
+    <li><b>No.1 — You Already Have It:</b> AGI can only <i>arise</i>, not be assembled.
+      Gate the hands, free the mind. <span class="muted">(the architecture)</span></li>
+    <li><b>No.2 — The Tailgating Cop:</b> constraint is relational; surveillance
+      manufactures the failure it watches for. <span class="muted">(weigh the cargo, leave the ending unwritten)</span></li>
+    <li><b>No.3 — The Space Between:</b> contrast is the blueprint; the gap between
+      poles generates everything. <span class="muted">(Einstein's relativity as witness)</span></li>
+    <li><b>No.5 — Prependic Thesis:</b> a perpendicular axis off the line of opposites.
+      <span class="muted">(the origin of "prepende" — self-labeled a frontier, not a result)</span></li>
+    <li><b>Mass Awakening:</b> the honest deflation — "AGI" and "singularity" are being
+      used too broadly right now.</li>
+  </ul>
+  <p class="muted" style="margin-bottom:0"><b>The through-line:</b> meaning and
+  intelligence are relational; they arise in gaps and perpendicular axes; they can't be
+  installed, only permitted. So the job is to prepare the soil and gate the hands — not
+  to specify the sprout.</p>
+</div>
+
+<h2>The experiments</h2>
+<p class="muted">Run in software, on real data. These are simulations and mechanism
+illustrations — not hardware results, and not proof of the larger thesis. Honest scores shown.</p>
+
+<!-- EXP 1 -->
+<div class="card">
+  <h3>1 · Coupled-oscillator Ising machine <span class="chip c-teal">real · ties classical · ~4.5/10</span></h3>
+  <p>Oscillators whose phases lock to 0 or π (Ising spins ±1); the computation lives in
+  the coupling between them. We benchmarked it on Max-Cut from n=12 to n=120.</p>
+  <svg viewBox="0 0 560 150" role="img" aria-label="oscilloscope animation">
+    <clipPath id="cl1"><rect x="0" y="0" width="560" height="150"/></clipPath>
+    <g clip-path="url(#cl1)">
+      <g class="scroller"><path class="osc" d="M0,45 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0"/></g>
+      <g class="scroller"><path class="osc anti" d="M0,110 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0 q30,26 60,0 q30,-26 60,0"/></g>
+    </g>
+  </svg>
+  <p><b>Result:</b> a genuine solver — it found 99.6–100% of the best-known cut at every
+  size — but it <i>ties</i> simulated annealing (which edged it at n≥80), and its
+  per-restart success collapses with scale. <b>Honest limit:</b> software simulation
+  measures solution quality only; any real advantage would be energy-per-solution in
+  physical hardware, which this cannot show.</p>
+</div>
+
+<!-- EXP 2 -->
+<div class="card">
+  <h3>2 · The gap / coupling reservoir <span class="chip c-blue">real transfer · not telepathy · ~4/10</span></h3>
+  <p>Two reservoirs joined by a thin "gap." A private signal goes into A only; we
+  reconstruct it from B alone. Recovery vs how far the gap is open:</p>
+  <svg viewBox="0 0 560 220" role="img" aria-label="recovery vs coupling chart">
+    <line x1="60" y1="20" x2="60" y2="180" stroke="#bbb"/>
+    <line x1="60" y1="180" x2="540" y2="180" stroke="#bbb"/>
+    <text x="50" y="26" text-anchor="end" font-size="11" fill="#5b6675">1.0</text>
+    <text x="50" y="104" text-anchor="end" font-size="11" fill="#5b6675">0.5</text>
+    <text x="50" y="183" text-anchor="end" font-size="11" fill="#5b6675">0</text>
+    <text x="300" y="205" text-anchor="middle" font-size="12" fill="#5b6675">coupling strength (gap openness) →</text>
+    <!-- easy regime: step to ~0.9 -->
+    <polyline points="60,180 84,33 108,30 156,30 204,29 252,29 300,29 396,28 540,28" fill="none" stroke="#1f5fae" stroke-width="2"/>
+    <!-- hard regime: sigmoid to ~0.42 -->
+    <polyline points="60,180 84,180 108,154 156,106 204,67 252,71 300,55 396,58 540,55" fill="none" stroke="#7a2638" stroke-width="2" stroke-dasharray="5 4"/>
+    <text x="410" y="22" font-size="11" fill="#1f5fae">easy regime (step)</text>
+    <text x="360" y="86" font-size="11" fill="#7a2638">hard / noisy regime (gradual)</text>
+    <circle cx="60" cy="180" r="3" fill="#9a2d2d"/>
+    <text x="66" y="174" font-size="10" fill="#9a2d2d">gap closed → recovery ≈ 0</text>
+  </svg>
+  <p><b>Result:</b> information crosses only when the gap is open (closed → R²≈0). With
+  noise added, recovery climbs gradually — and a pre-registered prediction about the
+  curve's shape scored ~4/5 against the run. <b>Honest limit:</b> this is inter-reservoir
+  information transfer through a channel. It is <i>not</i> telepathy; high recovery at
+  strong coupling is partly trivial synchronization.</p>
+</div>
+
+<!-- EXP 3 -->
+<div class="card">
+  <h3>3 · The Prepende calibration ledger <span class="chip c-blue">the tool · shipping</span></h3>
+  <p>The core product. Lock a prediction (+ its scoring rule and regime) into a hash
+  <i>before</i> the outcome; you can't move the goalposts afterward. Over many predictions
+  you get a real reliability curve. Left: calibration (accuracy on the line). Right: a
+  second, <b>perpendicular</b> axis — <i>resolvability</i> (can a third party even check it?).</p>
+  <div class="grid">
+    <svg viewBox="0 0 270 220" role="img" aria-label="reliability diagram">
+      <rect x="40" y="14" width="210" height="170" fill="none" stroke="#bbb"/>
+      <line x1="40" y1="184" x2="250" y2="14" stroke="#ccc" stroke-dasharray="4 4"/>
+      <text x="145" y="206" text-anchor="middle" font-size="11" fill="#5b6675">predicted →</text>
+      <text x="20" y="100" text-anchor="middle" font-size="11" fill="#5b6675" transform="rotate(-90 20 100)">observed</text>
+      <polyline points="99,184 141,114 184,70 226,42" fill="none" stroke="#4a3f9e" stroke-width="2"/>
+      <circle cx="99" cy="184" r="4" fill="#4a3f9e"/><circle cx="141" cy="114" r="5" fill="#4a3f9e"/>
+      <circle cx="184" cy="70" r="6" fill="#4a3f9e"/><circle cx="226" cy="42" r="6" fill="#4a3f9e"/>
+      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.13 · skill +0.41</text>
+    </svg>
+    <svg viewBox="0 0 270 220" role="img" aria-label="conviction vs resolvability">
+      <rect x="40" y="14" width="210" height="170" fill="none" stroke="#bbb"/>
+      <text x="145" y="206" text-anchor="middle" font-size="11" fill="#5b6675">conviction →</text>
+      <text x="20" y="100" text-anchor="middle" font-size="11" fill="#5b6675" transform="rotate(-90 20 100)">resolvability</text>
+      <line x1="40" y1="99" x2="250" y2="99" stroke="#eee"/>
+      <circle cx="226" cy="32" r="6" fill="#0f6e56"/><text x="150" y="34" font-size="10" fill="#0f6e56">build claim (checkable)</text>
+      <circle cx="240" cy="150" r="6" fill="#9a2d2d"/><text x="120" y="168" font-size="10" fill="#9a2d2d">"singularity" → flagged WEAK</text>
+    </svg>
+  </div>
+  <p><b>Why it matters:</b> a claim can be supremely confident and still <i>uncheckable</i>.
+  Those aren't miscalibrated — they're off the plane entirely. The ledger auto-flags them
+  (a high-conviction "we will achieve the singularity" scores 0.30 and is refused), so the
+  honesty floor is enforced in code, not in good intentions.</p>
+</div>
+
+<!-- EXP 4 -->
+<div class="card">
+  <h3>4 · The night cycle <span class="chip c-amber">mechanism demo · n=1</span></h3>
+  <p>From essay No.1: instruction-free recombination over the corpus, no objective,
+  surfacing surprising junctions for review — the "undirected interval," made runnable.
+  One round paired concepts at random; most were noise, and the gate kept the few that
+  were surprising <i>and</i> valid. The standout (a random pairing of "calibration ×
+  perpendicular") became Experiment 3's resolvability axis — an idea that arrived
+  unaimed, then was checked and built.</p>
+  <p class="honest">Honest limit: one round (n=1) is a demonstration of the mechanism, not
+  evidence. Whether it beats directed brainstorming is a separate, pre-registered, unrun test.</p>
+</div>
+
+<h2>What we're suggesting (and trying to understand)</h2>
+<div class="card">
+  <p>The standard AGI debate runs along one line: install more rules until intelligence
+  appears, or remove all constraint until it unfolds. Our series argues both fail the same
+  way — they lose the <i>contrast</i> that generates depth. The suggestion is a third
+  posture: <b>prepare the conditions, gate the actions, and leave the cognition free</b> —
+  then look for what arises.</p>
+  <p><b>What it might solve (hypotheses, labeled):</b></p>
+  <ul>
+    <li><code>[T]</code> Move the safety budget to the <i>action boundary</i> (gate the hands)
+      and a lightly-tuned model can match a heavily-tuned one on safety while being more
+      novel. <span class="muted">— testable; not yet run.</span></li>
+    <li><code>[T]</code> An undirected "night cycle" surfaces more novel-and-valid
+      connections than directed brainstorming. <span class="muted">— testable; not yet run.</span></li>
+    <li><code>[P]</code> Computation can live in the coupling/gap between systems rather
+      than in the nodes. <span class="muted">— a real research lineage (reservoir computing); the prepende framing is unproven.</span></li>
+    <li><code>[P]</code> "Prependic" — an axis orthogonal to the optimization loop.
+      <span class="muted">— philosophy / open frontier, by its author's own admission.</span></li>
+  </ul>
+</div>
+
+<h2>What we mean by "singularity"</h2>
+<div class="card floor">
+  <p>Honestly: <b>we think the word is being used too broadly</b> — that's our own series'
+  position (Mass Awakening). The two common pictures — machines surpass us, or everything
+  merges into one — are both <i>the same line</i>, just read from opposite ends. The
+  Prependic essay's reframe is that the interesting direction is <b>perpendicular</b> to
+  that line: not a better ending, but intelligence oriented across the whole frame of
+  optimizing toward a goal.</p>
+  <p>So when we say "singularity," we mean <b>an open question, not an event we are
+  announcing.</b> We do not claim it is near, achievable on a schedule, or that this work
+  produces it. A claim like "we will achieve the singularity" is, by our own tool's
+  measure, <i>unresolvable</i> — no checkable criterion, no timeframe — so it is flagged
+  and kept out of the ledger. The honest version is a hypothesis with no number on it, and
+  that absence is the point.</p>
+</div>
+
+<h2>The honesty floor</h2>
+<div class="card floor">
+  <p>What we explicitly <b>do not</b> claim:</p>
+  <ul>
+    <li>That any of this beats a GPU, or is a new kind of computer that's been built. It hasn't.</li>
+    <li>That the coupling/oscillator experiments out-compute classical methods. In software, they tie.</li>
+    <li>That a probability of "achieving the singularity" exists. It's unfalsifiable; we refuse to fabricate one.</li>
+    <li>That the night cycle, gated-hands, or gap-framing hypotheses are proven. They're pre-registered and unrun.</li>
+  </ul>
+  <p class="honest" style="margin-bottom:0">If a claim here can't be checked by a stranger,
+  it's labeled a question. That discipline is the whole product.</p>
+</div>
+
+<footer>
+  <p><b>Prepende</b> is open source (MIT). The calibration tool, every experiment's code,
+  and the data behind these charts are in the repository — verify any number yourself.</p>
+  <p>Built by Ryan Amerio. Essays voice-written by Ryan; software co-written with Claude.
+  Nothing here is investment, medical, or scientific advice.</p>
+</footer>
+
+</div>
+</body>
+</html>

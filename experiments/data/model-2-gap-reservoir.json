@@ -1,0 +1,12 @@
+{
+  "name": "Gap / coupling reservoir (telepathy-proxy)",
+  "status": "real inter-reservoir transfer; NOT telepathy",
+  "data": {
+    "recovery_gap_closed_R2": -0.03,
+    "recovery_gap_open_R2_easy": 0.9,
+    "recovery_hard_regime_peak_R2": 0.42,
+    "bidirectional_high_c": "synchronizes and degrades"
+  },
+  "honest_score": 4.0,
+  "verdict": "information crosses the gap only when open; a narrow channel transmitting signal, not mind-reading"
+}
