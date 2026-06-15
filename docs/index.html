@@ -42,6 +42,13 @@
   li{margin:5px 0}
   code{background:#eef0ee;border-radius:5px;padding:1px 6px;font-size:14px}
   svg{display:block;max-width:100%}
+  img{max-width:100%;border-radius:10px;border:1px solid var(--line);display:block}
+  .gallery{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .gallery figure{margin:0}
+  .gallery figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+  @media(max-width:680px){.gallery{grid-template-columns:1fr}}
+  .log h3{margin-top:18px}
+  .log .date{color:var(--blue);font-weight:600}
   footer{margin:60px 0 40px;color:var(--muted);font-size:14px;border-top:1px solid var(--line);padding-top:20px}
   .series li{margin:7px 0}
   /* mechanism animations */
@@ -222,6 +229,36 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
   measure, <i>unresolvable</i> — no checkable criterion, no timeframe — so it is flagged
   and kept out of the ledger. The honest version is a hypothesis with no number on it, and
   that absence is the point.</p>
+</div>
+
+<h2>Follow the experiments</h2>
+<p class="muted">A running log — each entry dated, with what we tried, the real result,
+and what it does (and does not) show. New entries are appended as experiments run.</p>
+<div class="card log">
+  <h3><span class="date">2026-06-15</span> · Resolvability axis shipped</h3>
+  <p>The night cycle surfaced a real idea — "falsifiability is orthogonal to calibration."
+  Built it into the tool; it now auto-flags unresolvable claims (a "we'll achieve the
+  singularity" claim scores 0.30 and is refused). <span class="muted">Result: feature live + tested.</span></p>
+  <h3><span class="date">2026-06-14</span> · Calibration ledger (n=8)</h3>
+  <p>Locked 8 predictions; 4 resolved, including an honest miss kept on the record.
+  Brier 0.13, skill +0.41. <span class="muted">Result: the tool works; calibration only means much at n≥30.</span></p>
+  <h3><span class="date">2026-06-14</span> · Gap reservoir + hard regime</h3>
+  <p>A signal shown only to A is recovered from B alone — but only when the gap is open
+  (closed → R²≈0). With noise added, recovery climbs gradually; a pre-registered shape
+  prediction scored ~4/5. <span class="muted">Result: real transfer, not telepathy.</span></p>
+  <h3><span class="date">2026-06-14</span> · Ising machine benchmark (n=12→120)</h3>
+  <p>Finds 99.6–100% of the best-known cut at every size, but ties simulated annealing
+  (SA edges it at n≥80). <span class="muted">Result: a valid solver, no quality edge; hardware energy-per-solution is the open question.</span></p>
+</div>
+
+<h2>Concept art</h2>
+<p class="muted">Illustrations of what the ideas might look like as hardware — concept
+renders, not photographs of working devices. They help you picture it; they prove nothing.</p>
+<div class="gallery">
+  <figure><img src="assets/build-a-bench.png" alt="bench build concept render"><figcaption>The ~$180 bench build — concept render (op-amp oscillators + a coupling mesh).</figcaption></figure>
+  <figure><img src="assets/cymatics-sand.png" alt="cymatics standing waves in sand"><figcaption>Cymatics: sand self-organizing into standing waves. A real phenomenon — and a poor reservoir.</figcaption></figure>
+  <figure><img src="assets/prepende-cell-concept.png" alt="the prepende cell concept"><figcaption>"The prepende cell" — concept illustration of compute living in the coupling gap.</figcaption></figure>
+  <figure><img src="assets/suspended-presence.png" alt="a suspended self-sustaining presence"><figcaption>A self-sustaining "presence" held in the gap — concept illustration.</figcaption></figure>
 </div>
 
 <h2>The honesty floor</h2>
