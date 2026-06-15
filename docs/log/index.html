@@ -33,6 +33,14 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-15 · standard benchmark</div>
+  <h2>NARMA10 — the gap loses on the standard benchmark too <span class="tag miss">negative · pattern holds</span></h2>
+  <p>We ran NARMA10 (the canonical reservoir-computing task: a 10th-order nonlinear autoregressive moving-average sequence the reservoir must predict from its random input stream). Setup: a gap-coupled two-reservoir system (two N=50 reservoirs joined by a thin rank-1 gap, coupling c=0.4, readout from the second reservoir's 50 states) versus a single reservoir of matched total size (100 neurons, readout from a random 50-neuron subset). We matched readout <i>dimensionality</i> rather than total neuron count so the comparison isolates architectural structure, not readout capacity. 5 seeds, ridge-regression readout, metric NRMSE (lower is better).</p>
+  <p><b>Result:</b> gap NRMSE <b>0.53</b> vs single <b>0.40</b> — the single reservoir wins clearly and consistently across all 5 seeds. This is the second independent task, after the [T2] signal-recovery test, where the literal "compute in the gap" architecture underperforms a matched monolithic reservoir. As a performance substrate, the gap does not help on real tasks. The perpendicular thesis lives on as a measurable structure <i>inside</i> learning — resolvability and H1 — not as this physical gap.</p>
+  <p class="muted">Code: <code>sim_narma_reservoir.py</code> · data: <code>experiments/data/narma10.json</code></p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-15 · night</div>
   <h2>Big-n degradation — largely intrinsic, not a budget artifact <span class="tag miss">caveat resolved · deflationary</span></h2>
   <p>We re-ran the big-n comparison with equal, larger restart counts (OIM 40 / SA 40, vs the earlier unequal OIM 20 / SA 12). OIM/best barely moved: n=160 97.3% (was 97.4%), n=200 95.2% (was 94.3%), n=250 94.8% (was 93.6%) — roughly +1 point at n≥200, flat at n=160 — while SA held 100% and OIM's exact-optimum hit-rate stayed 0%. Doubling and equalizing the budget did not close the gap, so the cut-quality degradation beyond n~120 is largely intrinsic to the OIM at this scale, not an artifact of the earlier unequal budget. The prior entry's "preliminary, pending matched recheck" caveat is now substantially resolved — in the deflationary direction. Remaining caveat: equal restart count is still not equal wall-time, so a wall-time-matched check would firm this further; but the budget confound is largely ruled out.</p>
