@@ -33,6 +33,14 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-15 · evening</div>
+  <h2>Perpendicular, re-aimed: H1 orthogonal-gradient <span class="tag ok">toy proof · supportive</span></h2>
+  <p><b>Up front:</b> the frontier H1 test is <b>pre-registered at p=0.5 and UNRESOLVED</b> — nothing below resolves it. We re-aimed "perpendicular" from a prior physical-gap framing (abandoned: it tied then lost to a classical baseline) to a measurable claim about learning: <b>H1</b> — the parameter-space direction that most improves cross-task generalization is near-orthogonal to the direction that most reduces in-distribution training loss. The frontier test needs ML infrastructure (GPU, real networks) we don't have here.</p>
+  <p>Toy proof of the measurement, runnable here: a tiny shared-feature MLP, two related regression tasks (shared feature map, different random readouts), 5 seeds. Mean cosine(grad in-distribution, grad held-out) = <b>−0.04</b> overall (early −0.21, settling to −0.02), consistently near-orthogonal across seeds. At toy scale the two gradient directions are near-orthogonal — the first learning-internal sign, beyond the resolvability axis, that the perpendicular reading may hold where we relocated it.</p>
+  <p class="muted">Honest scope: a toy proof that the measurement is meaningful — NOT the frontier claim and NOT a resolution of H1. "Related" here means a specific simple thing (shared features, different readout); real transfer is richer. The early slight anti-alignment then drift to ~0 is interesting but n=5 toy seeds. Suggestive, not proof.</p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-15 · later still</div>
   <h2>Big-n scaling — the tie is a small-n result <span class="tag miss">preliminary · headline narrowed</span></h2>
   <p>Extending OIM vs SA to bigger random Max-Cut (p=0.5): OIM/best falls from 99.75% at n=120 to 97.4% (n=160), 94.3% (n=200), 93.6% (n=250), while SA holds 100% and OIM never reaches the exact optimum (exact-optimum hit-rate 0% at every tested n above 120). So the earlier "ties SA on cut quality to n=120" looks like a small-n phenomenon: beyond ~n=120, OIM's cut quality — not only its exact-optimum rate — appears to degrade relative to SA.</p>

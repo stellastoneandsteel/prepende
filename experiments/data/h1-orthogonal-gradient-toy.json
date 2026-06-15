@@ -1,0 +1,8 @@
+{
+  "study": "H1-orthogonal-gradient-toy",
+  "seeds": 5,
+  "mean_cos_overall": -0.0399,
+  "mean_cos_early": -0.2073,
+  "mean_cos_late": -0.0161,
+  "toy_verdict": "ORTHOGONAL (|cos|<0.15)"
+}
