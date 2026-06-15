@@ -32,6 +32,7 @@
   .c-blue{color:var(--blue);border-color:var(--blue);background:#e9f1fb}
   .c-amber{color:var(--amber);border-color:var(--amber);background:#fbf2df}
   .c-red{color:var(--red);border-color:var(--red);background:#fbeaea}
+  .c-violet{color:var(--violet);border-color:var(--violet);background:#ece9fb}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
   @media(max-width:680px){.grid{grid-template-columns:1fr}}
   a{color:var(--blue);text-decoration:none}
@@ -70,7 +71,10 @@
     hash-locked AI predictions with real calibration scoring — proof that a system's
     confidence is trustworthy, not a promise that it is. <b>A question:</b> a series of
     essays and software experiments asking whether intelligence lives <i>along</i> the
-    optimization line, or on an axis perpendicular to it. Everything here separates what
+    optimization line, or on an axis perpendicular to it. Both are run by one engine —
+    <i>Engram</i>, the prepende loop, which circles rather than optimizes toward a goal —
+    built from the same posture it tests, so it stands as a specimen of the question, not
+    proof of it. Everything here separates what
     we <i>tested</i> from what we <i>suggest</i> from what we <i>cannot yet claim.</i>
   </div>
 </header>
@@ -232,6 +236,194 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
   evidence. Whether it beats directed brainstorming is a separate, pre-registered, unrun test.</p>
 </div>
 
+<h2>The engine behind the experiments</h2>
+<p class="muted">Everything above was produced by one system, run on a loop — and that
+system is built on the same idea the essays argue for. So it isn't only the lab. It's also a
+specimen.</p>
+
+<div class="card">
+  <h3>Engram — the prepende loop <span class="chip c-violet">the system · n=1</span></h3>
+  <p>The experiments here weren't planned on a whiteboard and then executed. They were surfaced
+  by a loop that doesn't optimize toward a goal — it <i>circles</i>: it wanders over a memory
+  that compounds, notices a surprising junction, gates out everything that isn't both surprising
+  <i>and</i> valid, tests what's left, and folds the result back into the memory it wanders next.
+  We call the loop <b>Engram</b>. The diagram is deliberately a silhouette, not a schematic —
+  enough to see the shape, not the wiring.</p>
+  <svg viewBox="0 0 640 352" role="img" aria-label="The Engram loop: an undirected recursion ring around a shared memory, with a signal crossing the gap at the center">
+    <defs>
+      <radialGradient id="eng-core" cx="50%" cy="42%" r="62%">
+        <stop offset="0%" stop-color="#ffffff"/>
+        <stop offset="55%" stop-color="#ece9fb"/>
+        <stop offset="100%" stop-color="#d8d2f3"/>
+      </radialGradient>
+      <linearGradient id="eng-ring" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#b9b3e6"/>
+        <stop offset="100%" stop-color="#cdd4de"/>
+      </linearGradient>
+      <filter id="eng-shadow" x="-20%" y="-40%" width="140%" height="200%">
+        <feDropShadow dx="0" dy="1.5" stdDeviation="2.4" flood-color="#16233a" flood-opacity="0.16"/>
+      </filter>
+      <filter id="eng-glow" x="-160%" y="-160%" width="420%" height="420%">
+        <feGaussianBlur stdDeviation="3" result="b"/>
+        <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+    </defs>
+    <text x="0" y="14" font-size="11" fill="#5b6675"><tspan font-weight="700" letter-spacing="1.5" fill="#4a3f9e">ENGRAM</tspan>  ·  the prepende loop — it circles; it doesn’t optimize toward a goal</text>
+
+    <!-- spokes: every stage draws from the one memory -->
+    <g stroke="#dcd8cf" stroke-width="1" stroke-dasharray="1 4" stroke-linecap="round">
+      <line x1="320" y1="195" x2="320" y2="63"/>
+      <line x1="320" y1="195" x2="538.7" y2="154.2"/>
+      <line x1="320" y1="195" x2="455.2" y2="301.8"/>
+      <line x1="320" y1="195" x2="184.8" y2="301.8"/>
+      <line x1="320" y1="195" x2="101.3" y2="154.2"/>
+    </g>
+
+    <!-- the loop -->
+    <ellipse cx="320" cy="195" rx="230" ry="132" fill="none" stroke="#ece9e2" stroke-width="6"/>
+    <ellipse cx="320" cy="195" rx="230" ry="132" fill="none" stroke="url(#eng-ring)" stroke-width="2" stroke-dasharray="2 9" stroke-linecap="round">
+      <animate attributeName="stroke-dashoffset" from="0" to="-110" dur="3.4s" repeatCount="indefinite"/>
+    </ellipse>
+    <!-- clockwise cue -->
+    <g transform="translate(482.6,101.7) rotate(30)"><path d="M-7,-5.5 L7,0 L-7,5.5 Z" fill="#9590cf"/></g>
+
+    <!-- the gap / shared memory -->
+    <circle cx="320" cy="195" r="66" fill="#4a3f9e" opacity="0.10" filter="url(#eng-glow)"/>
+    <circle cx="320" cy="195" r="54" fill="none" stroke="#4a3f9e" stroke-width="1.4">
+      <animate attributeName="r" values="54;80" dur="3.6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0" dur="3.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="320" cy="195" r="54" fill="none" stroke="#4a3f9e" stroke-width="1.4">
+      <animate attributeName="r" values="54;80" dur="3.6s" begin="1.8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;0" dur="3.6s" begin="1.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="320" cy="195" r="54" fill="url(#eng-core)" stroke="#4a3f9e" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <text x="320" y="189" text-anchor="middle" font-size="13" font-weight="700" fill="#4a3f9e">the gap</text>
+    <text x="320" y="205" text-anchor="middle" font-size="9.5" fill="#6a6f7e">memory · compounds</text>
+    <!-- “telepathy”: a signal crosses the gap -->
+    <line x1="248" y1="226" x2="392" y2="226" stroke="#1f5fae" stroke-width="1.3" stroke-dasharray="3 5" opacity="0.4"/>
+    <g filter="url(#eng-glow)">
+      <circle r="4.5" fill="#1f5fae"><animateMotion dur="2.4s" repeatCount="indefinite" path="M252,226 L388,226"/></circle>
+      <circle r="4.5" fill="#1f5fae" opacity="0.5"><animateMotion dur="2.4s" begin="1.2s" repeatCount="indefinite" path="M252,226 L388,226"/></circle>
+    </g>
+    <text x="320" y="268" text-anchor="middle" font-size="9.5" font-style="italic" fill="#1f5fae">“telepathy” — a signal crosses the gap</text>
+
+    <!-- recursion: glowing thoughts travel clockwise -->
+    <g filter="url(#eng-glow)">
+      <circle r="5.5" fill="#4a3f9e"><animateMotion dur="7s" repeatCount="indefinite" path="M320,63 A230,132 0 1 1 320,327 A230,132 0 1 1 320,63"/></circle>
+      <circle r="5.5" fill="#6157c4"><animateMotion dur="7s" begin="2.33s" repeatCount="indefinite" path="M320,63 A230,132 0 1 1 320,327 A230,132 0 1 1 320,63"/></circle>
+      <circle r="5.5" fill="#4a3f9e"><animateMotion dur="7s" begin="4.66s" repeatCount="indefinite" path="M320,63 A230,132 0 1 1 320,327 A230,132 0 1 1 320,63"/></circle>
+    </g>
+
+    <!-- stage nodes -->
+    <g>
+      <g filter="url(#eng-shadow)"><rect x="238" y="42" width="164" height="42" rx="11" fill="#ffffff" stroke="#e6e3db"/></g>
+      <circle cx="259" cy="63" r="13" fill="#4a3f9e"/>
+      <text x="259" y="67" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">1</text>
+      <text x="280" y="60" font-size="12.5" font-weight="700" fill="#16233a">Wander</text>
+      <text x="280" y="74" font-size="9" fill="#5b6675">undirected recombination</text>
+
+      <g filter="url(#eng-shadow)"><rect x="456.7" y="133.2" width="164" height="42" rx="11" fill="#ffffff" stroke="#e6e3db"/></g>
+      <circle cx="477.7" cy="154.2" r="13" fill="#4a3f9e"/>
+      <text x="477.7" y="158.2" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">2</text>
+      <text x="498.7" y="151.2" font-size="12.5" font-weight="700" fill="#16233a">Notice</text>
+      <text x="498.7" y="165.2" font-size="9" fill="#5b6675">a surprising junction</text>
+
+      <g filter="url(#eng-shadow)"><rect x="373.2" y="280.8" width="164" height="42" rx="11" fill="#ffffff" stroke="#e6e3db"/></g>
+      <circle cx="394.2" cy="301.8" r="13" fill="#4a3f9e"/>
+      <text x="394.2" y="305.8" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">3</text>
+      <text x="415.2" y="298.8" font-size="12.5" font-weight="700" fill="#16233a">Gate</text>
+      <text x="415.2" y="312.8" font-size="9" fill="#5b6675">surprising AND valid</text>
+
+      <g filter="url(#eng-shadow)"><rect x="102.8" y="280.8" width="164" height="42" rx="11" fill="#ffffff" stroke="#e6e3db"/></g>
+      <circle cx="123.8" cy="301.8" r="13" fill="#4a3f9e"/>
+      <text x="123.8" y="305.8" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">4</text>
+      <text x="144.8" y="298.8" font-size="12.5" font-weight="700" fill="#16233a">Test</text>
+      <text x="144.8" y="312.8" font-size="9" fill="#5b6675">pre-register, then check</text>
+
+      <g filter="url(#eng-shadow)"><rect x="19.3" y="133.2" width="164" height="42" rx="11" fill="#ffffff" stroke="#e6e3db"/></g>
+      <circle cx="40.3" cy="154.2" r="13" fill="#4a3f9e"/>
+      <text x="40.3" y="158.2" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">5</text>
+      <text x="61.3" y="151.2" font-size="12.5" font-weight="700" fill="#16233a">Remember</text>
+      <text x="61.3" y="165.2" font-size="9" fill="#5b6675">it compounds</text>
+    </g>
+  </svg>
+  <p class="muted" style="margin-bottom:0">The ring is the recursion. The center is <b>the
+  gap</b> — one memory every turn reads from and writes back into — and the dot crossing it is
+  the channel the series keeps calling <i>"telepathy"</i>: a signal that arrives in the next turn
+  without being aimed there.</p>
+</div>
+
+<div class="card">
+  <h3>Why the engine is itself part of the research</h3>
+  <p>Read the loop against the essays and it stops looking like a coincidence. No.1 says
+  <i>gate the hands, free the mind</i> — Engram spends its whole safety budget on the
+  <b>Gate</b> and leaves the <b>Wander</b> uncensored. No.3 says the <i>contrast in the gap</i>
+  generates everything — Engram's compute lives in the gap, not the nodes. The <b>night cycle</b>
+  (Experiment 4) is literally one beat of this loop; the <b>calibration ledger</b> (Experiment 3)
+  <i>is</i> its Test stage; the <b>gap reservoir</b> (Experiment 2) is the channel at its center.
+  The series describes a posture. The engine runs it.</p>
+  <p>Which makes the engine the first thing the thesis can be tested <i>on</i>. The open question
+  the essays raise — does an unaimed loop over a compounding memory surface more novel-and-valid
+  ideas than a directed one? — is a question about Engram itself. Experiment 4 is n=1 toward
+  answering it. The system isn't only the author of the research; it's also the specimen, held to
+  the same honesty floor as everything else on this page.</p>
+  <p class="honest">Honest limit: Engram is a software loop with a memory and a gate — not a mind,
+  not conscious, not literally telepathic. "The gap" and "telepathy" are the measured channel from
+  Experiment 2 plus a metaphor for a signal arriving unaimed; nothing more is claimed. Whether the
+  loop actually beats directed work is the same pre-registered, unrun test as Experiment 4 — so for
+  now this is a labeled <code>[P]</code> posture, not a result.</p>
+</div>
+
+<div class="card">
+  <h3>Why this is a different bet — and what it would imply</h3>
+  <p class="muted">No architecture here, just the shape of the wager. Each line is something the
+  mainstream does one way and Engram does another — and what it would mean <i>if the difference
+  holds</i>. Most are labeled <code>[T]</code> (testable) or <code>[P]</code> (posture): staked
+  in the open, losable in the open.</p>
+
+  <p><b>1 · No goal to climb.</b> The mainstream optimizes — descend a loss, maximize a reward,
+  hit an objective; intelligence is the summit you climb toward. Engram doesn't optimize toward
+  a goal — it <i>circles</i>, and what counts as intelligence is what compounds in the loop, not
+  a peak it reaches. <b>Implies:</b> you can surface the valuable idea you could never have
+  specified in advance — discovery that doesn't need a target. <code>[P]</code></p>
+
+  <p><b>2 · The gate is on the hands, not the mind.</b> Mainstream safety shapes the
+  <i>thinking</i> — tune, filter, and penalize the model's reasoning until the output is safe,
+  which also sands off the novelty. Engram leaves the wander uncensored and spends its whole
+  safety budget at the <i>action boundary</i>: what may leave the system, not what it may think.
+  <b>Implies:</b> safety and novelty stop being a trade-off — more careful about actions and
+  more free in cognition, at the same time. <code>[T]</code></p>
+
+  <p><b>3 · The memory compounds, so the model needn't.</b> Mainstream inference is effectively
+  stateless — every call starts cold, and getting smarter means retraining a bigger model.
+  Engram's value lives in a memory that accumulates across turns and feeds the next one.
+  <b>Implies:</b> the asset is the compounding track record, not the weights — a modest model
+  plus a memory that grows could rival a far larger one retrained from scratch. <code>[T]</code></p>
+
+  <p><b>4 · Honesty is enforced in code, not promised.</b> Mainstream confidence is asserted —
+  "90% sure," a benchmark number — with nothing proving the claim came <i>before</i> the outcome.
+  Here a prediction is hash-locked before it resolves, and a claim no stranger could check is
+  refused outright. <b>Implies:</b> trust becomes something you can verify rather than something
+  you have to extend. <span class="muted">(the one piece already shipping.)</span></p>
+
+  <p><b>5 · Compute could live in the gap, not the nodes.</b> Mainstream computation happens in
+  the nodes — transistors, weights. The prepende suggestion is that it can live in the
+  <i>coupling between</i> systems instead (the hardware angle, below). <b>Implies, if hardware
+  ever shows it:</b> a different energy economics for computing — and, just as honestly, this is
+  an old research lineage and an unproven framing, not a result. <code>[P]</code></p>
+
+  <p><b>6 · The system is its own first subject.</b> Because the engine is built from the thesis,
+  it is at once the author of this research and a specimen of it — it can be studied as evidence
+  about its own premise. <b>Implies:</b> the work compounds on itself; every turn is both a
+  result and data about whether the posture earns its keep. <code>[P]</code></p>
+
+  <p class="honest" style="margin-bottom:0">The honest size of all this: a coherent <b>bet</b>,
+  not a won argument. One line (the ledger) ships today; the rest are pre-registered postures we
+  can be wrong about in public. They're stated plainly so you can hold us to each one — which is
+  the whole point.</p>
+</div>
+
 <h2>How it differs from a GPU</h2>
 <p class="muted">The same lineage everyone is racing down — taken one step further.</p>
 <div class="card">
@@ -321,6 +513,7 @@ renders, not photographs of working devices. They help you picture it; they prov
     <li>That the coupling/oscillator experiments out-compute classical methods. In software, they tie.</li>
     <li>That a probability of "achieving the singularity" exists. It's unfalsifiable; we refuse to fabricate one.</li>
     <li>That the night cycle, gated-hands, or gap-framing hypotheses are proven. They're pre-registered and unrun.</li>
+    <li>That the engine ("Engram") is a mind, is conscious, or performs literal telepathy. It's a software loop with a memory and a gate; "the gap" is the measured channel from Experiment 2, and "telepathy" is a metaphor for a signal arriving unaimed.</li>
   </ul>
   <p class="honest" style="margin-bottom:0">If a claim here can't be checked by a stranger,
   it's labeled a question. That discipline is the whole product.</p>
