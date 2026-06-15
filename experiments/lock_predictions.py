@@ -12,8 +12,7 @@ Two honestly-separated groups:
     later in the open. This is the audited track record (gate c).
 
 Re-runnable: truncates the ledger and rebuilds it deterministically (except timestamps).
-The relational-constraint prediction is
-stated generically about "an AI's action-gates".
+The relational-constraint prediction is stated generically about an AI's action-gates.
 """
 import os, sys, time
 
