@@ -101,6 +101,33 @@ testable <code>[T]</code> claims and philosophy <code>[P]</code> claims.</p>
 <p class="muted">Run in software, on real data. These are simulations and mechanism
 illustrations — not hardware results, and not proof of the larger thesis. Honest scores shown.</p>
 
+<div class="card">
+  <h3>The three models, animated</h3>
+  <svg viewBox="0 0 600 330" role="img" aria-label="three animated mechanisms">
+    <text x="0" y="16" font-size="13" font-weight="600" fill="#16233a">1 · coupled oscillators — phases lock to 0 / π</text>
+    <clipPath id="aosc"><rect x="0" y="26" width="600" height="66"/></clipPath>
+    <g clip-path="url(#aosc)">
+      <g class="scroller"><path class="osc" d="M0,52 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0"/></g>
+      <g class="scroller"><path class="osc anti" d="M0,78 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0 q30,20 60,0 q30,-20 60,0"/></g>
+    </g>
+    <text x="0" y="120" font-size="13" font-weight="600" fill="#16233a">2 · the gap — a signal crosses A → gap → B</text>
+    <rect x="20" y="134" width="70" height="44" rx="7" fill="#eaf6f1" stroke="#0f6e56"/><text x="55" y="161" text-anchor="middle" font-size="12" fill="#16233a">A</text>
+    <rect x="200" y="134" width="200" height="44" rx="7" fill="#ece9fb" stroke="#4a3f9e" stroke-dasharray="5 4"/><text x="300" y="161" text-anchor="middle" font-size="12" fill="#4a3f9e">the gap</text>
+    <rect x="510" y="134" width="70" height="44" rx="7" fill="#eaf6f1" stroke="#0f6e56"/><text x="545" y="161" text-anchor="middle" font-size="12" fill="#16233a">B</text>
+    <line x1="90" y1="156" x2="200" y2="156" stroke="#aaa"/><line x1="400" y1="156" x2="510" y2="156" stroke="#aaa"/>
+    <circle r="6" fill="#1f5fae"><animateMotion dur="2.6s" repeatCount="indefinite" path="M90,156 L510,156"/></circle>
+    <circle r="6" fill="#1f5fae" opacity="0.5"><animateMotion dur="2.6s" begin="1.3s" repeatCount="indefinite" path="M90,156 L510,156"/></circle>
+    <text x="0" y="210" font-size="13" font-weight="600" fill="#16233a">3 · cymatics — vibration finds the standing-wave nodes</text>
+    <circle cx="300" cy="280" r="4" fill="none" stroke="#8a5a0b" stroke-width="2"><animate attributeName="r" values="4;62" dur="2.4s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.85;0" dur="2.4s" repeatCount="indefinite"/></circle>
+    <circle cx="300" cy="280" r="4" fill="none" stroke="#8a5a0b" stroke-width="2"><animate attributeName="r" values="4;62" dur="2.4s" begin="0.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.85;0" dur="2.4s" begin="0.8s" repeatCount="indefinite"/></circle>
+    <circle cx="300" cy="280" r="4" fill="none" stroke="#8a5a0b" stroke-width="2"><animate attributeName="r" values="4;62" dur="2.4s" begin="1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0.85;0" dur="2.4s" begin="1.6s" repeatCount="indefinite"/></circle>
+    <rect x="238" y="296" width="124" height="8" rx="3" fill="#b4b2a9"/>
+  </svg>
+  <p class="muted" style="margin-bottom:0">Two phases lock together, one opposite (Ising spins ±1);
+  a private signal reaches B only when the gap is open; sand settles onto the nodes.
+  Honest scores: ~4.5 / ~4 / ~3 out of 10.</p>
+</div>
+
 <!-- EXP 1 -->
 <div class="card">
   <h3>1 · Coupled-oscillator Ising machine <span class="chip c-teal">real · ties classical · ~4.5/10</span></h3>
@@ -192,6 +219,20 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
   unaimed, then was checked and built.</p>
   <p class="honest">Honest limit: one round (n=1) is a demonstration of the mechanism, not
   evidence. Whether it beats directed brainstorming is a separate, pre-registered, unrun test.</p>
+</div>
+
+<h2>How it differs from a GPU</h2>
+<p class="muted">The same lineage everyone is racing down — taken one step further.</p>
+<div class="card">
+  <p><b>1 · Today — CPU + GPU.</b> Processor and memory are separate; a stored program is
+  fetched and executed over numbers; most of the energy goes to moving data.</p>
+  <p><b>2 · The "we don't need GPUs" wave (2024–26).</b> Matmul-free models, in-memory /
+  analog, neuromorphic, thermodynamic — all attack the same paradigm's costs, but still
+  execute designed operations.</p>
+  <p><b>3 · Prepende.</b> No stored program, no trained internal weights — a self-sustaining
+  presence in the coupling is the computation; you only read a thin linear layer off the top.</p>
+  <p class="honest" style="margin-bottom:0">The one-sentence difference: everyone else makes
+  the matrix-math cheaper or closer to memory. We don't do the matrix-math at all.</p>
 </div>
 
 <h2>What we're suggesting (and trying to understand)</h2>
