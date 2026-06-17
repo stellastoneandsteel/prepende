@@ -33,6 +33,15 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-17 · the sparse niche</div>
+  <h2>First break in the pattern: the OIM edges past simulated annealing on sparse graphs <span class="tag ok">pre-registered · 2 hits</span></h2>
+  <p><b>The favorable regime, found.</b> After a week of the substrate tying or losing, two pre-registered batches tested Max-Cut on <b>sparse</b> (random 3-regular) versus <b>dense</b> (Erdos-Renyi p=0.5) graphs, scaling to N=400, against a greedy local-search baseline and a budget-matched simulated-annealing baseline. Cut quality is a ratio, OIM best cut over baseline best cut, so above 1.0 means the OIM found the better cut.</p>
+  <p><b>Result.</b> On sparse graphs the OIM beat SA: ratio <b>1.036 at N=200, 1.052 at N=400</b> (3.6 to 5.2 percent better cuts), the edge growing with size and surviving the swap from greedy local search to a real SA, which rules out the simplest weak-baseline explanation, though not a tuned or state-of-the-art solver. On dense graphs it tied at N=200 (1.00) and slipped mildly at N=400 (0.983); the collapse pre-registered for dense did not happen, a miss on the pessimistic side. The split is clean by structure.</p>
+  <p><b>Cheap coupling works.</b> Quantizing the coupling matrix retained <b>100% at 4 bits, 98.8% at 2 bits, and 98.2% at 1 bit</b> (sign only). Coarse hybrid-digital coupling costs almost nothing in this software model.</p>
+  <p class="muted">Caveats: software and quality-only (energy and speed, the real analog question, are unmeasured); baselines budget-matched and modest, not state-of-the-art; sparse means 3-regular specifically; N ceiling 400 against the field's 1k to 10k. The first non-deflationary, pre-registered, honesty-checked signal in the program. It aims the work at sparse problems with cheap coupling. Not a victory. Code: <code>experiments/sim_oim_sparse_niche.py</code>, <code>experiments/sim_oim_sa_check.py</code>.</p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-17 · the strength mode</div>
   <h2>Circuit OIM finds the optimal cuts; energy stays a hardware question <span class="tag ok">strength confirmed · honest</span></h2>
   <p><b>Pivot to where the substrate has earned credit.</b> The reservoir thread closed deflationary, so we tested the substrate's actual strength — the above-threshold Ising spin. A circuit-level SHIL-parametron oscillator Ising machine (ngspice, antiferromagnetic coupling on graph edges, 8 random restarts) was run on five small graphs. It recovers the brute-force optimal cut on every one (best-found = optimum on 4-cycle, 5-cycle, K4, K5, and a random 6-node graph), but only about 40% of restarts hit it — a heuristic that needs restarts, not a one-shot solver. Two contracts were hash-locked first; the strict 80%-per-restart bar missed, the optimum-recovery held.</p>
