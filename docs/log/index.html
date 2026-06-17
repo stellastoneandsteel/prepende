@@ -33,6 +33,14 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-17 · the noise floor</div>
+  <h2>The XOR edge is real — and noise-fragile <span class="tag miss">pre-registered miss · honest</span></h2>
+  <p><b>The test that matters for hardware.</b> Batch 5 showed the parametron reservoir beats a linear delay-line on temporal-XOR by ~20 points. But a <i>physical</i> reservoir is noisy, and if the edge can't survive noise it isn't a real computational advantage. We pre-registered two contracts (cids <code>7c77b87ca14f</code>, <code>b38c72b3e257</code>) before the run: (1) the margin survives moderate noise — at Gaussian readout noise σ=0.3 (feature-std units), reservoir−linear accuracy ≥ 0.10 (p=0.70); (2) it has a ceiling — by σ=1.0 the margin drops below 0.10 (p=0.60). Noise was applied identically to both methods; hyperparameters were frozen at the clean validation optimum and the readout retrained at each noise level; 5 seeds.</p>
+  <p><b>Result — primary miss, boundary hit.</b> The edge is brittle. At only σ=0.1 the reservoir falls from 0.677 to <b>0.532</b> and the margin collapses from +0.20 to <b>+0.05</b>; at σ=0.3 it is +0.03 (miss — we'd bet it would hold ≥0.10); by σ=1.0 it is +0.01 (boundary bet hit). A tuned ESN reference collapses the same way (0.79 → 0.50). The XOR advantage lives in low-amplitude, high-rank nonlinear features that readout noise erases. Net: the reservoir mode's one genuine advantage does not survive realistic noise — as a physical computer this fabric still does not earn its keep. Another pre-registered bet logged as lost.</p>
+  <p class="muted">Code: <code>experiments/sim_reservoir_noise.py</code> (numpy) · data <code>experiments/data/reservoir_noise.json</code>. Open question (Batch 7): does scaling N add the redundancy that would make the nonlinear features noise-robust?</p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-17 · the boundary</div>
   <h2>The reservoir's boundary — weak on linear tasks, decisive on nonlinear memory <span class="tag ok">pre-registered · two hits</span></h2>
   <p><b>The question.</b> Batch 4 left the coupled sub-threshold parametron reservoir "valid but weak": a real reservoir (echo-state property holds, coupling even helped) that still loses to a trained linear filter on NARMA10 (0.52 vs 0.38 NRMSE). But NARMA10 is dominated by short-memory, near-linear structure — exactly the regime a linear filter handles — so that test cannot reveal a nonlinear reservoir's edge. The honest follow-up is not "is it good?" but "<i>where</i> is it good?"</p>

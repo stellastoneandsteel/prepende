@@ -200,9 +200,9 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
       <!--LEDGER:rel-->
       <polyline points="134,184 176,99 222,14" fill="none" stroke="#4a3f9e" stroke-width="2"/>
       <circle cx="134" cy="184" r="4" fill="#4a3f9e"/>
-      <circle cx="176" cy="99" r="5" fill="#4a3f9e"/>
+      <circle cx="176" cy="99" r="7" fill="#4a3f9e"/>
       <circle cx="222" cy="14" r="6" fill="#4a3f9e"/>
-      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.12 · skill +0.47</text>
+      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.17 · skill +0.28</text>
       <!--/LEDGER:rel-->
     </svg>
     <svg viewBox="0 0 270 220" role="img" aria-label="conviction vs resolvability">
@@ -215,7 +215,7 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
     </svg>
   </div>
   <p class="muted" style="font-size:.82rem;margin-top:.5rem"><!--LEDGER:stamp-->
-      ledger: 7 resolved · Brier 0.12 · skill +0.47 · auto-rebuilt 2026-06-17T08:47:03+00:00 (UTC)
+      ledger: 9 resolved · Brier 0.17 · skill +0.28 · auto-rebuilt 2026-06-17T08:55:20+00:00 (UTC)
       <!--/LEDGER:stamp--></p>
   <p><b>Why it matters:</b> a claim can be supremely confident and still <i>uncheckable</i>.
   Those aren't miscalibrated — they're off the plane entirely. The ledger auto-flags them
@@ -480,14 +480,14 @@ specimen.</p>
 (and does not) show. To keep this page short, full entries live in the logbook; only the
 latest is summarized here.</p>
 <div class="card log">
-  <h3><span class="date">2026-06-17</span> · the reservoir's boundary — weak on linear tasks, decisive on nonlinear ones</h3>
-  <p>Batch 4 found the coupled sub-threshold parametron reservoir "valid but weak" — a real reservoir,
-  but beaten by a trained linear filter on NARMA10. Batch 5 asked the sharper question, pre-registered
-  first: on a temporal-XOR task a linear readout <i>structurally cannot</i> solve, the same reservoir
-  reaches <b>68%</b> vs the linear filter's <b>48% (chance)</b> — a +20-point win, with both pre-registered
-  predictions hitting (p=0.70 and p=0.85). The fabric is weak where linearity suffices and useful where
-  the task is nonlinear in its memory — the boundary, not just the verdict. (The measured parametron
-  Ising bit and the demoted reservoir bridge, from earlier the same day, are in the logbook.)
+  <h3><span class="date">2026-06-17</span> · the reservoir's edge is real — and noise-fragile</h3>
+  <p>Batch 5 found the parametron reservoir decisively beats a linear filter on a temporal-XOR task it
+  structurally can't compute (68% vs 48%-chance, +20 points, both pre-registered predictions hit). Batch 6
+  then pre-registered the test that matters for a <i>physical</i> device — does that edge survive noise? It
+  does not: just 10% readout noise collapses the reservoir to 53% and the +20-point margin to +5, essentially
+  gone by σ=1.0. We had bet (p=0.70) the edge would survive moderate noise and <b>lost that bet</b> (a logged
+  miss); the paired bet, that it erodes under heavy noise, hit. The advantage is real but lives in fragile
+  high-rank features — so as hardware this fabric still doesn't earn its keep.
   <span class="muted">Full detail → <a href="log/">the logbook</a>.</span></p>
   <p style="margin:8px 0 0"><a href="log/"><b>Full logbook →</b></a></p>
 </div>
@@ -724,6 +724,35 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
   (0.57 → 0.68). The earlier verdict wasn't wrong, it was incomplete: this fabric is weak where a linear
   filter already suffices and genuinely useful where the task is nonlinear in its memory.
   <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_boundary.py">Reproduce it</a> (numpy).</p>
+  <p style="margin-top:14px"><b>Batch 6 — does the edge survive noise?</b> A physical reservoir is noisy, so we
+  pre-registered the obvious follow-up and ran it: add Gaussian readout noise (in feature-std units),
+  identically to the reservoir and the linear baseline, and sweep it. The advantage is <b>fragile</b>:</p>
+  <svg viewBox="0 0 560 200" role="img" aria-label="temporal-XOR accuracy vs readout noise">
+    <text x="20" y="16" font-size="12" fill="#16233a" font-weight="700">Temporal-XOR accuracy vs readout noise σ — the edge is noise-fragile</text>
+    <line x1="70" y1="30" x2="70" y2="160" stroke="#bbb"/>
+    <line x1="70" y1="160" x2="520" y2="160" stroke="#bbb"/>
+    <line x1="70" y1="127.5" x2="520" y2="127.5" stroke="#7a2638" stroke-dasharray="4 3" opacity="0.5"/>
+    <text x="520" y="124" text-anchor="end" font-size="10" fill="#7a2638">chance 50%</text>
+    <polyline points="70,70.1 115,117.0 160,120.2 205,121.4 295,122.1 520,122.1" fill="none" stroke="#0f6e56" stroke-width="2"/>
+    <polyline points="70,135.3 115,133.6 160,131.8 205,131.9 295,130.2 520,124.9" fill="none" stroke="#1f5fae" stroke-width="2" opacity="0.7"/>
+    <circle cx="70" cy="70.1" r="3" fill="#0f6e56"/>
+    <text x="80" y="66" font-size="10" fill="#0f6e56">reservoir 0.68 (clean)</text>
+    <text x="150" y="110" font-size="10" fill="#0f6e56">→ 0.53 at σ=0.1</text>
+    <text x="300" y="140" font-size="10" fill="#1f5fae">linear (flat, at chance)</text>
+    <text x="70" y="175" font-size="9" fill="#5b6675" text-anchor="middle">0</text>
+    <text x="115" y="175" font-size="9" fill="#5b6675" text-anchor="middle">0.1</text>
+    <text x="205" y="175" font-size="9" fill="#5b6675" text-anchor="middle">0.3</text>
+    <text x="295" y="175" font-size="9" fill="#5b6675" text-anchor="middle">0.5</text>
+    <text x="520" y="175" font-size="9" fill="#5b6675" text-anchor="middle">1.0</text>
+    <text x="295" y="192" font-size="10" fill="#5b6675" text-anchor="middle">readout noise σ (feature-std units)</text>
+  </svg>
+  <p><b>Honest miss.</b> At just σ=0.1 readout noise the reservoir falls from 0.68 to 0.53 and the
+  +20-point margin collapses to +5; by σ=0.3 it is +3, and gone by σ=1.0. We had pre-registered
+  (p=0.70) that the edge would survive moderate noise — it did not. (The paired boundary bet, that it
+  erodes under heavy noise, hit.) The XOR advantage is real but lives in low-amplitude, high-rank
+  features that noise erases — a tuned ESN collapses the same way. So as a <i>physical</i> computer this
+  fabric still does not earn its keep: its one genuine advantage does not survive the noise a real device
+  would carry. <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_noise.py">Reproduce it</a> (numpy).</p>
 </div>
 
 <h2>The build, animated</h2>

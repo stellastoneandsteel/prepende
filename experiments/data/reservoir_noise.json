@@ -1,0 +1,80 @@
+{
+  "batch": 6,
+  "task": "temporal-XOR under readout-feature noise (Gaussian, feature-std units)",
+  "config": {
+    "N": 50,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "sigmas": [
+      0.0,
+      0.1,
+      0.2,
+      0.3,
+      0.5,
+      1.0
+    ],
+    "selection": "hyperparams frozen at clean(sigma=0) VAL; readout retrained per sigma; noise on train+test, both methods",
+    "frozen_cfg": {
+      "reservoir": {
+        "pfrac": 0.5,
+        "c": 0.3,
+        "isc": 2.0
+      },
+      "linear_lags": 8,
+      "esn_sr_leak": [
+        0.9,
+        0.6
+      ]
+    }
+  },
+  "noise_curve": {
+    "0.0": {
+      "reservoir": 0.6765,
+      "linear": 0.476,
+      "esn": 0.7917,
+      "margin": 0.2005
+    },
+    "0.1": {
+      "reservoir": 0.5323,
+      "linear": 0.4813,
+      "esn": 0.4965,
+      "margin": 0.051
+    },
+    "0.2": {
+      "reservoir": 0.5225,
+      "linear": 0.4867,
+      "esn": 0.4875,
+      "margin": 0.0358
+    },
+    "0.3": {
+      "reservoir": 0.5188,
+      "linear": 0.4858,
+      "esn": 0.49,
+      "margin": 0.033
+    },
+    "0.5": {
+      "reservoir": 0.5165,
+      "linear": 0.4917,
+      "esn": 0.491,
+      "margin": 0.0247
+    },
+    "1.0": {
+      "reservoir": 0.5165,
+      "linear": 0.5073,
+      "esn": 0.4898,
+      "margin": 0.0092
+    }
+  },
+  "margin_at_0.3": 0.033,
+  "margin_at_1.0": 0.0092,
+  "resolved": {
+    "advantage_survives_moderate_noise_y": 0,
+    "advantage_erodes_under_heavy_noise_y": 1
+  },
+  "verdict": "XOR advantage vs noise: margin 0.201 (clean) -> 0.033 (sigma0.3) -> 0.009 (sigma1.0). Does NOT survive moderate noise; erodes below 10pts under heavy noise (mapped upper limit)."
+}
