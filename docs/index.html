@@ -659,19 +659,39 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
 </div>
 
 <div class="card">
-  <h3>Can the same fabric be a reservoir? — proposed, then demoted <span class="chip c-amber">honesty floor · hypothesis</span></h3>
+  <h3>Can the same fabric be a reservoir? — proposed, demoted, then tested <span class="chip c-amber">honesty floor · tested</span></h3>
   <p>The loop proposed a bridge: a network of these cells, run <i>below</i> threshold, might double as
   a physical reservoir — the gap-coupling computer of Experiment 2, in oscillator hardware. We ran the
   claim through a three-lens adversarial gate (circuit physics, reservoir-computing theory, a numbers
   skeptic). It came back unanimous: demote the headline from <i>"is"</i> to <b>hypothesis</b>, and one
-  stated figure (a megahertz carrier) was simply false against the 1 kHz bench. Both corrections stand.</p>
-  <p><b>Why it stays a hypothesis:</b> no coupled multi-cell run, no trained readout, no echo-state or
-  memory-capacity measurement yet — and our own gap-coupled reservoir already <i>missed</i> twice
-  (Experiment 2), exactly as the leading objection (coupling collapses the usable state rank) would
-  predict. It enters the ledger as a gated question, ranked against that disconfirming evidence, with
-  its falsifiability tests written down.</p>
-  <p class="honest" style="margin-bottom:0">The honesty floor doing its job in public: an idea the
-  system liked, caught and downgraded by its own gate before it could be sold as a result.</p>
+  stated figure (a megahertz carrier) was simply false against the 1 kHz bench.</p>
+  <p><b>Then we ran the test it was waiting on.</b> Three predictions were hash-locked first, then a
+  coupled sub-threshold parametron reservoir was benchmarked on NARMA10 (echo-state property + memory
+  capacity + a trained ridge readout), against a trained linear filter and a tuned echo-state network:</p>
+  <svg viewBox="0 0 560 200" role="img" aria-label="NARMA10 error: parametron reservoir vs baselines">
+    <text x="20" y="16" font-size="12" fill="#16233a" font-weight="700">NARMA10 error (NRMSE) — lower is better</text>
+    <line x1="60" y1="30" x2="60" y2="155" stroke="#bbb"/>
+    <line x1="60" y1="155" x2="520" y2="155" stroke="#bbb"/>
+    <rect x="110" y="90" width="90" height="65" rx="3" fill="#0f6e56"/>
+    <text x="155" y="84" text-anchor="middle" font-size="11" fill="#0f6e56" font-weight="700">0.33</text>
+    <text x="155" y="171" text-anchor="middle" font-size="11" fill="#5b6675">tuned ESN</text>
+    <rect x="240" y="80" width="90" height="75" rx="3" fill="#1f5fae"/>
+    <text x="285" y="74" text-anchor="middle" font-size="11" fill="#1f5fae" font-weight="700">0.38</text>
+    <text x="285" y="171" text-anchor="middle" font-size="11" fill="#5b6675">linear filter</text>
+    <rect x="370" y="51" width="90" height="104" rx="3" fill="#7a2638"/>
+    <text x="415" y="45" text-anchor="middle" font-size="11" fill="#7a2638" font-weight="700">0.52</text>
+    <text x="415" y="171" text-anchor="middle" font-size="11" fill="#5b6675">parametron reservoir</text>
+    <text x="415" y="187" text-anchor="middle" font-size="10" fill="#7a2638">worst — loses to both</text>
+  </svg>
+  <p><b>Verdict — valid but weak.</b> It <i>is</i> a real reservoir (the echo-state property holds), and
+  coupling even <i>helped</i> (NRMSE 0.59 → 0.52) — a result that bucks our own prior pattern, so we
+  pre-registered the opposite and lost that bet. But it does <b>not</b> beat a trivial trained linear
+  filter (0.52 vs 0.38), and a vanilla echo-state network beats it outright (0.33). The sub-threshold
+  nonlinearity is too weak to earn its keep. Of three pre-registered predictions: one hit, two misses.</p>
+  <p class="honest" style="margin-bottom:0">The honesty floor, full arc: an idea the system liked →
+  caught and downgraded by its own gate → tested anyway → and it still loses to the boring baseline.
+  We logged the bets we got wrong.
+  <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_falsifiability.py">Reproduce it</a> (numpy).</p>
 </div>
 
 <h2>The build, animated</h2>
