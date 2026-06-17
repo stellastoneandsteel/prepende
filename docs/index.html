@@ -198,11 +198,11 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
       <text x="145" y="206" text-anchor="middle" font-size="11" fill="#5b6675">predicted →</text>
       <text x="20" y="100" text-anchor="middle" font-size="11" fill="#5b6675" transform="rotate(-90 20 100)">observed</text>
       <!--LEDGER:rel-->
-      <polyline points="134,184 176,99 222,14" fill="none" stroke="#4a3f9e" stroke-width="2"/>
-      <circle cx="134" cy="184" r="4" fill="#4a3f9e"/>
-      <circle cx="176" cy="99" r="7" fill="#4a3f9e"/>
+      <polyline points="140,184 179,82 222,14" fill="none" stroke="#4a3f9e" stroke-width="2"/>
+      <circle cx="140" cy="184" r="5" fill="#4a3f9e"/>
+      <circle cx="179" cy="82" r="8" fill="#4a3f9e"/>
       <circle cx="222" cy="14" r="6" fill="#4a3f9e"/>
-      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.17 · skill +0.28</text>
+      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.17 · skill +0.29</text>
       <!--/LEDGER:rel-->
     </svg>
     <svg viewBox="0 0 270 220" role="img" aria-label="conviction vs resolvability">
@@ -215,7 +215,7 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
     </svg>
   </div>
   <p class="muted" style="font-size:.82rem;margin-top:.5rem"><!--LEDGER:stamp-->
-      ledger: 9 resolved · Brier 0.17 · skill +0.28 · auto-rebuilt 2026-06-17T08:55:20+00:00 (UTC)
+      ledger: 11 resolved · Brier 0.17 · skill +0.29 · auto-rebuilt 2026-06-17T09:01:06+00:00 (UTC)
       <!--/LEDGER:stamp--></p>
   <p><b>Why it matters:</b> a claim can be supremely confident and still <i>uncheckable</i>.
   Those aren't miscalibrated — they're off the plane entirely. The ledger auto-flags them
@@ -480,15 +480,17 @@ specimen.</p>
 (and does not) show. To keep this page short, full entries live in the logbook; only the
 latest is summarized here.</p>
 <div class="card log">
-  <h3><span class="date">2026-06-17</span> · the reservoir's edge is real — and noise-fragile</h3>
-  <p>Batch 5 found the parametron reservoir decisively beats a linear filter on a temporal-XOR task it
-  structurally can't compute (68% vs 48%-chance, +20 points, both pre-registered predictions hit). Batch 6
-  then pre-registered the test that matters for a <i>physical</i> device — does that edge survive noise? It
-  does not: just 10% readout noise collapses the reservoir to 53% and the +20-point margin to +5, essentially
-  gone by σ=1.0. We had bet (p=0.70) the edge would survive moderate noise and <b>lost that bet</b> (a logged
-  miss); the paired bet, that it erodes under heavy noise, hit. The advantage is real but lives in fragile
-  high-rank features — so as hardware this fabric still doesn't earn its keep.
-  <span class="muted">Full detail → <a href="log/">the logbook</a>.</span></p>
+  <h3><span class="date">2026-06-17</span> · a reservoir's real edge, killed by noise at any scale — three pre-registered batches</h3>
+  <p>A complete, honest arc on the "can this fabric double as a reservoir?" question.
+  <b>Batch 5:</b> the parametron reservoir decisively beats a linear filter on a temporal-XOR task it
+  structurally can't compute — 68% vs 48% (chance), +20 points (both bets hit). <b>Batch 6:</b> but that
+  edge is noise-fragile — just 10% readout noise collapses it from 68% to 53%, gone by σ=1.0 (we bet it
+  would survive and lost). <b>Batch 7:</b> and scale doesn't save it — bigger reservoirs are cleanly better
+  (68→77% clean) but stay pinned at chance under noise for every size N up to 400 (we bet scale might rescue
+  it, p=0.50, and lost). The conclusion is honest and closed: a <b>real</b> nonlinear-memory advantage that
+  is <b>fragile to noise at any scale</b> — so as a physical computer this fabric still does not earn its
+  keep. Four of six forward bets hit; the two misses were the optimistic ones.
+  <span class="muted">Full arc → <a href="log/">the logbook</a>.</span></p>
   <p style="margin:8px 0 0"><a href="log/"><b>Full logbook →</b></a></p>
 </div>
 
@@ -753,6 +755,35 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
   features that noise erases — a tuned ESN collapses the same way. So as a <i>physical</i> computer this
   fabric still does not earn its keep: its one genuine advantage does not survive the noise a real device
   would carry. <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_noise.py">Reproduce it</a> (numpy).</p>
+  <p style="margin-top:14px"><b>Batch 7 — does scale rescue it?</b> Reservoir-computing theory says a bigger reservoir
+  spreads the signal across more features, so a readout should average the noise down. We pre-registered
+  that (p=0.50, a coin-flip) and swept N from 50 to 400. It does not:</p>
+  <svg viewBox="0 0 560 200" role="img" aria-label="temporal-XOR accuracy vs reservoir size">
+    <text x="20" y="16" font-size="12" fill="#16233a" font-weight="700">Temporal-XOR accuracy vs reservoir size N</text>
+    <line x1="70" y1="30" x2="70" y2="160" stroke="#bbb"/>
+    <line x1="70" y1="160" x2="520" y2="160" stroke="#bbb"/>
+    <line x1="70" y1="141.4" x2="520" y2="141.4" stroke="#7a2638" stroke-dasharray="4 3" opacity="0.5"/>
+    <text x="520" y="138" text-anchor="end" font-size="10" fill="#7a2638">chance 50%</text>
+    <polyline points="90,75.8 230,61.7 370,50.9 510,41.3" fill="none" stroke="#0f6e56" stroke-width="2"/>
+    <polyline points="90,134.4 230,137.4 370,134.8 510,140.7" fill="none" stroke="#1f5fae" stroke-width="2" opacity="0.85"/>
+    <circle cx="90" cy="75.8" r="3" fill="#0f6e56"/><circle cx="510" cy="41.3" r="3" fill="#0f6e56"/>
+    <circle cx="90" cy="134.4" r="3" fill="#1f5fae"/><circle cx="510" cy="140.7" r="3" fill="#1f5fae"/>
+    <text x="300" y="48" font-size="10" fill="#0f6e56">clean — rises with N (0.68 → 0.77)</text>
+    <text x="300" y="128" font-size="10" fill="#1f5fae">with σ=0.3 noise — flat at chance</text>
+    <text x="90" y="175" font-size="9" fill="#5b6675" text-anchor="middle">50</text>
+    <text x="230" y="175" font-size="9" fill="#5b6675" text-anchor="middle">100</text>
+    <text x="370" y="175" font-size="9" fill="#5b6675" text-anchor="middle">200</text>
+    <text x="510" y="175" font-size="9" fill="#5b6675" text-anchor="middle">400</text>
+    <text x="295" y="192" font-size="10" fill="#5b6675" text-anchor="middle">reservoir size N (cells)</text>
+  </svg>
+  <p><b>The verdict, now complete.</b> Bigger reservoirs are cleanly better — clean accuracy climbs 0.68 →
+  0.77 from N=50 to N=400 (control bet, hit) — but under σ=0.3 noise accuracy stays pinned at chance for
+  <i>every</i> size (it even dips at N=400). The noise-fragility is fundamental, not a small-reservoir
+  artifact; scale buys capacity, not robustness. Across three pre-registered batches the arc is honest and
+  closed: the parametron reservoir has a <b>real</b> nonlinear-memory advantage that is <b>fragile to noise
+  at any scale</b> — so as a physical computer it does not earn its keep. Four of six forward bets hit; the
+  two misses were exactly the optimistic ones (it'll survive noise; scale will save it).
+  <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_scaling.py">Reproduce it</a> (numpy).</p>
 </div>
 
 <h2>The build, animated</h2>

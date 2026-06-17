@@ -1,0 +1,63 @@
+{
+  "batch": 7,
+  "task": "temporal-XOR; reservoir size sweep at fixed dynamics; clean vs sigma=0.3 noise",
+  "config": {
+    "Ns": [
+      50,
+      100,
+      200,
+      400
+    ],
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "sigma_noise": 0.3,
+    "fixed_dynamics": {
+      "pfrac": 0.5,
+      "c": 0.3,
+      "isc": 2.0
+    },
+    "linear_baseline": {
+      "lags": 8,
+      "clean_acc": 0.476,
+      "noisy_acc": 0.4858
+    }
+  },
+  "scaling_curve": {
+    "50": {
+      "clean_acc": 0.6765,
+      "noisy_acc": 0.5188,
+      "clean_margin": 0.2005,
+      "noisy_margin": 0.033
+    },
+    "100": {
+      "clean_acc": 0.715,
+      "noisy_acc": 0.5112,
+      "clean_margin": 0.239,
+      "noisy_margin": 0.0255
+    },
+    "200": {
+      "clean_acc": 0.744,
+      "noisy_acc": 0.518,
+      "clean_margin": 0.268,
+      "noisy_margin": 0.0323
+    },
+    "400": {
+      "clean_acc": 0.77,
+      "noisy_acc": 0.5015,
+      "clean_margin": 0.294,
+      "noisy_margin": 0.0158
+    }
+  },
+  "margin_at_N200_sigma0.3": 0.0323,
+  "clean_acc_gain_N50_to_N400": 0.0935,
+  "resolved": {
+    "scale_restores_noise_robustness_y": 0,
+    "scale_improves_clean_capacity_y": 1
+  },
+  "verdict": "scaling N: noisy(sigma0.3) margin at N=200 is 0.032; clean acc N=50->N=400 gains +0.094. Scale does NOT restore noise-robustness (<0.10). Bigger reservoirs are cleanly better."
+}
