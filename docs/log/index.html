@@ -33,6 +33,14 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-17 · the strength mode</div>
+  <h2>Circuit OIM finds the optimal cuts; energy stays a hardware question <span class="tag ok">strength confirmed · honest</span></h2>
+  <p><b>Pivot to where the substrate has earned credit.</b> The reservoir thread closed deflationary, so we tested the substrate's actual strength — the above-threshold Ising spin. A circuit-level SHIL-parametron oscillator Ising machine (ngspice, antiferromagnetic coupling on graph edges, 8 random restarts) was run on five small graphs. It recovers the brute-force optimal cut on every one (best-found = optimum on 4-cycle, 5-cycle, K4, K5, and a random 6-node graph), but only about 40% of restarts hit it — a heuristic that needs restarts, not a one-shot solver. Two contracts were hash-locked first; the strict 80%-per-restart bar missed, the optimum-recovery held.</p>
+  <p><b>Energy, honestly.</b> We estimated per-solution energy from the simulated power and compared it to a CMOS simulated-annealing estimate. The toy circuit came out worse (~6e-8 J vs ~2e-9 J), but the toy component values are not power-optimised, so this carries no device-level weight. The energy advantage that motivates analog Ising machines remains a hardware question a simulator cannot settle. Bet missed (we had given it about even odds).</p>
+  <p class="muted">Net: the substrate's strength — a real Ising spin that solves small Max-Cut — is confirmed at the circuit level; the promise, energy at scale, is real only as a hardware question. Next step is a small physical build. Code: <code>experiments/sim_ngspice_reservoir.py</code> family. A full standing report and an Engram-authored summary accompany this entry.</p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-17 · the circuit, not the model</div>
   <h2>The real circuit is weaker than its own model <span class="tag miss">circuit-level · honest</span></h2>
   <p><b>Closing the loop honestly.</b> Batches 4–7 ran the reservoir in an idealized envelope model. The fair question is whether the <i>actual circuit</i> behaves the same — so we built it in ngspice: N=6 real sub-threshold parametron cells (LC tank + tanh transconductor + 2·f₀ pump), resistively coupled, driven by an f₀ carrier amplitude-modulated by the input, with a per-symbol lock-in (X,Y) readout. Three contracts hash-locked first.</p>
