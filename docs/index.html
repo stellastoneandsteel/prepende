@@ -480,13 +480,14 @@ specimen.</p>
 (and does not) show. To keep this page short, full entries live in the logbook; only the
 latest is summarized here.</p>
 <div class="card log">
-  <h3><span class="date">2026-06-15</span> · OIM scaling + gap-reservoir [T2] miss</h3>
-  <p>The oscillator Ising machine ties simulated annealing on cut quality to n=120, but its
-  exact-optimum per-restart hit-rate collapses with size (91.7% → 0%), and in software it is
-  slower than SA — so the energy case stays a hardware question, not a result. The gap-coupled
-  reservoir [T2] was pre-registered at p=0.45 and resolved a clean miss (gap R² 0.27 vs a
-  single reservoir's 0.96 at matched readout). <span class="muted">Full detail and the [T1]
-  hardware estimate → <a href="log/">the logbook</a>.</span></p>
+  <h3><span class="date">2026-06-17</span> · parametron Ising bit measured · reservoir bridge demoted</h3>
+  <p>A single degenerate parametric cell (tank 1.000 kHz, pump 2.000 kHz, gain held sub-threshold)
+  oscillates at exactly pump/2 only when pumped, and from opposite seeds settles into two phases
+  180.0° apart — a measured Ising bit — with a pump-tunable memory time constant (51 → 524 ms below
+  threshold, critical slowing down). A proposed "same fabric doubles as a reservoir" bridge was run
+  through a three-lens adversarial gate and demoted from claim to hypothesis (one false megahertz
+  figure caught). The earlier OIM-scaling and gap-reservoir [T2] results still stand.
+  <span class="muted">Full detail → <a href="log/">the logbook</a>.</span></p>
   <p style="margin:8px 0 0"><a href="log/"><b>Full logbook →</b></a></p>
 </div>
 
@@ -605,7 +606,47 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
 </div>
 
 <div class="card">
-  <h3>4 · The buildable design <span class="chip c-amber">concept · ≈$180</span></h3>
+  <h3>4 · The parametron cell — a measured Ising bit <span class="chip c-teal">ngspice · verified</span></h3>
+  <p>The cleanest possible spin: a degenerate parametric oscillator. An LC tank resonant at
+  <b>f₀ = 1.000 kHz</b>, its small-signal gain held <i>below</i> threshold so it cannot oscillate
+  on its own. Pump it at exactly <b>2·f₀ = 2.000 kHz</b> and it springs to life at <i>half</i> the
+  pump — sub-harmonic injection locking — locking into only one of two phases, 0 or π. That phase
+  <i>is</i> the spin (±1).</p>
+  <svg viewBox="0 0 600 150" role="img" aria-label="two oscillator traces 180 degrees apart">
+    <line x1="0" y1="75" x2="600" y2="75" stroke="#e3e0d8" stroke-dasharray="3 4"/>
+    <path d="M0,75 q30,-40 60,0 q30,40 60,0 q30,-40 60,0 q30,40 60,0 q30,-40 60,0 q30,40 60,0 q30,-40 60,0 q30,40 60,0 q30,-40 60,0 q30,40 60,0" fill="none" stroke="#0f6e56" stroke-width="2.4"/>
+    <path d="M0,75 q30,40 60,0 q30,-40 60,0 q30,40 60,0 q30,-40 60,0 q30,40 60,0 q30,-40 60,0 q30,40 60,0 q30,-40 60,0 q30,40 60,0 q30,-40 60,0" fill="none" stroke="#7a2638" stroke-width="2.4" stroke-dasharray="6 4"/>
+    <text x="6" y="28" font-size="12" fill="#0f6e56" font-weight="700">spin ↑ · φ = 0°</text>
+    <text x="6" y="138" font-size="12" fill="#7a2638" font-weight="700">spin ↓ · φ = 180°</text>
+    <text x="594" y="14" font-size="11" fill="#5b6675" text-anchor="end">both at 1.000 kHz = pump / 2 · measured 180.0° apart</text>
+  </svg>
+  <p><b>Result (ngspice, lock-in phase vs the pump):</b> with the pump on, the cell oscillates at
+  exactly pump/2; from opposite seeds it settles into two steady states <b>180.0° apart</b>;
+  intermediate seeds snap onto one of the two, never resting between. With the pump off, the same
+  cell decays to <b>0 V</b> — the oscillation is genuinely pump-born, not free-running. The behaviour
+  was hash-locked as a prediction <i>before</i> the run and resolved a clean hit on all four checks.</p>
+  <p><b>A tunable memory, below threshold:</b> hold the pump just under threshold and the cell still
+  doesn't oscillate, but its ring-down slows sharply as the pump rises (critical slowing down) — the
+  envelope time constant climbs from <b>51 ms</b> (no pump) to <b>524 ms</b> at 95% of threshold:
+  one knob, a ~10× span of memory depth.</p>
+  <svg viewBox="0 0 560 200" role="img" aria-label="envelope time constant rising with pump amplitude">
+    <line x1="60" y1="20" x2="60" y2="175" stroke="#bbb"/>
+    <line x1="60" y1="175" x2="540" y2="175" stroke="#bbb"/>
+    <text x="52" y="30" text-anchor="end" font-size="11" fill="#5b6675">550 ms</text>
+    <text x="52" y="178" text-anchor="end" font-size="11" fill="#5b6675">0</text>
+    <text x="300" y="196" text-anchor="middle" font-size="12" fill="#5b6675">pump amplitude → parametric threshold →</text>
+    <polyline points="60,161 242,152 362,137 454,103 516,27" fill="none" stroke="#1f5fae" stroke-width="2.4"/>
+    <circle cx="60" cy="161" r="4" fill="#1f5fae"/><circle cx="242" cy="152" r="4" fill="#1f5fae"/><circle cx="362" cy="137" r="4" fill="#1f5fae"/><circle cx="454" cy="103" r="4" fill="#1f5fae"/><circle cx="516" cy="27" r="5" fill="#1f5fae"/>
+    <text x="66" y="158" font-size="10" fill="#16233a">51 ms</text>
+    <text x="516" y="20" font-size="11" fill="#1f5fae" text-anchor="end" font-weight="700">524 ms</text>
+  </svg>
+  <p class="honest" style="margin-bottom:0">Honest limit: one cell, in software. The two-state spin is
+  real and measured; the "tunable memory" is a single-cell time constant, not yet a working reservoir.
+  <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_shil_parametron.py">Reproduce it</a> (ngspice + numpy).</p>
+</div>
+
+<div class="card">
+  <h3>5 · The buildable design <span class="chip c-amber">concept · ≈$180</span></h3>
   <p>Scaled up: a ring of those oscillators, a resistor coupling mesh that encodes the problem,
   a sub-harmonic (SHIL) drive that binarises every phase to 0 or π, and a microcontroller readout
   — the Build A prototype, from real parts.</p>
@@ -615,6 +656,22 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
     <figcaption>Concept render of the buildable design — <b>not</b> a photograph of a working device.
     The mechanism is verified in ngspice (above); the full machine has not been built.</figcaption>
   </figure>
+</div>
+
+<div class="card">
+  <h3>Can the same fabric be a reservoir? — proposed, then demoted <span class="chip c-amber">honesty floor · hypothesis</span></h3>
+  <p>The loop proposed a bridge: a network of these cells, run <i>below</i> threshold, might double as
+  a physical reservoir — the gap-coupling computer of Experiment 2, in oscillator hardware. We ran the
+  claim through a three-lens adversarial gate (circuit physics, reservoir-computing theory, a numbers
+  skeptic). It came back unanimous: demote the headline from <i>"is"</i> to <b>hypothesis</b>, and one
+  stated figure (a megahertz carrier) was simply false against the 1 kHz bench. Both corrections stand.</p>
+  <p><b>Why it stays a hypothesis:</b> no coupled multi-cell run, no trained readout, no echo-state or
+  memory-capacity measurement yet — and our own gap-coupled reservoir already <i>missed</i> twice
+  (Experiment 2), exactly as the leading objection (coupling collapses the usable state rank) would
+  predict. It enters the ledger as a gated question, ranked against that disconfirming evidence, with
+  its falsifiability tests written down.</p>
+  <p class="honest" style="margin-bottom:0">The honesty floor doing its job in public: an idea the
+  system liked, caught and downgraded by its own gate before it could be sold as a result.</p>
 </div>
 
 <h2>The build, animated</h2>
