@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prepende — a physical reservoir's real edge, and the noise that takes it back</title>
+<meta name="description" content="Three pre-registered batches mapping where a coupled sub-threshold parametron reservoir earns its keep: a real nonlinear-memory advantage that does not survive noise at any scale. Honest, hash-locked, calibration-scored.">
+<style>
+  :root{--bg:#f4f3ef;--ink:#16233a;--blue:#1f5fae;--maroon:#7a2638;--teal:#0f6e56;--muted:#5b6675}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;padding:0 18px}
+  .wrap{max-width:760px;margin:0 auto;padding:40px 0 80px}
+  a{color:var(--blue)}
+  h1{font-size:1.8rem;margin:0 0 6px;line-height:1.25}
+  .sub{color:var(--muted);margin:0 0 8px;font-size:1.05rem}
+  .date{color:var(--muted);font-size:.85rem;letter-spacing:.04em;margin:0 0 26px}
+  h2{font-size:1.2rem;margin:30px 0 6px}
+  p{margin:10px 0}
+  figure{margin:18px 0;background:#fff;border:1px solid #e4e2db;border-radius:12px;padding:14px}
+  figcaption{color:var(--muted);font-size:.9rem;margin-top:6px}
+  .muted{color:var(--muted)}
+  code{background:#eee;padding:1px 5px;border-radius:4px;font-size:.85em}
+  table{border-collapse:collapse;width:100%;font-size:.9rem;margin:14px 0}
+  th,td{border:1px solid #e4e2db;padding:6px 9px;text-align:left;vertical-align:top}
+  th{background:#efeee9}
+  .hit{color:var(--teal);font-weight:600}
+  .miss{color:var(--maroon);font-weight:600}
+  .lead{background:#fff;border:1px solid #e4e2db;border-radius:12px;padding:18px 22px;margin:20px 0}
+  .back{font-size:.9rem}
+  blockquote{border-left:4px solid var(--teal);background:#eef6f3;margin:14px 0;padding:8px 16px;color:var(--ink)}
+</style></head>
+<body><div class="wrap">
+<p class="back"><a href="../">← Prepende</a> · <a href="../log/">logbook</a></p>
+
+<h1>A physical reservoir's real edge — and the noise that takes it back</h1>
+<p class="sub">Three pre-registered batches map exactly where a coupled sub-threshold parametron fabric earns its keep as a computer, and exactly where it stops.</p>
+<p class="date">2026-06-17 · hash-locked predictions · numpy · five seeds throughout</p>
+
+<div class="lead">
+<p style="margin-top:0"><b>The short version.</b> A network of degenerate parametric oscillators, held below threshold, has a <i>genuine</i> computational advantage: on a task that is nonlinear in its memory — one a linear filter structurally cannot solve — it beats that filter by twenty points. But the advantage is fragile. Ten percent readout noise erases it, and making the reservoir eight times larger does not bring it back. As a piece of software it works; as a model of <i>hardware</i> it does not earn its keep. Every step below was a falsifiable prediction locked into a content hash <i>before</i> the run that resolved it — including the two we lost.</p>
+</div>
+
+<h2>Why bother — and why pre-register</h2>
+<p>An earlier build proposed that the same oscillator fabric used as an Ising machine might double as a physical <i>reservoir</i> — a fixed nonlinear dynamical system you read out with a trained linear layer. An adversarial gate demoted the claim to a hypothesis. Then we tested it: on NARMA10, the standard reservoir benchmark, the parametron reservoir was <b>valid but weak</b> — a real reservoir (the echo-state property held) that nonetheless lost to a trained linear filter (0.52 vs 0.38 NRMSE). A vanilla echo-state network beat it outright.</p>
+<p>That verdict was honest but incomplete. NARMA10 is dominated by short-memory, near-linear structure — exactly the regime a linear filter handles — so it cannot reveal whether a <i>nonlinear</i> reservoir has any edge at all. The sharper question is not "is it good?" but "<i>where</i> is it good?" To answer it without fooling ourselves, every claim below was hash-locked before its scored run, with its resolution rule and evaluation regime fixed at lock time. You cannot move the goalposts after the fact: editing any field breaks the hash, and the git commit of each lock is the external timestamp proving it preceded its outcome.</p>
+
+<h2>Batch 5 — the boundary: a task linearity can't touch</h2>
+<p>We chose temporal parity, the textbook nonlinearly-separable problem. Binarise the input, <code>b(t)=1[u(t)&gt;0.25]</code>, and ask the system to predict <code>y(t)=b(t-2) XOR b(t-4)</code>. A linear readout of a linear delay line <b>cannot</b> represent XOR, so it pins the floor at chance. We pre-registered two contracts: the parametron reservoir beats the linear delay line by ≥15 points (p=0.70), and the linear baseline stays below 60% (p=0.85). Method was stricter than the NARMA10 run — hyperparameters chosen on a validation split, reported on held-out test.</p>
+<figure>
+  <svg viewBox="0 0 560 200" role="img" aria-label="temporal-XOR accuracy: parametron reservoir vs baselines">
+    <text x="20" y="16" font-size="12" fill="#16233a" font-weight="700">Temporal-XOR accuracy — higher is better</text>
+    <line x1="60" y1="30" x2="60" y2="155" stroke="#bbb"/>
+    <line x1="60" y1="155" x2="520" y2="155" stroke="#bbb"/>
+    <line x1="60" y1="92.5" x2="520" y2="92.5" stroke="#7a2638" stroke-dasharray="4 3" opacity="0.55"/>
+    <text x="518" y="89" text-anchor="end" font-size="10" fill="#7a2638">chance 50%</text>
+    <rect x="110" y="95.5" width="90" height="59.5" rx="3" fill="#7a2638"/>
+    <text x="155" y="89" text-anchor="middle" font-size="11" fill="#7a2638" font-weight="700">0.48</text>
+    <text x="155" y="171" text-anchor="middle" font-size="11" fill="#5b6675">linear filter</text>
+    <text x="155" y="187" text-anchor="middle" font-size="10" fill="#7a2638">at chance — can't</text>
+    <rect x="240" y="70.4" width="90" height="84.6" rx="3" fill="#0f6e56"/>
+    <text x="285" y="64" text-anchor="middle" font-size="11" fill="#0f6e56" font-weight="700">0.68</text>
+    <text x="285" y="171" text-anchor="middle" font-size="11" fill="#5b6675">parametron reservoir</text>
+    <text x="285" y="187" text-anchor="middle" font-size="10" fill="#0f6e56">+20 pts — wins</text>
+    <rect x="370" y="56" width="90" height="99" rx="3" fill="#1f5fae"/>
+    <text x="415" y="50" text-anchor="middle" font-size="11" fill="#1f5fae" font-weight="700">0.79</text>
+    <text x="415" y="171" text-anchor="middle" font-size="11" fill="#5b6675">tuned ESN</text>
+  </svg>
+  <figcaption>Both contracts hit. The same fabric that lost on NARMA10 reaches 0.68 where the linear filter sits at chance (0.48). The reservoir's value is real and task-dependent: it earns its keep exactly where linear filtering fails.</figcaption>
+</figure>
+
+<h2>Batch 6 — the noise wall</h2>
+<p>A real reservoir is analog and noisy, so the edge only matters if it survives noise. We pre-registered the test: add Gaussian readout noise (in feature-std units), identically to the reservoir and the linear baseline, and sweep it. Primary bet — the margin survives moderate noise, staying ≥0.10 at σ=0.3 (p=0.70). Paired bet — it has a ceiling, dropping below 0.10 by σ=1.0 (p=0.60).</p>
+<figure>
+  <svg viewBox="0 0 560 200" role="img" aria-label="temporal-XOR accuracy vs readout noise">
+    <text x="20" y="16" font-size="12" fill="#16233a" font-weight="700">Temporal-XOR accuracy vs readout noise σ — the edge is noise-fragile</text>
+    <line x1="70" y1="30" x2="70" y2="160" stroke="#bbb"/>
+    <line x1="70" y1="160" x2="520" y2="160" stroke="#bbb"/>
+    <line x1="70" y1="127.5" x2="520" y2="127.5" stroke="#7a2638" stroke-dasharray="4 3" opacity="0.5"/>
+    <text x="520" y="124" text-anchor="end" font-size="10" fill="#7a2638">chance 50%</text>
+    <polyline points="70,70.1 115,117.0 160,120.2 205,121.4 295,122.1 520,122.1" fill="none" stroke="#0f6e56" stroke-width="2"/>
+    <polyline points="70,135.3 115,133.6 160,131.8 205,131.9 295,130.2 520,124.9" fill="none" stroke="#1f5fae" stroke-width="2" opacity="0.7"/>
+    <circle cx="70" cy="70.1" r="3" fill="#0f6e56"/>
+    <text x="80" y="66" font-size="10" fill="#0f6e56">reservoir 0.68 (clean)</text>
+    <text x="150" y="110" font-size="10" fill="#0f6e56">→ 0.53 at σ=0.1</text>
+    <text x="300" y="140" font-size="10" fill="#1f5fae">linear (flat, at chance)</text>
+    <text x="70" y="175" font-size="9" fill="#5b6675" text-anchor="middle">0</text>
+    <text x="115" y="175" font-size="9" fill="#5b6675" text-anchor="middle">0.1</text>
+    <text x="205" y="175" font-size="9" fill="#5b6675" text-anchor="middle">0.3</text>
+    <text x="295" y="175" font-size="9" fill="#5b6675" text-anchor="middle">0.5</text>
+    <text x="520" y="175" font-size="9" fill="#5b6675" text-anchor="middle">1.0</text>
+    <text x="295" y="192" font-size="10" fill="#5b6675" text-anchor="middle">readout noise σ (feature-std units)</text>
+  </svg>
+  <figcaption>Primary bet lost. At just σ=0.1 the reservoir falls from 0.68 to 0.53 and the +20-point margin collapses to +5; by σ=0.3 it is +3, gone by σ=1.0. The tuned ESN collapses identically. The advantage lives in low-amplitude, high-rank features that noise erases.</figcaption>
+</figure>
+
+<h2>Batch 7 — does scale rescue it?</h2>
+<p>Reservoir-computing theory offers a way out: a bigger reservoir spreads the task signal across more features, so the readout averages independent noise down. If true, the advantage returns at scale. We pre-registered it as a coin-flip (p=0.50) and swept the reservoir from 50 to 400 cells at fixed dynamics — alongside a control that bigger reservoirs are at least cleanly better (p=0.70).</p>
+<figure>
+  <svg viewBox="0 0 560 200" role="img" aria-label="temporal-XOR accuracy vs reservoir size">
+    <text x="20" y="16" font-size="12" fill="#16233a" font-weight="700">Temporal-XOR accuracy vs reservoir size N</text>
+    <line x1="70" y1="30" x2="70" y2="160" stroke="#bbb"/>
+    <line x1="70" y1="160" x2="520" y2="160" stroke="#bbb"/>
+    <line x1="70" y1="141.4" x2="520" y2="141.4" stroke="#7a2638" stroke-dasharray="4 3" opacity="0.5"/>
+    <text x="520" y="138" text-anchor="end" font-size="10" fill="#7a2638">chance 50%</text>
+    <polyline points="90,75.8 230,61.7 370,50.9 510,41.3" fill="none" stroke="#0f6e56" stroke-width="2"/>
+    <polyline points="90,134.4 230,137.4 370,134.8 510,140.7" fill="none" stroke="#1f5fae" stroke-width="2" opacity="0.85"/>
+    <circle cx="90" cy="75.8" r="3" fill="#0f6e56"/><circle cx="510" cy="41.3" r="3" fill="#0f6e56"/>
+    <circle cx="90" cy="134.4" r="3" fill="#1f5fae"/><circle cx="510" cy="140.7" r="3" fill="#1f5fae"/>
+    <text x="300" y="48" font-size="10" fill="#0f6e56">clean — rises with N (0.68 → 0.77)</text>
+    <text x="300" y="128" font-size="10" fill="#1f5fae">with σ=0.3 noise — flat at chance</text>
+    <text x="90" y="175" font-size="9" fill="#5b6675" text-anchor="middle">50</text>
+    <text x="230" y="175" font-size="9" fill="#5b6675" text-anchor="middle">100</text>
+    <text x="370" y="175" font-size="9" fill="#5b6675" text-anchor="middle">200</text>
+    <text x="510" y="175" font-size="9" fill="#5b6675" text-anchor="middle">400</text>
+    <text x="295" y="192" font-size="10" fill="#5b6675" text-anchor="middle">reservoir size N (cells)</text>
+  </svg>
+  <figcaption>Control hit, rescue missed. Clean accuracy climbs with size (0.68 → 0.77), but under σ=0.3 noise accuracy stays pinned at chance for every N — it even dips at 400. Scale buys capacity, not robustness; the noise-fragility is structural.</figcaption>
+</figure>
+
+<h2>The scorecard</h2>
+<p>Six forward predictions across the three batches, each locked before its run. Four hit, two missed — and both misses were on the optimistic side (the edge will survive noise; scale will save it). That is what honest calibration looks like: the bets we most wanted to win are the ones we lost.</p>
+<table>
+  <tr><th>Batch</th><th>Prediction</th><th>p</th><th>Outcome</th></tr>
+  <tr><td>5</td><td>reservoir beats linear on XOR by ≥15 pts</td><td>0.70</td><td class="hit">HIT (+20)</td></tr>
+  <tr><td>5</td><td>linear stays below 60% (task is nonlinear)</td><td>0.85</td><td class="hit">HIT (0.48)</td></tr>
+  <tr><td>6</td><td>edge survives moderate noise (≥0.10 at σ=0.3)</td><td>0.70</td><td class="miss">MISS (0.03)</td></tr>
+  <tr><td>6</td><td>edge erodes under heavy noise (&lt;0.10 at σ=1.0)</td><td>0.60</td><td class="hit">HIT (0.01)</td></tr>
+  <tr><td>7</td><td>scale restores robustness (≥0.10 at N=200)</td><td>0.50</td><td class="miss">MISS (0.03)</td></tr>
+  <tr><td>7</td><td>scale improves clean capacity (≥0.05)</td><td>0.70</td><td class="hit">HIT (+0.09)</td></tr>
+</table>
+<p class="muted">The full ledger — every lock, every resolution, the running Brier and skill scores, and the tamper-evidence chain — lives in <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/predictions.jsonl">experiments/predictions.jsonl</a> and is summarised on the <a href="../#ledger">front page</a>.</p>
+
+<h2>What it means</h2>
+<blockquote>The parametron reservoir has a real nonlinear-memory advantage that does not survive noise at any scale we tested. As software it works; as hardware it does not earn its keep.</blockquote>
+<p>This is a deflationary result, and that is the point. The honest finish is not a press release about a new kind of computer — it is a clean, falsifiable map of where an attractive idea actually holds (nonlinear tasks, noise-free) and where it breaks (any realistic noise, regardless of size). The substrate's genuine strength stays what it was measured to be earlier: the above-threshold Ising spin, not the sub-threshold reservoir. We will say so until a measurement says otherwise — and if one does, the ledger will show we changed our minds for a reason, on the record.</p>
+<p class="muted">Reproduce everything (numpy, pure stdlib for the ledger):
+<a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_boundary.py">sim_reservoir_boundary.py</a> ·
+<a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_noise.py">sim_reservoir_noise.py</a> ·
+<a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_scaling.py">sim_reservoir_scaling.py</a>.</p>
+
+<p class="back" style="margin-top:30px"><a href="../">← Prepende</a> · <a href="../log/">full logbook</a></p>
+</div></body></html>
