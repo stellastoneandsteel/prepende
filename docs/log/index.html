@@ -33,6 +33,15 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-17 · the boundary</div>
+  <h2>The reservoir's boundary — weak on linear tasks, decisive on nonlinear memory <span class="tag ok">pre-registered · two hits</span></h2>
+  <p><b>The question.</b> Batch 4 left the coupled sub-threshold parametron reservoir "valid but weak": a real reservoir (echo-state property holds, coupling even helped) that still loses to a trained linear filter on NARMA10 (0.52 vs 0.38 NRMSE). But NARMA10 is dominated by short-memory, near-linear structure — exactly the regime a linear filter handles — so that test cannot reveal a nonlinear reservoir's edge. The honest follow-up is not "is it good?" but "<i>where</i> is it good?"</p>
+  <p><b>The test (pre-registered first).</b> A temporal-XOR task: binarise the input, <code>b(t)=1[u(t)&gt;0.25]</code>, and predict <code>y(t)=b(t-2) XOR b(t-4)</code>. A linear readout of a linear delay line <b>cannot</b> represent XOR — the textbook nonlinearly-separable problem — so it pins the floor at chance. Two contracts were hash-locked before the scored run (cids <code>81c035f7b3d3</code>, <code>b0d07bea3624</code>): (1) the parametron reservoir beats the linear delay line by ≥15 points (p=0.70); (2) the linear baseline stays below 60% (p=0.85). Stricter than Batch 4: hyperparameters chosen on a validation split, reported on held-out test, 5 seeds.</p>
+  <p><b>Result — both hit.</b> Linear delay line: <b>0.476</b> test accuracy — at chance, as it must be. The same parametron reservoir: <b>0.677</b> (stable across seeds, 0.66–0.69) — a <b>+20-point</b> win. A tuned ESN reference reaches 0.792, and coupling helped again (uncoupled 0.565 → coupled 0.684). The boundary is now mapped: this fabric is weak where a linear filter already suffices and genuinely useful where the task is nonlinear in its memory. Batch 4 was incomplete, not wrong.</p>
+  <p class="muted">Code: <code>experiments/sim_reservoir_boundary.py</code> (numpy) · predictions <code>experiments/predictions.jsonl</code>. Next: does the advantage survive analog/observation noise (Batch 6), and how does it scale with size (Batch 7)?</p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-17 · the single spin</div>
   <h2>The parametron cell — a measured Ising bit, and a reservoir bridge that got demoted <span class="tag ok">measured · gated</span></h2>
   <p><b>The cell.</b> The cleanest possible spin is a degenerate parametric oscillator: an LC tank (L 25.33 mH, C 1 µF, ESR 1 Ω) resonant at f₀ = 1.000 kHz, with a bounded tanh negative-resistance element whose DC gain is held <i>below</i> the self-oscillation threshold. The only energy comes from modulating that conductance at the pump frequency 2·f₀ = 2.000 kHz — a degenerate parametric pump. Measured in ngspice (lock-in phase against the pump, 500 ms transient):</p>

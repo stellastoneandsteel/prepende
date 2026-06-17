@@ -1,0 +1,60 @@
+{
+  "batch": 5,
+  "task": "temporal-XOR  y(t)=b(t-2) XOR b(t-4), b=1[u>0.25]",
+  "config": {
+    "N": 50,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "wash_train_val_test": [
+      200,
+      2000,
+      800,
+      800
+    ],
+    "selection": "hyperparams chosen on VAL acc"
+  },
+  "parametron_reservoir": {
+    "best_cfg": {
+      "pfrac": 0.5,
+      "c": 0.3,
+      "isc": 2.0
+    },
+    "val_acc": 0.6838,
+    "test_acc": 0.6765,
+    "test_acc_per_seed": [
+      0.68,
+      0.66,
+      0.6725,
+      0.69,
+      0.68
+    ]
+  },
+  "linear_delayline": {
+    "best_lags": 8,
+    "val_acc": 0.494,
+    "test_acc": 0.476
+  },
+  "esn_reference": {
+    "best_sr_leak": [
+      0.9,
+      0.6
+    ],
+    "val_acc": 0.7885,
+    "test_acc": 0.7917
+  },
+  "coupling_contrast_val": {
+    "c0_acc": 0.565,
+    "best_cpos_acc": 0.6838
+  },
+  "reservoir_minus_linear_test_acc": 0.2005,
+  "resolved": {
+    "reservoir_beats_linear_by_15pts_y": 1,
+    "linear_near_chance_below_0.60_y": 1
+  },
+  "verdict": "temporal-XOR boundary: reservoir test acc 0.677 vs linear 0.476 (ESN 0.792). Reservoir DECISIVELY beats linear (>=15pts); linear is near chance -> task is genuinely nonlinear."
+}
