@@ -33,6 +33,15 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-17 · the niche, bounded</div>
+  <h2>How big is the sparse win? Smaller than it looked, and 3-regular-specific <span class="tag miss">honesty test · 2 deflationary</span></h2>
+  <p><b>Pressure-testing the one positive.</b> The sparse-graph result was the program's only non-deflationary finding, so it got the hardest look. Against a 4x-stronger simulated annealing (48 restarts, 320 sweeps), and on a second sparse family (4-regular), at N=200: on <b>3-regular</b> the OIM still wins but the margin shrinks from 1.048 to <b>1.021</b>; on <b>4-regular</b> the OIM <b>loses</b> (0.988). The edge is real but narrow and 3-regular-specific, and it erodes as the classical baseline is given more budget. These are exactly the caveats the earlier write-up flagged, now quantified.</p>
+  <p><b>No software speed edge.</b> In normalized iterations the OIM reaches 99% of its final cut at 0.33; SA gets there at 0.19. SA converges faster. Any real speed advantage would have to come from hardware parallelism, which a simulator cannot show.</p>
+  <p><b>Wireless coupling, revisited.</b> With per-link phase and amplitude compensation the radiative-coupled OIM recovers wired quality almost fully (0.998 at 0.1 rad residual phase), but that is demanding hardware, close to rebuilding wired coupling over the air.</p>
+  <p class="muted">Net: the honest target narrows to sparse, low-degree, structured problems with cheap coupling and a near-field, phase-controlled build. The verified Ising spin remains the asset; the optimization edge is a small, specific niche, not a broad win. Code: <code>experiments/sim_oim_sparse_niche.py</code>, <code>sim_oim_sa_check.py</code>. One pre-registered hit, two deflationary misses.</p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-17 · the sparse niche</div>
   <h2>First break in the pattern: the OIM edges past simulated annealing on sparse graphs <span class="tag ok">pre-registered · 2 hits</span></h2>
   <p><b>The favorable regime, found.</b> After a week of the substrate tying or losing, two pre-registered batches tested Max-Cut on <b>sparse</b> (random 3-regular) versus <b>dense</b> (Erdos-Renyi p=0.5) graphs, scaling to N=400, against a greedy local-search baseline and a budget-matched simulated-annealing baseline. Cut quality is a ratio, OIM best cut over baseline best cut, so above 1.0 means the OIM found the better cut.</p>
