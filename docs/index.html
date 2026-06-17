@@ -662,7 +662,7 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
 </div>
 
 <div class="card">
-  <h3>Can the same fabric be a reservoir? — proposed, demoted, tested, then bounded <span class="chip c-amber">honesty floor · boundary mapped</span></h3>
+  <h3>Can the same fabric be a reservoir? — proposed, demoted, tested, bounded, then built <span class="chip c-amber">honesty floor · model and circuit</span></h3>
   <p>The loop proposed a bridge: a network of these cells, run <i>below</i> threshold, might double as
   a physical reservoir — the gap-coupling computer of Experiment 2, in oscillator hardware. We ran the
   claim through a three-lens adversarial gate (circuit physics, reservoir-computing theory, a numbers
@@ -784,6 +784,15 @@ nothing hand-drawn, nothing AI-imagined. <a href="https://github.com/stellastone
   at any scale</b> — so as a physical computer it does not earn its keep. Four of six forward bets hit; the
   two misses were exactly the optimistic ones (it'll survive noise; scale will save it).
   <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_reservoir_scaling.py">Reproduce it</a> (numpy).</p>
+  <p style="margin-top:14px"><b>The circuit, not the model.</b> Everything above is the idealized
+  envelope model. We also built the real thing in ngspice — N=6 actual sub-threshold parametron cells
+  (LC tank + tanh transconductor + 2·f₀ pump), resistively coupled, with a per-symbol lock-in readout.
+  The physical circuit is <b>weaker still</b>: it loses to a linear filter on a product-memory task
+  (NRMSE 0.44 vs 0.11) and <b>fails temporal-XOR outright</b> (accuracy 0.39, below chance) — it does
+  not reproduce even the one nonlinear edge the model had. The abstraction was generous; the real
+  device is less capable, not more. <span class="muted">(N=6, one readout scheme — suggestive, not a
+  clean refutation.)</span>
+  <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/sim_ngspice_reservoir.py">Reproduce it</a> (ngspice + numpy).</p>
 </div>
 
 <h2>The build, animated</h2>
