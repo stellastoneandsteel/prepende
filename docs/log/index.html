@@ -33,6 +33,33 @@
 <p class="sub">Every run, every result — including the ones that lose — filed by date so the front page stays short. Each entry clears an accuracy/appropriateness gate before it posts.</p>
 
 <div class="entry">
+  <div class="date">2026-06-21 · the recovery test</div>
+  <h2>Is the noise-fragility just a bad readout? No — averaging can't recover the edge <span class="tag miss">pre-registered · recovery refuted</span></h2>
+  <p><b>The diagnostic follow-up.</b> Batches 6–7 found the parametron reservoir's temporal-XOR edge collapses under modest readout noise and that scale doesn't rescue it. The most hopeful explanation left was <i>measurement</i> noise: if the signal still lives in the reservoir state and only the sensor is noisy, the textbook fix is to read each feature several times and average (effective noise ÷ √M). We applied that averaging <b>identically to the reservoir and the linear delay-line</b> — it advantages neither — and pre-registered that <b>M=16</b> reads would restore the 10-point margin at σ=0.3 (p=0.72).</p>
+  <p><b>It doesn't.</b> The clean margin of 20.1 points collapses to 2.4 with no averaging and recovers only to 2.6 (M=4) and 4.0 (M=16) — barely off the floor, nowhere near the 10-point bar. The optimistic recovery bet lost; the two controls (single-shot still collapses; a token M=4 isn't enough) both hit.</p>
+  <svg viewBox="0 0 360 200" width="100%" style="max-width:430px;display:block;margin:12px 0" role="img" aria-label="Margin in points versus averaging depth: 2.4 at M=1, 2.6 at M=4, 4.0 at M=16 — all far below the 10-point recovery bar and the 20.1-point clean margin">
+    <line x1="52" y1="40" x2="300" y2="40" stroke="var(--muted)" stroke-width="1" stroke-dasharray="2 3" opacity="0.75"/>
+    <text x="305" y="43" font-size="9.5" fill="var(--muted)">clean 20.1</text>
+    <line x1="52" y1="95" x2="300" y2="95" stroke="var(--maroon)" stroke-width="1.4" stroke-dasharray="5 3"/>
+    <text x="305" y="98" font-size="9.5" fill="var(--maroon)">bar 10.0</text>
+    <line x1="52" y1="150" x2="300" y2="150" stroke="var(--ink)" stroke-width="1"/>
+    <polyline points="92,137 174,136 256,128" fill="none" stroke="var(--maroon)" stroke-width="2.2"/>
+    <circle cx="92" cy="137" r="3.3" fill="var(--maroon)"/>
+    <circle cx="174" cy="136" r="3.3" fill="var(--maroon)"/>
+    <circle cx="256" cy="128" r="3.3" fill="var(--maroon)"/>
+    <text x="92" y="130" font-size="9.5" fill="var(--ink)" text-anchor="middle">2.4</text>
+    <text x="174" y="129" font-size="9.5" fill="var(--ink)" text-anchor="middle">2.6</text>
+    <text x="256" y="121" font-size="9.5" fill="var(--ink)" text-anchor="middle">4.0</text>
+    <text x="92" y="164" font-size="9.5" fill="var(--muted)" text-anchor="middle">M=1</text>
+    <text x="174" y="164" font-size="9.5" fill="var(--muted)" text-anchor="middle">M=4</text>
+    <text x="256" y="164" font-size="9.5" fill="var(--muted)" text-anchor="middle">M=16</text>
+    <text x="52" y="184" font-size="9.5" fill="var(--muted)">reads averaged before readout →   (test-accuracy margin, points; σ=0.3)</text>
+  </svg>
+  <p><b>What it means.</b> The fragility is intrinsic, not a sensor artifact. The XOR-computing signal sits in razor-thin directions of the reservoir's state that even small feature noise erases — you can't average your way back to it. That is the harder verdict for a physical computer: the edge isn't being hidden by a noisy readout, it is genuinely destroyed by noise in the representation. All three noise batches now point the same way — a <b>real</b> nonlinear-memory advantage that does not survive contact with noise.</p>
+  <p class="muted">Across the reservoir arc, six of nine pre-registered forward bets have hit; all three misses were the optimistic ones (survive noise, scale rescues, averaging recovers) — a calibration signal in itself. Code: <code>experiments/sim_reservoir_recover.py</code>, <code>experiments/batch8_recover_predictions.py</code>; resolved against <code>experiments/data/reservoir_recover.json</code> under the locked Batch-6 regime.</p>
+</div>
+
+<div class="entry">
   <div class="date">2026-06-20 15:26</div>
   <h2>Auto research-loop note <span class="tag miss">auto · gated · pending review</span></h2>
   <p>A local model proposed LC oscillator topologies and component values for set target frequencies, and ngspice verified each in simulation. Recent targets of 2000 Hz and 5000 Hz were matched with essentially zero relative error.  That match is expected, not a result: an LC tank's frequency follows a closed-form law in its inductance and capacitance, so hitting a chosen target is arithmetic, not discovery. What the run actually demonstrates is the closed loop itself - a model proposing a circuit, a simulator checking it, running automatically and on-device. It is not a novel computer, not a new device, and not evidence of any capability beyond that mechanism. All figures are simulator estimates.</p>

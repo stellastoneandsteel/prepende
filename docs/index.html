@@ -205,11 +205,11 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
       <text x="145" y="206" text-anchor="middle" font-size="11" fill="#5b6675">predicted →</text>
       <text x="20" y="100" text-anchor="middle" font-size="11" fill="#5b6675" transform="rotate(-90 20 100)">observed</text>
       <!--LEDGER:rel-->
-      <polyline points="140,184 179,82 222,14" fill="none" stroke="#4a3f9e" stroke-width="2"/>
-      <circle cx="140" cy="184" r="5" fill="#4a3f9e"/>
-      <circle cx="179" cy="82" r="8" fill="#4a3f9e"/>
-      <circle cx="222" cy="14" r="6" fill="#4a3f9e"/>
-      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.17 · skill +0.29</text>
+      <polyline points="145,127 181,99 223,14" fill="none" stroke="#4a3f9e" stroke-width="2"/>
+      <circle cx="145" cy="127" r="6" fill="#4a3f9e"/>
+      <circle cx="181" cy="99" r="8" fill="#4a3f9e"/>
+      <circle cx="223" cy="14" r="7" fill="#4a3f9e"/>
+      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.19 · skill +0.21</text>
       <!--/LEDGER:rel-->
     </svg>
     <svg viewBox="0 0 270 220" role="img" aria-label="conviction vs resolvability">
@@ -222,7 +222,7 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
     </svg>
   </div>
   <p class="muted" style="font-size:.82rem;margin-top:.5rem"><!--LEDGER:stamp-->
-      ledger: 11 resolved · Brier 0.17 · skill +0.29 · auto-rebuilt 2026-06-17T09:01:06+00:00 (UTC)
+      ledger: 14 resolved · Brier 0.19 · skill +0.21 · auto-rebuilt 2026-06-22T02:30:06+00:00 (UTC)
       <!--/LEDGER:stamp--></p>
   <p><b>Why it matters:</b> a claim can be supremely confident and still <i>uncheckable</i>.
   Those aren't miscalibrated — they're off the plane entirely. The ledger auto-flags them
@@ -487,16 +487,19 @@ specimen.</p>
 (and does not) show. To keep this page short, full entries live in the logbook; only the
 latest is summarized here.</p>
 <div class="card log">
-  <h3><span class="date">2026-06-17</span> · a reservoir's real edge, killed by noise at any scale — three pre-registered batches</h3>
+  <h3><span class="date">2026-06-21</span> · a reservoir's real edge, killed by noise — and not even a fixable kind of noise — four pre-registered batches</h3>
   <p>A complete, honest arc on the "can this fabric double as a reservoir?" question.
   <b>Batch 5:</b> the parametron reservoir decisively beats a linear filter on a temporal-XOR task it
   structurally can't compute — 68% vs 48% (chance), +20 points (both bets hit). <b>Batch 6:</b> but that
   edge is noise-fragile — just 10% readout noise collapses it from 68% to 53%, gone by σ=1.0 (we bet it
   would survive and lost). <b>Batch 7:</b> and scale doesn't save it — bigger reservoirs are cleanly better
   (68→77% clean) but stay pinned at chance under noise for every size N up to 400 (we bet scale might rescue
-  it, p=0.50, and lost). The conclusion is honest and closed: a <b>real</b> nonlinear-memory advantage that
-  is <b>fragile to noise at any scale</b> — so as a physical computer this fabric still does not earn its
-  keep. Four of six forward bets hit; the two misses were the optimistic ones.
+  it, p=0.50, and lost). <b>Batch 8:</b> and it isn't even a measurement artifact — averaging repeated noisy
+  reads (the textbook fix, applied fairly to both methods) recovers almost nothing: the +20-point margin
+  crawls from 2.4 to just 4.0 points even at 16-read averaging, far short of the 10-point bar (we bet
+  recovery, p=0.72, and lost). The conclusion is honest and closed: a <b>real</b> nonlinear-memory advantage
+  that is <b>destroyed by noise in the representation itself</b> — so as a physical computer this fabric
+  still does not earn its keep. Six of nine forward bets hit; every miss was an optimistic one.
   <span class="muted">Full write-up → <a href="reservoir-arc/">the reservoir arc</a> · day-by-day → <a href="log/">the logbook</a>.</span></p>
   <p style="margin:8px 0 0"><a href="log/"><b>Full logbook →</b></a></p>
 </div>
