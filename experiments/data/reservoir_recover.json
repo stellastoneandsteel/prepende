@@ -1,0 +1,67 @@
+{
+  "batch": 8,
+  "task": "temporal-XOR; measurement-averaging recovery at sigma=0.3 (Batch-6 regime)",
+  "config": {
+    "N": 50,
+    "seeds": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "sigma": 0.3,
+    "Ms": [
+      1,
+      4,
+      16
+    ],
+    "selection": "hyperparams frozen at clean(sigma=0) VAL; readout retrained per (M); M reads averaged before readout, identical for reservoir and linear delay-line",
+    "frozen_cfg": {
+      "reservoir": {
+        "pfrac": 0.5,
+        "c": 0.3,
+        "isc": 2.0
+      },
+      "linear_lags": 8,
+      "esn_sr_leak": [
+        0.9,
+        0.6
+      ]
+    }
+  },
+  "clean_reference": {
+    "reservoir": 0.6765,
+    "linear": 0.476,
+    "margin": 0.2005
+  },
+  "sweep_sigma0.3": {
+    "1": {
+      "reservoir": 0.5045,
+      "linear": 0.4805,
+      "esn": 0.4873,
+      "margin": 0.024
+    },
+    "4": {
+      "reservoir": 0.505,
+      "linear": 0.4787,
+      "esn": 0.4988,
+      "margin": 0.0263
+    },
+    "16": {
+      "reservoir": 0.5235,
+      "linear": 0.4832,
+      "esn": 0.514,
+      "margin": 0.0403
+    }
+  },
+  "margin_M1": 0.024,
+  "margin_M4": 0.0263,
+  "margin_M16": 0.0403,
+  "resolved": {
+    "recover_y": 0,
+    "control_y": 1,
+    "dose_y": 1
+  },
+  "verdict": "Recovery at sigma=0.3 (clean margin 0.201): M=1 0.024 -> M=4 0.026 -> M=16 0.040. Averaging does NOT recover the edge even at M=16: the loss is deeper than measurement noise. Single-shot still collapses (control holds). Token M=4 is not enough (dose-response confirmed)."
+}
