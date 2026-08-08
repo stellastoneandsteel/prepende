@@ -68,8 +68,9 @@
   <p class="tag">Computation, and honesty, in the space between.</p>
   <div class="lead">
     Prepende is two things held to one standard. <b>A tool:</b> pre-registered,
-    hash-locked AI predictions with real calibration scoring — proof that a system's
-    confidence is trustworthy, not a promise that it is. <b>A question:</b> a series of
+    hash-locked AI predictions with calibration scoring. Protocol v2 chains every event
+    and supports verifier-trusted checkpoint signatures; the public historical corpus is
+    still legacy v1 and explicitly unanchored. <b>A question:</b> a series of
     essays and software experiments asking whether intelligence lives <i>along</i> the
     optimization line, or on an axis perpendicular to it. Both are run by one engine —
     <i>Engram</i>, the prepende loop, which circles rather than optimizes toward a goal —
@@ -193,10 +194,11 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
 
 <!-- EXP 3 -->
 <div class="card">
-  <h3>3 · The Prepende calibration ledger <span class="chip c-blue">the tool · shipping</span></h3>
-  <p>The core product. Lock a prediction (+ its scoring rule and regime) into a hash
-  <i>before</i> the outcome; you can't move the goalposts afterward. Over many predictions
-  you get a real reliability curve. Left: calibration (accuracy on the line). Right: a
+  <h3>3 · The Prepende calibration ledger <span class="chip c-amber">v2 release candidate</span></h3>
+  <p>The core product. Protocol v2 locks a prediction, evaluator, evidence regime, and
+  deadline into a chained stream, then distinguishes internal integrity from an externally
+  trusted checkpoint. Over enough independent predictions it can produce a reliability
+  curve. The current public v1 corpus is below that floor. Left: calibration. Right: a
   second, <b>perpendicular</b> axis — <i>resolvability</i> (can a third party even check it?).</p>
   <div class="grid">
     <svg viewBox="0 0 270 220" role="img" aria-label="reliability diagram">
@@ -205,11 +207,9 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
       <text x="145" y="206" text-anchor="middle" font-size="11" fill="#5b6675">predicted →</text>
       <text x="20" y="100" text-anchor="middle" font-size="11" fill="#5b6675" transform="rotate(-90 20 100)">observed</text>
       <!--LEDGER:rel-->
-      <polyline points="145,127 181,99 223,14" fill="none" stroke="#4a3f9e" stroke-width="2"/>
-      <circle cx="145" cy="127" r="6" fill="#4a3f9e"/>
-      <circle cx="181" cy="99" r="8" fill="#4a3f9e"/>
-      <circle cx="223" cy="14" r="7" fill="#4a3f9e"/>
-      <text x="48" y="28" font-size="10" fill="#16233a">Brier 0.19 · skill +0.21</text>
+      <text x="145" y="92" text-anchor="middle" font-size="11" fill="#9a2d2d">INSUFFICIENT EVIDENCE</text>
+      <text x="145" y="112" text-anchor="middle" font-size="10" fill="#5b6675">forward resolved n=10; curve requires n&gt;=30</text>
+      <text x="145" y="130" text-anchor="middle" font-size="10" fill="#5b6675">legacy v1 resolutions are not hash-protected</text>
       <!--/LEDGER:rel-->
     </svg>
     <svg viewBox="0 0 270 220" role="img" aria-label="conviction vs resolvability">
@@ -222,12 +222,11 @@ illustrations — not hardware results, and not proof of the larger thesis. Hone
     </svg>
   </div>
   <p class="muted" style="font-size:.82rem;margin-top:.5rem"><!--LEDGER:stamp-->
-      ledger: 14 resolved · Brier 0.19 · skill +0.21 · auto-rebuilt 2026-08-03T12:36:48+00:00 (UTC)
+      legacy v1: 26 locked, 14 resolved, 12 pending (46.2% unresolved); v1 has no locked forfeit state; 4 retrospective excluded; UNANCHORED; v2=UNANCHORED with 0 contracts; calibration suppressed unless a unique forward v2 cohort is OK, independently resolved, and n&gt;=30
       <!--/LEDGER:stamp--></p>
   <p><b>Why it matters:</b> a claim can be supremely confident and still <i>uncheckable</i>.
-  Those aren't miscalibrated — they're off the plane entirely. The ledger auto-flags them
-  (a high-conviction "we will achieve the singularity" scores 0.30 and is refused), so the
-  honesty floor is enforced in code, not in good intentions.</p>
+  Those are not miscalibrated; they are off the plane entirely. The resolvability linter
+  flags them for review. It is a heuristic, not proof and not an automatic refusal gate.</p>
 </div>
 
 <!-- EXP 4 -->
@@ -835,8 +834,9 @@ renders, not photographs of working devices. They help you picture it; they prov
 </div>
 
 <footer>
-  <p><b>Prepende</b> is open source (MIT). The calibration tool, every experiment's code,
-  and the data behind these charts are in the repository — verify any number yourself.</p>
+  <p><b>Prepende</b> is open source (MIT). The protocol tool, experiment code, and data
+  behind these charts are in the repository for inspection and reproduction. The public
+  v1 history remains explicitly unanchored and below the calibration evidence floor.</p>
   <p>Built by Ryan Amerio. Essays voice-written by Ryan; software co-written with Claude.
   Nothing here is investment, medical, or scientific advice.</p>
 </footer>

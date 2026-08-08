@@ -2,8 +2,8 @@
 """batch5_boundary_predictions.py — pre-register and (later) resolve Batch 5.
 
 Blueprint discipline (no direction): --lock writes two falsifiable contracts into the
-PUBLIC ledger BEFORE the scored sim is run; the git commit of that lock is the external,
-tamper-evident timestamp. --resolve reads the sim's results JSON and closes each contract
+legacy PUBLIC ledger before the scored sim is run; repository history records that order
+but is not an independently trusted timestamp. --resolve reads the sim's results JSON and closes each contract
 under the IDENTICAL eval_regime (a changed regime is refused by prepende.RetrofitError).
 
 The eval_regime / question / rule strings live here as constants so the lock and the
@@ -20,7 +20,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
-from prepende import Ledger, lock_prediction  # noqa: E402
+from prepende import LegacyLedger as Ledger, legacy_lock_prediction as lock_prediction  # noqa: E402
 
 LEDGER = os.path.join(HERE, "predictions.jsonl")
 RESULTS = os.path.join(HERE, "data", "reservoir_boundary.json")

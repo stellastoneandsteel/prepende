@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 Seed the PUBLIC prediction ledger (experiments/predictions.jsonl) via the prepende API
-so every entry carries a real SHA-256 lock hash. The git commit timestamp is the
-external, tamper-evident "locked before outcome" anchor.
+so every entry carries a SHA-256 contract hash. Repository history records the published
+ordering, but this legacy v1 format has no independently trusted timestamp and does not
+protect resolution rows.
 
 Two honestly-separated groups:
   * predictor "prepende:dev-selftest" -- development self-tests. These were recorded
@@ -19,7 +20,7 @@ import os, sys, time
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
-from prepende import Ledger, lock_prediction, summary, resolvability  # noqa: E402
+from prepende import LegacyLedger as Ledger, legacy_lock_prediction as lock_prediction, summary, resolvability  # noqa: E402
 
 LEDGER = os.path.join(HERE, "predictions.jsonl")
 NOW = time.time()
@@ -79,7 +80,10 @@ FORWARD = [
 
 
 def main():
-    open(LEDGER, "w").close()  # truncate -> deterministic rebuild
+    if os.path.exists(LEDGER) and os.path.getsize(LEDGER):
+        raise SystemExit(
+            "REFUSED: the published v1 ledger is immutable; create a Protocol v2 stream"
+        )
     L = Ledger(LEDGER)
     n_dev = n_fwd = 0
     for predictor, kind, claim, q, rule, regime, outcome, note in DEV_SELFTESTS:

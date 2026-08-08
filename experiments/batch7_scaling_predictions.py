@@ -12,7 +12,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
-from prepende import Ledger, lock_prediction  # noqa: E402
+from prepende import LegacyLedger as Ledger, legacy_lock_prediction as lock_prediction  # noqa: E402
 
 LEDGER = os.path.join(HERE, "predictions.jsonl")
 RESULTS = os.path.join(HERE, "data", "reservoir_scaling.json")

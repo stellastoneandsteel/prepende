@@ -19,10 +19,13 @@ def _prob_pairs(resolved) -> List[Tuple[float, int]]:
     for c, r in resolved:
         if r is None:
             continue
+        outcome = getattr(r, "outcome", None)
+        if not isinstance(outcome, dict):
+            continue
         if c.kind == "probability":
-            pairs.append((float(c.claim.get("p")), int(r.outcome.get("y"))))
+            pairs.append((float(c.claim.get("p")), int(outcome.get("y"))))
         elif c.kind == "categorical":
-            correct = 1 if str(c.claim.get("label")) == str(r.outcome.get("label")) else 0
+            correct = 1 if str(c.claim.get("label")) == str(outcome.get("label")) else 0
             pairs.append((float(c.claim.get("p", 0.5)), correct))
     return pairs
 
@@ -60,14 +63,63 @@ def calibration_table(resolved, nbins: int = 5) -> List[Dict[str, Any]]:
 def numeric_summary(resolved) -> Dict[str, Any]:
     errs, cover, cnt = [], 0, 0
     for c, r in resolved:
-        if r is None or c.kind != "numeric":
+        outcome = getattr(r, "outcome", None) if r is not None else None
+        if not isinstance(outcome, dict) or c.kind != "numeric":
             continue
         cnt += 1
-        pred, obs = float(c.claim.get("value")), float(r.outcome.get("value"))
+        pred, obs = float(c.claim.get("value")), float(outcome.get("value"))
         errs.append(abs(pred - obs))
         lo, hi = c.claim.get("lo"), c.claim.get("hi")
-        if lo is not None and hi is not None and lo <= obs <= hi:
+        if lo is not None and hi is not None and float(lo) <= obs <= float(hi):
             cover += 1
     if cnt == 0:
         return {"n_numeric": 0}
     return {"n_numeric": cnt, "mae": sum(errs) / cnt, "ci_coverage": cover / cnt}
+
+
+def penalized_probability_summary(records) -> Dict[str, Any]:
+    """Brier mean with locked forfeit penalties included in the denominator."""
+    losses: List[float] = []
+    resolved = forfeited = 0
+    for contract, terminal in records:
+        if contract.kind not in {"probability", "categorical"}:
+            continue
+        outcome = getattr(terminal, "outcome", None) if terminal is not None else None
+        if isinstance(outcome, dict):
+            if contract.kind == "probability":
+                y = int(outcome["y"])
+            else:
+                y = int(str(contract.claim["label"]) == str(outcome["label"]))
+            losses.append(brier(float(contract.claim["p"]), y))
+            resolved += 1
+        elif getattr(terminal, "disposition", None) == "forfeit":
+            losses.append(float(contract.nonresolution_policy["penalty"]))
+            forfeited += 1
+    return {
+        "n_scored": len(losses),
+        "n_resolved": resolved,
+        "n_forfeited": forfeited,
+        "penalized_brier": (sum(losses) / len(losses)) if losses else None,
+    }
+
+
+def penalized_numeric_summary(records) -> Dict[str, Any]:
+    """Numeric absolute error with locked forfeit penalties in the denominator."""
+    losses: List[float] = []
+    resolved = forfeited = 0
+    for contract, terminal in records:
+        if contract.kind != "numeric":
+            continue
+        outcome = getattr(terminal, "outcome", None) if terminal is not None else None
+        if isinstance(outcome, dict):
+            losses.append(abs(float(contract.claim["value"]) - float(outcome["value"])))
+            resolved += 1
+        elif getattr(terminal, "disposition", None) == "forfeit":
+            losses.append(float(contract.nonresolution_policy["penalty"]))
+            forfeited += 1
+    return {
+        "n_scored": len(losses),
+        "n_resolved": resolved,
+        "n_forfeited": forfeited,
+        "penalized_mae": (sum(losses) / len(losses)) if losses else None,
+    }

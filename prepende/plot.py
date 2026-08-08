@@ -2,10 +2,20 @@
 from __future__ import annotations
 
 from .metrics import reliability
+from .report import MIN_CALIBRATION_N, segregated_records
 
 
 def reliability_svg(resolved, path: str, nbins: int = 10,
-                    title: str = "Calibration / reliability diagram") -> str:
+                    title: str = "Calibration / reliability diagram",
+                    minimum_n: int = 30) -> str:
+    resolved = list(resolved)
+    cohorts = segregated_records(resolved)
+    if len(cohorts) > 1:
+        raise ValueError(
+            "refusing to pool calibration records across predictor, model, domain, "
+            "evaluation, provenance, or resolver cohorts"
+        )
+    minimum_n = max(MIN_CALIBRATION_N, int(minimum_n))
     rel = reliability(resolved, nbins)
     W = H = 440
     m = 64
@@ -26,7 +36,7 @@ def reliability_svg(resolved, path: str, nbins: int = 10,
     P.append('<text x="%d" y="%d" font-size="12" fill="#333" text-anchor="middle">predicted probability</text>' % (m + plot / 2, H - 14))
     P.append('<text x="18" y="%d" font-size="12" fill="#333" text-anchor="middle" transform="rotate(-90 18 %d)">observed frequency</text>' % (m + plot / 2, m + plot / 2))
     P.append('<text x="%d" y="30" font-size="15" fill="#222" text-anchor="middle">%s</text>' % (W / 2, title))
-    if rel.get("n"):
+    if rel.get("n", 0) >= minimum_n:
         pts = [b for b in rel["bins"] if b["n"]]
         if len(pts) >= 2:
             poly = " ".join("%.1f,%.1f" % (X(b["mean_pred"]), Y(b["observed"])) for b in pts)
@@ -39,7 +49,7 @@ def reliability_svg(resolved, path: str, nbins: int = 10,
         P.append('<text x="%d" y="%d" font-size="12" fill="#222">ECE=%.3f   Brier=%.3f   skill=%+.3f</text>' % (m + 6, m + 18, rel["ece"], rel["brier"], skill))
         P.append('<text x="%d" y="%d" font-size="11" fill="#666">n=%d   point size ~ count   bars = 95%% Wilson CI</text>' % (m + 6, m + 34, rel["n"]))
     else:
-        P.append('<text x="%d" y="%d" font-size="12" fill="#999" text-anchor="middle">no resolved predictions yet</text>' % (W / 2, H / 2))
+        P.append('<text x="%d" y="%d" font-size="12" fill="#999" text-anchor="middle">insufficient evidence: n=%d, minimum=%d</text>' % (W / 2, H / 2, rel.get("n", 0), minimum_n))
     P.append('</svg>')
     svg = "\n".join(P)
     with open(path, "w", encoding="utf-8") as f:

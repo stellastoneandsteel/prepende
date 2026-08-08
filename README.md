@@ -1,96 +1,139 @@
-# Prepende
+# Prepende Protocol
 
-**Verifiable proof that a predictor's confidence is trustworthy.**
+**Registered, chained prediction commitments with explicit external trust.**
 
-Prepende makes an AI (or a human) commit a **falsifiable prediction before the outcome
-is known**, with its scoring rule *and* evaluation regime locked into a content hash.
-After that you cannot move the goalposts: any edit breaks the hash, and resolving under
-a changed regime is refused. Over many predictions the ledger produces a real
-**calibration curve** — when it says 70%, does it happen ~70% of the time?
+Prepende Protocol v2 locks a prediction together with its deterministic evaluator,
+evaluation artifacts, deadline, resolver policy, and non-resolution penalty. Every later
+event is sequence-numbered and hash-chained. External checkpoint signatures can establish
+which registered-stream prefix existed by an authority-attested time.
 
-Pure standard library. No dependencies. MIT licensed.
+This is a release candidate. It distinguishes internal integrity, external anchoring,
+registered-stream completeness, and independent resolution. It does not claim that hidden
+unregistered streams cannot exist or that a named authority is honest.
 
-## Why
+## Install locally
 
-AI systems state confidence constantly — agent self-scores, "I'm 90% sure," eval numbers —
-and almost none of it is *verifiably* calibrated, because nothing proves the prediction was
-made before the outcome. Prepende turns "trust the AI's confidence" from faith into
-something you can check by hashing.
+```bash
+python3 -m pip install -e .
+# Ed25519 anchor and resolver verification:
+python3 -m pip install -e '.[signatures]'
+```
 
-The hard part of calibration isn't the math — it's **not cheating after the fact.** That's
-enforced here by construction:
+No runtime dependency is required for canonicalization, chaining, validation, scoring, or
+self-resolved streams. Ed25519 verification is an optional dependency.
 
-- **Tamper-evident:** the prediction + resolution rule + eval regime are SHA-256 hashed at
-  lock time. Change any of them and `Ledger.integrity()` flags it.
-- **No goalpost-moving:** resolving under a different `eval_regime` than the locked one is
-  refused (`RetrofitError`).
-- **External timestamp:** the ledger is JSONL — commit it to git (or a timestamp service) and
-  the history proves each lock preceded its outcome.
-
-## Quickstart
+## Create and lock
 
 ```python
-from prepende import Ledger, lock_prediction, build_report
+from prepende import Ledger
 
-L = Ledger("ledger.jsonl")
-c = lock_prediction(
-    predictor="gpt-x",                       # any model id or "human:alice"
-    question="Will the next release pass CI on the first attempt?",
-    kind="probability", claim={"p": 0.8},
-    resolution_rule="y=1 if first CI run is green",
-    eval_regime="ci-pipeline-v3",
+ledger = Ledger.create(
+    "ledger-v2.jsonl",
+    stream_id="agent-a-production",
+    registered_predictor="agent-a",
 )
-L.lock(c)                                     # commit BEFORE the outcome
-# ... later ...
-L.resolve(c.cid, {"y": 1}, "ci-pipeline-v3") # regime MUST match the lock
-print(build_report(L))
+
+contract = ledger.lock_prediction(
+    predictor="agent-a",
+    model_version="model-2026-08",
+    domain="ci-delivery",
+    event_id="release-184-first-run",
+    question="Will release 184 pass its first CI run?",
+    kind="probability",
+    claim={"p": "0.8"},
+    resolution_rule="y=1 if the first recorded CI conclusion is success",
+    evaluator={
+        "type": "binary_value",
+        "version": "1",
+        "parameters": {"evidence": "first-ci-result", "field": "passed"},
+    },
+    evaluation={
+        "id": "ci-pipeline-v3",
+        "spec_digest": "sha256:" + "1" * 64,
+        "artifacts": [],
+    },
+    resolution_due_at="2026-08-10T00:00:00Z",
+    resolver_policy={"mode": "self", "authorized_key_ids": []},
+    nonresolution_policy={"action": "forfeit", "metric": "brier", "penalty": "1"},
+)
 ```
 
-CLI:
+Numbers in hashed records use decimal strings. `created_at` and `resolved_at` are not public
+arguments; the ledger assigns them inside the append flow.
+
+## Resolve from pinned evidence
+
+```python
+ledger.resolve(
+    contract.contract_id,
+    evidence=[{
+        "name": "first-ci-result",
+        "uri": "urn:ci:release-184:first",
+        "content": {"passed": True},
+    }],
+)
+```
+
+The evidence digest and outcome are recomputed during every verification. Signed resolver
+flows use `prepare_resolution()` followed by `resolve_signed()` before the locked deadline.
+When evaluation artifacts are declared, each artifact role must be supplied as an evidence
+name with the exact locked URI and content digest, and `evaluator.parameters.evidence`
+selects the hash-pinned document that drives the outcome.
+
+## Checkpoint and verify
+
+```python
+checkpoint = ledger.checkpoint()
+request = ledger.anchor_request(checkpoint["checkpoint_id"])
+# The independent provider adds its own anchored_at and key_id, signs the full statement,
+# and returns both values. Prepende then appends that receipt:
+# ledger.add_anchor(provider_statement, provider_signature)
+
+report = ledger.verify(
+    trusted_anchor_keys={"example-tsa": trusted_key_record},
+    external_anchor_receipts=receipts_obtained_independently,
+)
+print(report.status)  # OK, UNANCHORED, INCOMPLETE, or TAMPERED
+```
+
+Trust is supplied by the verifier. A key mentioned only inside a ledger is not automatically
+trusted. Passing receipts obtained outside the ledger lets verification detect a presented
+stream that omits a later known checkpoint. See [the protocol specification](docs/PROTOCOL_V2.md) and
+[threat model](docs/THREAT_MODEL_V2.md). The
+[provider spike](docs/ANCHOR_PROVIDER_SPIKE_V2.md) records why the RC uses an external
+Ed25519 authority interface and why that is not a claim that a live public TSA is configured.
+Signed outcomes count as independently resolved only after a trusted checkpoint externally
+witnesses the terminal row at or after its timestamp and by the locked deadline while the
+resolver key is valid. Revoked keys fail closed.
+
+## Reporting floor
+
+Reports keep protocol, predictor, model version, domain, prediction kind, evaluator and
+artifact manifest, evaluation regime, provenance, and resolver class separate. Pending,
+overdue, forfeited, and void contracts remain visible. Calibration
+curves and skill headlines are suppressed below 30 resolved probabilistic predictions in a
+single segregated cohort. The public rebuild additionally requires exactly one sufficient
+forward cohort, a fully verified stream, and independently trusted resolution signatures.
+
+## Legacy corpus
+
+`experiments/predictions.jsonl` is frozen as byte-for-byte v1 history: 26 contracts, 14
+resolutions, and 12 pending at the v2 cutover. V1 contract hashes still verify, but resolution
+content, row order, completeness, and timestamps were not protected by the protocol. Use
+`LegacyLedger` to inspect it. A v2 import event can commit its exact bytes without upgrading
+those historical guarantees.
+
+## Commands
 
 ```bash
-python3 -m prepende --ledger ledger.jsonl lock \
-  --predictor gpt-x --question "..." --claim '{"p":0.8}' \
-  --rule "y=1 if green" --regime ci-v3
-python3 -m prepende --ledger ledger.jsonl resolve --cid <id> --outcome '{"y":1}' --regime ci-v3
-python3 -m prepende --ledger ledger.jsonl report
-python3 -m prepende --ledger ledger.jsonl plot --out calibration.svg
+python3 -m prepende --help
+python3 -m prepende.tests
+python3 -m unittest discover -s tests -v
+python3 -m build
 ```
 
-Demo + tests:
-
-```bash
-python3 -m prepende.demo     # report + reliability SVG + anti-retrofit proofs
-python3 -m prepende.tests    # test suite
-```
-
-## Metrics
-
-Brier score, log loss, skill vs base-rate baseline, **ECE / MCE**, the Murphy **Brier
-decomposition** (reliability − resolution + uncertainty), per-bin **Wilson 95% CIs**, and a
-reliability-diagram **SVG**.
-
-## Prediction kinds
-
-- `probability` — `{"p": 0.7}` → outcome `{"y": 1|0}` (Brier, log loss, calibration).
-- `numeric` — `{"value": 0.9, "lo": 0.85, "hi": 0.95}` → `{"value": 0.78}` (MAE, CI coverage).
-- `categorical` — `{"label": "a", "p": 0.6}` → `{"label": "b"}` (scored via correctness).
-
-## Honest limits
-
-This makes predictions **falsifiable and scorable, not correct.** A calibration curve only
-means something at **n ≥ ~30** across independent domains, and self-scoring is weak evidence
-to outsiders — the cheap fix is to **commit the ledger publicly** so the locks are externally
-timestamped. The asset is the accumulated, checkable track record; the code is just the rails.
+The research simulations under `experiments/` require numpy. The protocol core does not.
 
 ## License
 
-MIT © 2026 Ryan Amerio
-
-## This repository
-- `prepende/` — the calibration tool (pure standard library, no deps).
-- `docs/index.html` — the project site (GitHub Pages: Settings -> Pages -> /docs).
-- `experiments/` — runnable simulations + the data behind the site's charts (need numpy).
-
-Honest scope: the experiments are software results, not hardware claims; the larger
-ideas are labeled hypotheses; nothing here claims a "singularity." See the site.
+MIT, copyright 2026 Ryan Amerio.

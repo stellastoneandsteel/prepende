@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Resolve the pre-registered [T2] prediction from sim_gap_reservoir.py's result.
 
-[T2] was locked BEFORE the run (predictions.jsonl, git history proves order). The
+[T2] appears before the run in repository history. This is legacy v1 provenance, not an
+independently trusted timestamp or a protected resolution row. The
 gap-coupled reservoir did NOT beat a single reservoir at matched readout, so [T2]
 resolves y=0 -- a clean, pre-registered miss. The eval_regime passed here must match
 the locked regime exactly, or the ledger refuses the resolution (anti-retrofit).
@@ -11,7 +12,7 @@ import os, sys, json
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 sys.path.insert(0, ROOT)
-from prepende import Ledger  # noqa: E402
+from prepende import LegacyLedger as Ledger  # noqa: E402
 
 LEDGER = os.path.join(HERE, "predictions.jsonl")
 DATA = os.path.join(HERE, "data", "gap-reservoir-t2.json")

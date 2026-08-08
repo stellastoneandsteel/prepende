@@ -25,7 +25,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install deps
-        run: pip install --quiet numpy
+        run: pip install --quiet numpy '.[signatures]'
       - name: Rebuild data-driven site numbers
         run: python experiments/rebuild.py
       - name: Commit refreshed numbers if changed

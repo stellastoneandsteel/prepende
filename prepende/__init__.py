@@ -1,25 +1,43 @@
-"""prepende — pre-registered, hash-locked predictions with calibration scoring.
+"""Prepende Protocol: registered, chained prediction commitments."""
 
-The one novel idea, made enforceable: a predictor (any AI or human) commits a
-falsifiable prediction BEFORE the outcome is known, with its scoring rule AND
-evaluation regime locked into a content hash. You cannot move the goalposts after
-the fact — any edit breaks the hash, and resolving under a changed regime is refused.
-Over many predictions the ledger yields a real calibration curve: is the predictor's
-stated confidence trustworthy?
-"""
-from .contract import Contract, Resolution, lock_prediction
-from .ledger import Ledger, RetrofitError
-from .scoring import brier, log_score, summary, calibration_table, numeric_summary
+from .contract import Contract, Disposition, Resolution
+from .anchors import AnchorProvider, ResolutionSigner, build_anchor_statement
+from .ledger import (
+    IntegrityReport,
+    Ledger,
+    LedgerIntegrityError,
+    RetrofitError,
+    STATUS_INCOMPLETE,
+    STATUS_OK,
+    STATUS_TAMPERED,
+    STATUS_UNANCHORED,
+)
+from .legacy import LegacyContract, LegacyLedger, LegacyResolution, legacy_lock_prediction
 from .metrics import reliability, wilson
-from .resolvability import resolvability, resolvability_report
 from .plot import reliability_svg
-from .report import build_report
+from .report import MIN_CALIBRATION_N, build_report, grouped_summaries
+from .resolvability import resolvability, resolvability_report
+from .scoring import (
+    brier,
+    calibration_table,
+    log_score,
+    numeric_summary,
+    penalized_numeric_summary,
+    penalized_probability_summary,
+    summary,
+)
+from .signing import TrustedKey, sign_detached, verify_detached
 
-__version__ = "0.2.0"
+__version__ = "0.3.0rc1"
 __all__ = [
-    "Contract", "Resolution", "lock_prediction",
-    "Ledger", "RetrofitError",
-    "brier", "log_score", "summary", "calibration_table", "numeric_summary",
-    "reliability", "wilson", "reliability_svg", "build_report",
-    "resolvability", "resolvability_report",
+    "Contract", "Disposition", "Resolution", "Ledger", "IntegrityReport",
+    "LedgerIntegrityError", "RetrofitError", "STATUS_OK", "STATUS_UNANCHORED",
+    "STATUS_INCOMPLETE", "STATUS_TAMPERED", "LegacyContract", "LegacyLedger",
+    "LegacyResolution", "legacy_lock_prediction", "brier", "log_score", "summary",
+    "calibration_table", "numeric_summary", "penalized_numeric_summary", "penalized_probability_summary",
+    "reliability", "wilson", "reliability_svg", "build_report", "grouped_summaries",
+    "MIN_CALIBRATION_N", "resolvability", "resolvability_report", "TrustedKey",
+    "sign_detached", "verify_detached",
+    "AnchorProvider", "ResolutionSigner",
+    "build_anchor_statement",
 ]
