@@ -1,21 +1,34 @@
 # Publishing Prepende Protocol
 
-Production package publication uses PyPI trusted publishing. No long-lived PyPI API token
-belongs in this repository, a local environment file, or a GitHub secret.
+GitHub Releases is the only supported distribution channel for Prepende Protocol. The
+canonical release record is a repository tag pinned to the verified commit plus an immutable GitHub release in
+`stellastoneandsteel/prepende` containing:
 
-The PyPI publisher registration must match exactly:
+- the built wheel;
+- the source distribution; and
+- `SHA256SUMS` covering those exact artifacts.
 
-- PyPI project: `prepende-protocol`
-- GitHub owner: `stellastoneandsteel`
-- GitHub repository: `prepende`
-- Workflow: `publish-pypi.yml`
-- Environment: `pypi`
+Prepende is not published to PyPI. This repository has no PyPI publishing workflow,
+environment, trusted-publisher registration, API token, or package claim. A PyPI project
+with a similar name is not an authoritative Prepende distribution.
 
-For the first release, create a pending trusted publisher in the authenticated PyPI account
-before dispatching the workflow. The GitHub release must already contain the wheel, sdist,
-and `SHA256SUMS`. The workflow downloads those published assets, verifies their exact
-digests, and exchanges GitHub's short-lived OIDC identity directly with PyPI.
+## Release procedure
 
-Dispatch `publish-pypi` with the existing release tag. PyPI versions are immutable: never
-rerun against a version that PyPI already accepted, and never replace a GitHub release asset
-after publication.
+1. Run the full test suite and build the wheel and source distribution from the intended
+   release commit.
+2. Install the wheel into a clean environment and rerun the protocol tests from the
+   installed package.
+3. Compute `SHA256SUMS` over the final wheel and source distribution.
+4. Create the release tag from the verified commit. Do not move or replace that tag.
+5. Create a GitHub release and upload the two distributions plus `SHA256SUMS`.
+6. Download the published assets into a clean directory and verify their checksums before
+   announcing the release.
+
+Published release assets are immutable. A correction uses a new version and a new tag; it
+never replaces an artifact under an existing release.
+
+## Consumer verification
+
+Download the wheel and `SHA256SUMS` from the same GitHub release, verify the wheel against
+the checksum file, and only then install it. Source checkouts and editable installs are for
+development, not release distribution.
