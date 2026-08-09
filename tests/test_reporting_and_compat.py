@@ -110,6 +110,20 @@ class ReportingTests(unittest.TestCase):
         ):
             self.assertNotIn(stale_claim, public_copy)
 
+    def test_quantitative_public_claim_floor_is_authoritative(self):
+        readme = (ROOT / "README.md").read_text(encoding="utf-8")
+        protocol = (ROOT / "docs" / "PROTOCOL_V2.md").read_text(encoding="utf-8")
+        site = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
+        self.assertIn("suppressed below 30 resolved probabilistic predictions", readme)
+        self.assertIn("Calibration curves and skill headlines are suppressed below 30 resolved", protocol)
+        self.assertIn("complete_through", protocol)
+        self.assertIn("INSUFFICIENT EVIDENCE", site)
+        self.assertIn("legacy v1: 26 locked, 14 resolved, 12 pending", site.lower())
+        fragment = site.split("<!--LEDGER:rel-->", 1)[1].split("<!--/LEDGER:rel-->", 1)[0].lower()
+        self.assertIn("curve requires n&gt;=30", fragment)
+        self.assertIn("forward resolved n=10", fragment)
+        self.assertNotIn("established benchmark", fragment)
+
     def test_calibration_is_suppressed_below_floor(self):
         with tempfile.TemporaryDirectory() as directory:
             ledger, _, _ = new_ledger(directory)

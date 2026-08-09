@@ -99,7 +99,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/engram",
-      "sha256": "f8f09c2bea8bea020cf2d60e9d471f96324cf641d737c0f180a4b812e8e65770",
+      "sha256": "f19bbb0851aba35fa177ecb40dbdba619923afd057a87d3861ade3141d171df5",
       "sourcePaths": [
         "bin/engram"
       ]
@@ -371,7 +371,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/__main__.py",
-      "sha256": "b4d171e89b390616bf473efd379e0628951a7fcc4880c030488030f595915d7c",
+      "sha256": "dd28ccfcf988d1412bb02a09e31faad534b179d1355a9bfa2a1d34d460cd17cf",
       "sourcePaths": [
         "kernel/__main__.py"
       ]
@@ -1307,7 +1307,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "b3e532f1bb858df23d41da767bd5d2a2b1d255255c91e8c03b0976e54789ae43",
+      "sha256": "c3230ebaf9b5eecd3045bea78e946c8105501ef560572a158a486a3694b32c3b",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]
@@ -1763,7 +1763,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_operational_status.py",
-      "sha256": "3f1c0042f1883a1a5cc89c7ae0038cb41b76386561f12f0bf8da5ab28f07c0cd",
+      "sha256": "c92bdae25b18fb425a29ed8904bbad20a103df40fdb3a5bce06c9f9a1eac2b75",
       "sourcePaths": [
         "tests/smoke_operational_status.py"
       ]

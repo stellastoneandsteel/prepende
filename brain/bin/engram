@@ -374,7 +374,7 @@ def context_fast(args: list[str]) -> int:
     status_ok = False
     try:
         status_proc = run_kernel(
-            ["--status", "--scope", str(opts["scope"])],
+            ["--status", "--context-fast", "--scope", str(opts["scope"])],
             capture=True,
             timeout=status_timeout,
         )

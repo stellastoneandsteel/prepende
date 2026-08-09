@@ -25,8 +25,7 @@ import argparse
 import asyncio
 import json
 import sys
-
-from kernel.core.brain import build_brain
+from typing import Any
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -48,11 +47,41 @@ def _parser() -> argparse.ArgumentParser:
                         "change (opt-in; pins the tactic to solo)")
     p.add_argument("--status", action="store_true",
                    help="print a read-only snapshot of what the brain knows, then exit")
+    p.add_argument("--context-fast", action="store_true",
+                   help="provider-free read-only snapshot for prepende context-fast")
     return p
 
 
+def _context_fast_status(scope: str) -> dict[str, Any]:
+    return {
+        "scope": scope or "default",
+        "model": "context-fast",
+        "memory": {
+            "backend": "sqlite",
+            "status": "provider_skipped",
+            "note": "Model providers are intentionally not initialized for context-fast.",
+        },
+        "knowledge": {
+            "rag": {"lexical_ready": False, "stale": True},
+            "graphify": {"ready": False, "reason": "context_fast"},
+        },
+        "runs": {"recent_count": 0, "recent": []},
+        "connectors": {"tools": 0, "ready": 0},
+    }
+
+
 async def _amain(args: argparse.Namespace) -> int:
+    if args.context_fast and not args.status:
+        print("--context-fast requires --status", file=sys.stderr)
+        return 2
+
     try:
+        if args.context_fast:
+            state = _context_fast_status(args.scope)
+            print(json.dumps(state, indent=2, default=str))
+            return 0
+
+        from kernel.core.brain import build_brain
         loop, cfg, gateway = build_brain(memory_policy=args.memory)
     except Exception as exc:
         print(f"setup error: {exc}", file=sys.stderr)
