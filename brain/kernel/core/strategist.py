@@ -78,7 +78,7 @@ class RulesStrategist(Strategist):
     async def choose(self, goal: Goal, ctx: Any) -> Choice:
         t = goal.text.lower()
         words = len(t.split())
-        # Meditation posture (opt-in, --meditate / ENGRAM_MEDITATE) PINS the tactic
+        # Meditation posture (opt-in, --meditate / PREPENDE_MEDITATE) PINS the tactic
         # to solo. The posture text itself is applied at the solo seam
         # (tactics/solo.py); pinning here keeps it reliably applied AND stops the
         # keyword router below from mis-routing a meditative prompt on stray words

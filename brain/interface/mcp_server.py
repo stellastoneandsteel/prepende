@@ -46,6 +46,7 @@ from kernel.core.intake import scan_intake
 from knowledge.scoped import ScopedVaults, validate_scope
 from memory.candidates import default_queue
 from prepende_brain.identity import require_identity_namespace
+from prepende_brain.env import brand_env
 from prepende_brain.private_fs import enforce_private_umask
 
 # Importing this module is the earliest common entry for both stdio and HTTP.
@@ -62,10 +63,7 @@ _scoped_vaults: ScopedVaults | None = None
 def _mcp_env(suffix: str) -> str:
     """Read a canonical MCP setting, treating whitespace as unset."""
 
-    canonical = os.environ.get(f"PREPENDE_MCP_{suffix}", "").strip()
-    if canonical:
-        return canonical
-    return os.environ.get(f"ENGRAM_MCP_{suffix}", "").strip()
+    return brand_env(f"MCP_{suffix}")
 
 
 def _vaults() -> ScopedVaults:

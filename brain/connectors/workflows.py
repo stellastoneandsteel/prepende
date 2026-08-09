@@ -28,9 +28,11 @@ from urllib.parse import urlsplit
 from pathlib import Path
 from typing import Any
 
+from prepende_brain.env import brand_env
+
 
 def load_workflows(path: str = "./workflows.json") -> list[dict]:
-    raw = (os.environ.get("PREPENDE_WORKFLOWS") or os.environ.get("ENGRAM_WORKFLOWS") or "").strip()
+    raw = brand_env("WORKFLOWS").strip()
     data: Any = None
     if raw:
         try:

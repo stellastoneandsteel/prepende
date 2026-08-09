@@ -1,6 +1,6 @@
 """Pure Thought Bus -> meditation bridge.
 
-The bridge gives Engram a mechanical version of "sit before you commit": it
+The bridge gives Prepende a mechanical version of "sit before you commit": it
 looks only at the final, bounded Thought Bus state and returns zero or one
 proposed CommitIntent.  It deliberately has no gateway, connector, memory,
 workspace, filesystem, or approval-store dependency.

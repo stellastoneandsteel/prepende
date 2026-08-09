@@ -96,6 +96,7 @@
     "tests/smoke_prepende_mcp_http.py",
     "tests/smoke_prepende_mcp_stdio.py",
     "tests/smoke_prepende_operator_receipts.py",
+    "tests/smoke_prepende_naming.py",
     "tests/smoke_protocol_v2_boundary.py",
     "tests/smoke_public_core_export.py",
     "tests/smoke_rag_writer_integrity.py",

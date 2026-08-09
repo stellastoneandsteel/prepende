@@ -79,7 +79,7 @@ def build_brain(cfg: Config | None = None, memory_policy: str | None = None):
         graphify = GraphifyProjection(str(graph_path), expected_root=cfg.vault)
     strategist = RulesStrategist(gateway)
     # Heavy tactics get a fixed, adversarial three-lens verifier panel by
-    # default. ENGRAM_VERIFY=1 extends it to solo; an explicit false value turns
+    # default. PREPENDE_VERIFY=1 extends it to solo; an explicit false value turns
     # it off. GoalLoop applies the tactic gate and records every skip/failure.
     from kernel.core.verifier import ResultVerifier, verification_mode
     verify_mode = verification_mode()

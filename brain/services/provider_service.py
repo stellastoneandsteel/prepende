@@ -10,6 +10,7 @@ from typing import Any, Sequence
 
 from kernel.core.config import Config
 from models.factory import build_gateway
+from prepende_brain.env import brand_env
 from prepende_brain.private_fs import append_private_text
 
 
@@ -50,7 +51,7 @@ class ProviderService:
         status: str,
         started: float,
     ) -> None:
-        path = Path(os.environ.get("ENGRAM_PROVIDER_LOG", "./.engram/provider_requests.jsonl"))
+        path = Path(brand_env("PROVIDER_LOG", "./.engram/provider_requests.jsonl"))
         item = {
             "ts": time.time(),
             "durationMs": int((time.time() - started) * 1000),

@@ -28,7 +28,8 @@ import time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ["MODEL_PROVIDER"] = "echo"
-os.environ.pop("ENGRAM_MEDITATE", None)  # hermetic: never inherit an operator opt-in
+os.environ.pop("PREPENDE_MEDITATE", None)  # hermetic: never inherit an operator opt-in
+os.environ.pop("ENGRAM_MEDITATE", None)
 
 from connectors.mcp_connector import McpConnector  # noqa: E402
 from kernel.core import meditation  # noqa: E402

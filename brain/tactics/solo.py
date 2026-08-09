@@ -19,7 +19,7 @@ from kernel.core import meditation
 # Module-level override hook. Experiment harnesses (research/consciousness-study
 # control + self-direction arms) inject a specific system prompt by assigning
 # tactics.solo.PERSONA at runtime; None means "use the active product persona"
-# (ENGRAM_PERSONA via resolve_persona). Keeping this seam preserves those studies
+# (PREPENDE_PERSONA via resolve_persona; legacy alias accepted). Keeping this seam preserves those studies
 # after the move from a hard PERSONA import to resolve_persona().
 PERSONA = None
 
@@ -50,14 +50,14 @@ class SoloTactic(Tactic):
         # shorter", "that one") have a referent — not just keyword-matched memory.
         # The current turn carries any recalled-memory preamble.
         history = ctx.get("history") or []
-        # The persona gives Engram a warm, natural conversational voice — the
+        # The persona gives Prepende a warm, natural conversational voice — the
         # difference between "talking to it like a person" and a task-executor.
-        # resolve_persona() honors ENGRAM_PERSONA so a dedicated product process
+        # resolve_persona() honors PREPENDE_PERSONA so a dedicated product process
         # (e.g. the Researcher & Editor) speaks in its specialist voice while the
         # multi-tenant default stays the general companion. A module-level PERSONA
         # override (set by study harnesses) wins when present.
         system = PERSONA if PERSONA is not None else resolve_persona()
-        # Meditation posture (opt-in via --meditate / ENGRAM_MEDITATE): a restraint
+        # Meditation posture (opt-in via --meditate / PREPENDE_MEDITATE): a restraint
         # prior appended on top of whatever base persona is active. Sibling of the
         # expectation prior; this single-agent seam is where it lands, and the
         # strategist pins meditation runs to solo so it is reliably applied.

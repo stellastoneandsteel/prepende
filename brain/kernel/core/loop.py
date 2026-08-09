@@ -1,4 +1,4 @@
-"""GoalLoop — the heart of Engram, the OS scheduler for thought.
+"""GoalLoop — the heart of Prepende, the OS scheduler for thought.
 
 Take a goal, decide how to think (Strategist), pursue it (Tactic), collapse to
 one decisive result (Resolver), and leave a real deliverable in the Workspace.

@@ -24,6 +24,7 @@ import time
 from typing import Any, Mapping
 
 from prepende_brain.identity import require_identity_namespace
+from prepende_brain.env import brand_env
 
 # ---- capability scoping (threat T2) -----------------------------------------
 # Least-privilege per connection. The READ/PROPOSE set is safe for an untrusted
@@ -43,15 +44,11 @@ ALL_TOOLS = SAFE_TOOLS | WRITE_TOOLS
 
 def _brand_env(env: Mapping[str, str], suffix: str) -> str:
     """Read the canonical Prepende env first, then the Engram alias."""
-
-    canonical = (env.get(f"PREPENDE_{suffix}") or "").strip()
-    if canonical:
-        return canonical
-    return (env.get(f"ENGRAM_{suffix}") or "").strip()
+    return brand_env(suffix, env=env)
 
 
 def allowed_capabilities(env: Mapping[str, str] | None = None) -> set[str]:
-    """The tool names this connection may call, from ENGRAM_MCP_CAPABILITIES:
+    """The tool names this connection may call, from PREPENDE_MCP_CAPABILITIES:
       unset/empty        -> ALL_TOOLS (operator default; no behaviour change)
       'untrusted'/'safe' -> SAFE_TOOLS (read + propose; no writes/actions)
       'all'              -> ALL_TOOLS
@@ -108,9 +105,7 @@ def deployment_revision(env: Mapping[str, str] | None = None) -> str | None:
     """
 
     e = os.environ if env is None else env
-    raw = (e.get("PREPENDE_DEPLOYMENT_REVISION") or "").strip()
-    if not raw:
-        raw = (e.get("ENGRAM_DEPLOYMENT_REVISION") or "").strip()
+    raw = _brand_env(e, "DEPLOYMENT_REVISION")
     if not raw:
         return None
     return raw if _REVISION_RE.fullmatch(raw) else None
@@ -274,7 +269,7 @@ def current_principal() -> dict[str, Any] | None:
 # ---- per-token rate limiting (threat T10) -----------------------------------
 class RateLimiter:
     """Sliding-window limiter, N requests per 60s per key. `now` is injectable so
-    it's testable without sleeping. Default from ENGRAM_MCP_RATE_LIMIT_PER_MINUTE."""
+    it's testable without sleeping. Default from PREPENDE_MCP_RATE_LIMIT_PER_MINUTE."""
 
     def __init__(self, per_minute: int | None = None) -> None:
         self.per_minute = int(per_minute if per_minute is not None
@@ -309,10 +304,7 @@ def startup_scope_guard(env: Mapping[str, str] | None = None) -> str | None:
     pinned = _brand_env(e, "MCP_SCOPE")
     if pinned and not _identity_slug(pinned):
         return "PREPENDE_MCP_SCOPE is not a validated lowercase tenant slug."
-    configured_revision = (
-        (e.get("PREPENDE_DEPLOYMENT_REVISION") or "").strip()
-        or (e.get("ENGRAM_DEPLOYMENT_REVISION") or "").strip()
-    )
+    configured_revision = _brand_env(e, "DEPLOYMENT_REVISION")
     if configured_revision and deployment_revision(e) is None:
         return (
             "PREPENDE_DEPLOYMENT_REVISION must be a sanitized revision token "

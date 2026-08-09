@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from prepende_brain.private_fs import secure_directory, secure_file
+from prepende_brain.env import brand_env
 
 from kernel.contracts import Knowledge
 
@@ -32,15 +33,15 @@ def _slug(text: str) -> str:
 # index reads as an organized map instead of a flat alphabetical dump. Driven by the
 # generic `type` frontmatter + GENERIC role keywords — no specific tenant/customer names
 # in the substrate (those would be a SEPARATION smell). A deployment can extend the
-# keyword sets via ENGRAM_VAULT_OPS_HINTS / ENGRAM_VAULT_RESEARCH_HINTS (comma lists).
-import os as _os
+# keyword sets via PREPENDE_VAULT_OPS_HINTS / PREPENDE_VAULT_RESEARCH_HINTS
+# (legacy Engram aliases remain accepted).
 _OPS_HINTS = ("tenant", "business", "launch", "publish", "ingestion", "auto-pilot",
               "operations", "harness", "client", "onboarding") + tuple(
-    h.strip() for h in (_os.environ.get("ENGRAM_VAULT_OPS_HINTS") or "").split(",") if h.strip())
+    h.strip() for h in brand_env("VAULT_OPS_HINTS").split(",") if h.strip())
 _RESEARCH_HINTS = ("oim", "ising", "reservoir", "narma", "max-cut", "maximum-cut",
                    "simulated-annealing", "thesis", "perpendicular", "coupled-oscillator",
                    "big-n", "oscillator", "benchmark", "experiment", "prepende") + tuple(
-    h.strip() for h in (_os.environ.get("ENGRAM_VAULT_RESEARCH_HINTS") or "").split(",") if h.strip())
+    h.strip() for h in brand_env("VAULT_RESEARCH_HINTS").split(",") if h.strip())
 _SECTION_ORDER = ("Maps of Content", "Research", "Operations & Tenants", "System & Architecture")
 
 

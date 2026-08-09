@@ -75,7 +75,7 @@
     {
       "mode": "100644",
       "outputPath": "agents/research.py",
-      "sha256": "14ef10d494afab67eeb2fc2e8ce2a7440d427b7b9b341c3099bea2497c03db3e",
+      "sha256": "12a243e9ec3bb389e0b4deeeb486d52f89a68e3f5e4181c09c726aef141e5010",
       "sourcePaths": [
         "agents/research.py"
       ]
@@ -99,7 +99,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/engram",
-      "sha256": "d07a6f9bd7eded2d40eb05da095c8c06209c0201981697f5d8bca2c9dc8e20f0",
+      "sha256": "f8f09c2bea8bea020cf2d60e9d471f96324cf641d737c0f180a4b812e8e65770",
       "sourcePaths": [
         "bin/engram"
       ]
@@ -147,7 +147,7 @@
     {
       "mode": "100644",
       "outputPath": "connectors/mcp_config.py",
-      "sha256": "315084a7de4f31b2708981554c0ddfe98c2cfc560420f7366f91218c57bbd109",
+      "sha256": "113c9404a786c2ba1f44deb31a5f88c362b26127038c037b254c869d60018a02",
       "sourcePaths": [
         "connectors/mcp_config.py"
       ]
@@ -179,7 +179,7 @@
     {
       "mode": "100644",
       "outputPath": "connectors/workflows.py",
-      "sha256": "d4f6e234cb9b7891f1bc9872508d8a86cbea1d39b2f3eccf9c608526c89d2237",
+      "sha256": "598bc9f57c73cc028d631019dd91e82941ebe1168d8eaef5370ad616403f31ce",
       "sourcePaths": [
         "connectors/workflows.py"
       ]
@@ -283,7 +283,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/engram_api.py",
-      "sha256": "54b0139794eb58210726eafa73913d24ce31cb5e8a62d285688a789fa5a03b1d",
+      "sha256": "f9277642dada08358061b47b81bde0489ab0bfef285b7b5b2e8823a278a17e2b",
       "sourcePaths": [
         "interface/engram_api.py"
       ]
@@ -291,7 +291,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/http_api.py",
-      "sha256": "580fbb42d31e30b3ef0bb357ebed4b0dfd1b26a3c488b873a46a9db7603d5f6c",
+      "sha256": "408d8de2ccd28841a21d6bec4bf6069b7ff31c60d7cb96ffa61b86aed358b71d",
       "sourcePaths": [
         "interface/http_api.py"
       ]
@@ -307,7 +307,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_preflight.py",
-      "sha256": "033c2855a5df6192b33b15dcabaad408a803faaab15245666cc4d3a7ca7a9978",
+      "sha256": "08b19098337d6427be90ebc6dc955cc57a8d628fa3cb7cb3c8cdb1ff5fcfc30b",
       "sourcePaths": [
         "interface/mcp_preflight.py"
       ]
@@ -315,7 +315,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_scope.py",
-      "sha256": "1641cc6ae24c27d5d654fab655527b6904aa8182d5167df86fc2f912d0fc27d6",
+      "sha256": "0ba8617bd9c33867c06c2b9c967755a11f2cb9d1f0be4d23edb7976d2f8f02a5",
       "sourcePaths": [
         "interface/mcp_scope.py"
       ]
@@ -323,7 +323,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_server.py",
-      "sha256": "e966c44811306dae441e4e1117e8f6d90f2f210b277a6cbad00136905cd0c20c",
+      "sha256": "34e9a11b216003b498995d00de997d3b3104b0c127fb64a6b85e91d8cb389037",
       "sourcePaths": [
         "interface/mcp_server.py"
       ]
@@ -338,8 +338,16 @@
     },
     {
       "mode": "100644",
+      "outputPath": "interface/prepende_api.py",
+      "sha256": "03853f06c8f12bd20b16862cfc0a1902068a64dbd6efe099e78eb98d864e4d24",
+      "sourcePaths": [
+        "interface/prepende_api.py"
+      ]
+    },
+    {
+      "mode": "100644",
       "outputPath": "interface/prepende_runtime.py",
-      "sha256": "78111d516b18316052df3e850da7a7a053d48f83c6e1b913ff7fbe14aab2519e",
+      "sha256": "90167dff983496e14e6a1e6ffa87a4b346c4d84ffb8548b2f2f8a21c5c0fd18e",
       "sourcePaths": [
         "interface/prepende_runtime.py"
       ]
@@ -347,7 +355,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/widget.py",
-      "sha256": "b36285530a53cb75bc8feb4f4b2db70bcf53cdd68e63cb6d9abcce18cb6303d2",
+      "sha256": "3b890434e114ca85204e5bf000de47607b561c6011f3dedf3b200f2dec142858",
       "sourcePaths": [
         "interface/widget.py"
       ]
@@ -363,7 +371,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/__main__.py",
-      "sha256": "c0a6f8034aed51322c0d762410629ccee8205d448a8d970be5765efda16821c1",
+      "sha256": "b4d171e89b390616bf473efd379e0628951a7fcc4880c030488030f595915d7c",
       "sourcePaths": [
         "kernel/__main__.py"
       ]
@@ -483,7 +491,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/brain.py",
-      "sha256": "873093eba90b997d719c6f5ac344b0272f8e8056415f5f1e36c2c957d216e678",
+      "sha256": "2877d289b8d17028a584b13ba31c4f884feff51276ccb16dddc36a344441aae1",
       "sourcePaths": [
         "kernel/core/brain.py"
       ]
@@ -491,7 +499,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/config.py",
-      "sha256": "c1adf81c826b47db54b8a53a7cf08d016d85f287d1e6ca61754730063367a8d2",
+      "sha256": "95369f5bc5c651760837a9604cc88c8a1dce8437d50cc2368390e78be50e24fb",
       "sourcePaths": [
         "kernel/core/config.py"
       ]
@@ -499,7 +507,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/context.py",
-      "sha256": "7a61b075c82fee826777ead8ef2f8c65246dd13df56035c64f748aee69c6c366",
+      "sha256": "3e523b4d5e4b7ee067fe846253b00f1746279653ca058acb2cb6ffe59b284240",
       "sourcePaths": [
         "kernel/core/context.py"
       ]
@@ -515,7 +523,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/intake.py",
-      "sha256": "d38a8ce713453b5b47edd476a1f86e3ac88cd40b7d0b3129d4b6f51b32b12efa",
+      "sha256": "7eeae80299f3a93e39084b77f2d42b2007d33c62ddc7c2eb8d28313a113b76ad",
       "sourcePaths": [
         "kernel/core/intake.py"
       ]
@@ -531,7 +539,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/keyvault.py",
-      "sha256": "562e40cd63ba800d87642f1c6a152c12210c4e162742fba176ad07549676542a",
+      "sha256": "1e6b33c1ae384d08f2243a256ef323bc262baf2b9e9b93325ab7057c505d1e70",
       "sourcePaths": [
         "kernel/core/keyvault.py"
       ]
@@ -539,7 +547,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/loop.py",
-      "sha256": "a428a142d07fccc5eabb69cbc911f6c0679bda3cc32e1d260a0fb2af96704e56",
+      "sha256": "0717d896fe400d941fdd244cbc95e898b149792e969f3ffe868424ab7a079886",
       "sourcePaths": [
         "kernel/core/loop.py"
       ]
@@ -547,7 +555,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/meditation.py",
-      "sha256": "dbeac1e0b70b4b07e6592fa07e48a5fe2788868ad275bdf443c9026b6fee2fa6",
+      "sha256": "7013e1320a80d2d25ad55775d1984d1f7ebf039cf92afc1876a6ef5be88aee05",
       "sourcePaths": [
         "kernel/core/meditation.py"
       ]
@@ -555,7 +563,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/meditation_bridge.py",
-      "sha256": "ae8a2bcc0420a4cb584d3084d10f3c552e86de721d0e7387e9da047c71908d2f",
+      "sha256": "8c9ee50b789b7d0b2057615d1b46266c0df7cf183a0a1a870250a6782e980d6a",
       "sourcePaths": [
         "kernel/core/meditation_bridge.py"
       ]
@@ -571,7 +579,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/model_thought_bus.py",
-      "sha256": "a1d159b27759f14348ad2cfc2d23914883b1ffed895e4d04ef74fc8b8672f286",
+      "sha256": "a3ac011253b328af9161ce43297d582c3ea78d901fb95a41021ce4fa0da4c133",
       "sourcePaths": [
         "kernel/core/model_thought_bus.py"
       ]
@@ -579,7 +587,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/persona.py",
-      "sha256": "71e66b00a46c47f731b65297e73e5b713ba9d75f3a51e30d05c8f48a93e67416",
+      "sha256": "af051fd89f0ac45e0c56d4fdb2ec056c2b91a70990fd658ed1386dc7204f1000",
       "sourcePaths": [
         "kernel/core/persona.py"
       ]
@@ -643,7 +651,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/strategist.py",
-      "sha256": "caa030abf930379f47229fa824058b1af8ce73d2ade064f80ff79df83f01f93c",
+      "sha256": "b89f64b5ec9ddef8fa4dfa450fef51ea1b00578f4bb9cfa8f3b3062817c70b43",
       "sourcePaths": [
         "kernel/core/strategist.py"
       ]
@@ -659,7 +667,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/thinking_voice.py",
-      "sha256": "d9e7164234111abbb4c5abc68ebf322708e1cd2f174c20eb09f71f266ef51f62",
+      "sha256": "6bb576052da127fc8401084d30c2d9ef10390eaa4a8975761de594c6a2f45aac",
       "sourcePaths": [
         "kernel/core/thinking_voice.py"
       ]
@@ -667,7 +675,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/thought_bus.py",
-      "sha256": "f18d5f0d1b40c8ebdfd8178a5e8b08962f4f6d89a0243f725b20e2a2816ebc4f",
+      "sha256": "4efbe6fae170d57b747d27ddb84fd7758ec1b5533026e3dfa98b4f4b977cb17e",
       "sourcePaths": [
         "kernel/core/thought_bus.py"
       ]
@@ -691,7 +699,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/verifier.py",
-      "sha256": "f0856b21a9602d37b7d0fbae84ea747299405155efd2552d8df3dbe0022b3cd0",
+      "sha256": "0b877d657ab8d9dfc79cff353e0e6fad2b1645f33237c4906fbe0363f9717ae5",
       "sourcePaths": [
         "kernel/core/verifier.py"
       ]
@@ -787,7 +795,7 @@
     {
       "mode": "100644",
       "outputPath": "knowledge/scrape_watch.py",
-      "sha256": "86796e01d52eabecb213447b6b8ecab6b052401f72e844408475162ef52c7647",
+      "sha256": "6a04f5df7bb96b451ac8cf14a457792051eb8113b555cc3023edd8d8ca799063",
       "sourcePaths": [
         "knowledge/scrape_watch.py"
       ]
@@ -803,7 +811,7 @@
     {
       "mode": "100644",
       "outputPath": "knowledge/vault.py",
-      "sha256": "b6c9597022e4956a61d7d7291666e9b4fc4edd9a2d99516b4e8cc01e446f1739",
+      "sha256": "20a398d3b147d19ca8ef39b0f47bac8a80196d37f6fbfdf85144f6742495089c",
       "sourcePaths": [
         "knowledge/vault.py"
       ]
@@ -867,7 +875,7 @@
     {
       "mode": "100644",
       "outputPath": "memory/postgres_store.py",
-      "sha256": "5ef19f2a4109eaa9aadb5f27531bdbb25ff57c1073a2951e4d5efbc85c735e2e",
+      "sha256": "99e9f4d2495a8490083fa118f28b7e743bca9f947b84b005357d90c6e0e3e8b5",
       "sourcePaths": [
         "memory/postgres_store.py"
       ]
@@ -883,7 +891,7 @@
     {
       "mode": "100644",
       "outputPath": "memory/sqlite_store.py",
-      "sha256": "f854e7e50a102408131110c89bab661a74900b28b5147d907d52de97fce32be0",
+      "sha256": "e9d01669e4715078fe2ad29db803afdc9b9cb4b2c073d27e95514e19e817242f",
       "sourcePaths": [
         "memory/sqlite_store.py"
       ]
@@ -939,7 +947,7 @@
     {
       "mode": "100644",
       "outputPath": "models/cli.py",
-      "sha256": "a9ad7c11c7253bec16bb344f4f9379b051e02fc335a6b15ab1565ffadeed6289",
+      "sha256": "2ff064dc9e1abc715bc7ff7ab388594a71667feffe757e83b843dbae968ad2c5",
       "sourcePaths": [
         "models/cli.py"
       ]
@@ -955,7 +963,7 @@
     {
       "mode": "100644",
       "outputPath": "models/factory.py",
-      "sha256": "6d343838082dd201a95d311f6556e0c9eaf2cd759d162166669db41a1bdcc48c",
+      "sha256": "a4944f908e5f1b0badebddecbc1529703867a3a23cca4e4acb43a4c1251d39ac",
       "sourcePaths": [
         "models/factory.py"
       ]
@@ -971,7 +979,7 @@
     {
       "mode": "100644",
       "outputPath": "models/openai.py",
-      "sha256": "4e2bca4d8b122dd87c38712a0af1bdec58fe6a1455ca621ab31090206753a1ca",
+      "sha256": "95db4bbc5487058a152fe1ffc1330cad2e6a23b980ab1f1c3ca0e105e7da8fb9",
       "sourcePaths": [
         "models/openai.py"
       ]
@@ -1003,7 +1011,7 @@
     {
       "mode": "100644",
       "outputPath": "operations/operational_status.py",
-      "sha256": "dbb22e41f91478e06e2dccd22f5676a4c7dcf81dba4903b15dbf8297a999630e",
+      "sha256": "5785afde5c7b26ee5e543e1cba90c29acc40c9e4efab02af4621684083a7b47f",
       "sourcePaths": [
         "operations/operational_status.py"
       ]
@@ -1043,7 +1051,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "849e3165d4dcce0a9931f709decdb3a5da116e66fefd3c01fce6f97067bb0de3",
+      "sha256": "25d6b7efab1876dbf816da6374158efc6f736065595d6e54416b721ed54f9d7f",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1074,6 +1082,14 @@
     },
     {
       "mode": "100644",
+      "outputPath": "prepende_brain/env.py",
+      "sha256": "044506055e553823cfd078f31fc8deb91a00f8fa52f0a987b00591f8748786cf",
+      "sourcePaths": [
+        "prepende_brain/env.py"
+      ]
+    },
+    {
+      "mode": "100644",
       "outputPath": "prepende_brain/identity.py",
       "sha256": "1dd3cc33767bd429661f167bd60fe12ac4a498c633963ed4da923dd7206ce93a",
       "sourcePaths": [
@@ -1099,7 +1115,7 @@
     {
       "mode": "100644",
       "outputPath": "prompts/evals/hermes_processing_layer_fixtures.md",
-      "sha256": "9b04871b611d6d3e0e0eff71d53d5110e9e198feb704a7a7954824bc97d7d68d",
+      "sha256": "aeaf2423280ec61fc26f419623abd9a621ec57989cc39b64d791bae9823e173e",
       "sourcePaths": [
         "prompts/evals/hermes_processing_layer_fixtures.md"
       ]
@@ -1107,7 +1123,7 @@
     {
       "mode": "100644",
       "outputPath": "prompts/hermes_synthesizer.md",
-      "sha256": "213aceb60f22f4c2ef3c9a75a0beb6eb0df188ca4cb2f5c737004a0578dbcae7",
+      "sha256": "0f04f537093761c78c9a3464ac1686e030eed4b5b1beca6c25a736e2f3993513",
       "sourcePaths": [
         "prompts/hermes_synthesizer.md"
       ]
@@ -1115,7 +1131,7 @@
     {
       "mode": "100644",
       "outputPath": "prompts/hermes_triage.md",
-      "sha256": "29ebc582033d6f19e26acf03469128d4ce895c6eb8ef7d40af7a41226ea0ef25",
+      "sha256": "957e3a76363704e0e4a8e918ec2467591a781d3712219a021424602d545c1a12",
       "sourcePaths": [
         "prompts/hermes_triage.md"
       ]
@@ -1123,7 +1139,7 @@
     {
       "mode": "100644",
       "outputPath": "prompts/hermes_validator.md",
-      "sha256": "d899bdcf25b4426d139845846e1624b15bea73e96ebc071ec91ccfea799cbb5e",
+      "sha256": "df3227263e7225d809caae7b8e0b779e3ff4e0cdd0dca49f6e8c5aab306a05b1",
       "sourcePaths": [
         "prompts/hermes_validator.md"
       ]
@@ -1171,7 +1187,7 @@
     {
       "mode": "100644",
       "outputPath": "routes/__init__.py",
-      "sha256": "2610edaf42e310b14561e3050fef6a75f196a336103ad4fff5cdc71e77b8d2ae",
+      "sha256": "24bfc65ccd4860a9fd3fc685f63317e284876cf5c7089c52b4a0f722bc82a113",
       "sourcePaths": [
         "routes/__init__.py"
       ]
@@ -1203,7 +1219,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/brain_heal.py",
-      "sha256": "43f163b960b409eb146d9b4a9467cb2a9856785c0f2a9131b84b6712a20cb6db",
+      "sha256": "3281d933265353272c34278b36ace1897f4ab0ac4e836445b78b1a43663bc4e4",
       "sourcePaths": [
         "scripts/brain_heal.py"
       ]
@@ -1243,7 +1259,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/prepende_operator.py",
-      "sha256": "31663be695543d1b3f6d0366c540ca0117e6ab186a5e2711b2a1ef9c2e399e33",
+      "sha256": "6be5c99fe60b8ff7493ab7e0aeb075e5dab0d227ff2014ea780b2336fadc6c7e",
       "sourcePaths": [
         "scripts/prepende_operator.py"
       ]
@@ -1291,7 +1307,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "d0a1044ac541454d78667d665d8ef5950fd544992c7ca832c9aea52d152f7023",
+      "sha256": "b3e532f1bb858df23d41da767bd5d2a2b1d255255c91e8c03b0976e54789ae43",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]
@@ -1355,7 +1371,7 @@
     {
       "mode": "100644",
       "outputPath": "services/auth_context.py",
-      "sha256": "5ec8a79928c4e32bd7d3b62c0bac980388eb025ac12f1418607b9befd25b2fe1",
+      "sha256": "5f178b9c7825fce7f7f22f582ce7c38ae4ee824cb56baddeb04b52d03bfcafc5",
       "sourcePaths": [
         "services/auth_context.py"
       ]
@@ -1395,7 +1411,7 @@
     {
       "mode": "100644",
       "outputPath": "services/embedding_service.py",
-      "sha256": "b1285fc7c59c6b5bd56590e4950d372cd5b0a988ded8204e18e38a0e8e4eaa00",
+      "sha256": "09167200c84add4e9276967763f61bc896ae9bdd5470a05950920d0914773b06",
       "sourcePaths": [
         "services/embedding_service.py"
       ]
@@ -1411,7 +1427,7 @@
     {
       "mode": "100644",
       "outputPath": "services/firestore_client.py",
-      "sha256": "f5215c5e658493b7dfee47c365ad943460f43c1f341bd05e10a081db889d255c",
+      "sha256": "315fe54c08d085be5b262b9dcbc38ea86090fa9b0f16c42e35f41d1a028d915d",
       "sourcePaths": [
         "services/firestore_client.py"
       ]
@@ -1419,7 +1435,7 @@
     {
       "mode": "100644",
       "outputPath": "services/heartbeat.py",
-      "sha256": "44f3141b1726814a0be58a826ac5604b7aaeb475ad4c9d29689bceaeaaab33d4",
+      "sha256": "def35b69bd57ab142e59cdb980b0e4a874c36d80cc4c2f5d9a9de10e02be35bd",
       "sourcePaths": [
         "services/heartbeat.py"
       ]
@@ -1451,7 +1467,7 @@
     {
       "mode": "100644",
       "outputPath": "services/provider_service.py",
-      "sha256": "bd93d48c966e3b333c47f6beae32058dfaf6af21717716bb0c67672b6d98d7a0",
+      "sha256": "20ebe199daca61bc1cfe43d11168686cfa139570fb6b8df00de7297c1ad9cd37",
       "sourcePaths": [
         "services/provider_service.py"
       ]
@@ -1539,7 +1555,7 @@
     {
       "mode": "100644",
       "outputPath": "tactics/solo.py",
-      "sha256": "6d68a140e2714828716c9e1e5614a4881200ebb217012e12fd9cb99aebb08de7",
+      "sha256": "287b8601dd0d57bb261ba030d613c1acc4601bbfa1fbed568af29cc61bcc34f4",
       "sourcePaths": [
         "tactics/solo.py"
       ]
@@ -1643,7 +1659,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_mcp.py",
-      "sha256": "ef426802b048376d0e17ba8d11f2318312f496cd13510a4e59b3bb83b7387002",
+      "sha256": "e13717f4990e2c857b43c1f7f4cf5c0cac2709bf436cb50189f0758cbe71f5d2",
       "sourcePaths": [
         "tests/smoke_mcp.py"
       ]
@@ -1651,7 +1667,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_mcp_auth_core.py",
-      "sha256": "10c340a2bc0a9257fbff6c5f0a9e6438084eeb3cfcb2905e97aadf7cf5fa2cb1",
+      "sha256": "9098bcb70f4de35d7ba528f6ff418ed29a973f0dc885fadfb1cbd70668bec83d",
       "sourcePaths": [
         "tests/smoke_mcp_auth_core.py"
       ]
@@ -1683,7 +1699,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_meditation.py",
-      "sha256": "ee51607a0f4f036f7ab4e942eb2e6ef79897465d6aa0c2fa8943197dde2592c5",
+      "sha256": "4c4e3b41b0d13a399614fd621579003c2b00e0129f16fe982221ac1fac6b296c",
       "sourcePaths": [
         "tests/smoke_meditation.py"
       ]
@@ -1699,7 +1715,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_meditation_tooluse.py",
-      "sha256": "7a90b10321a38a914ff50347df1b497c2b792247e6d970fdf14d55bf9f962755",
+      "sha256": "d1e9202d86ded4f9a8a2e0e8c79872a4f205e4b7c97feffd415c027ae1c9e132",
       "sourcePaths": [
         "tests/smoke_meditation_tooluse.py"
       ]
@@ -1806,6 +1822,14 @@
       "sha256": "41c593ca62f4f80bcd5b7b1b2514b758522664980cfd9f34989674af08b4759d",
       "sourcePaths": [
         "tests/smoke_prepende_mcp_stdio.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "tests/smoke_prepende_naming.py",
+      "sha256": "a4ad06ccc74b81091128b369934fb2051446a6b58acf01312a3f915f51f9f977",
+      "sourcePaths": [
+        "tests/smoke_prepende_naming.py"
       ]
     },
     {
@@ -2019,7 +2043,7 @@
     {
       "mode": "100644",
       "outputPath": "workflows.example.json",
-      "sha256": "070e8476a73f57d0e5406b810a3d47336cb3f726ceed5bf0ded972a9edd18c34",
+      "sha256": "4f7bcaa6d857ab958e399845a6a47459eeba443e1ea86a9067f4e92578fb221f",
       "sourcePaths": [
         "workflows.example.json"
       ]

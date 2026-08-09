@@ -16,6 +16,8 @@ import time
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+from prepende_brain.env import brand_env
+
 
 class AuthError(Exception):
     def __init__(self, message: str, status: int = 401) -> None:
@@ -39,7 +41,7 @@ def _b64decode(data: str) -> bytes:
 
 
 def _auth_secret() -> str:
-    secret = os.environ.get("ENGRAM_AUTH_SECRET", "").strip()
+    secret = brand_env("AUTH_SECRET").strip()
     if not secret:
         raise AuthError("auth is not configured", 500)
     return secret

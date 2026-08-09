@@ -1,7 +1,7 @@
 """SqliteMemoryStore — persistent shared memory on stdlib sqlite3.
 
 Zero infra, survives across sessions, accumulates. This is the Phase 1 memory
-that makes Engram a brain and not a goldfish: a fact written in one session is
+that makes Prepende a brain and not a goldfish: a fact written in one session is
 recalled in the next.
 
 Recall is HYBRID: keyword overlap + vector cosine (when an embedder is wired

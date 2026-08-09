@@ -3,20 +3,19 @@
 The vault reindex, embedding backfill, memory consolidation, and the site
 scraper all existed as on-demand calls; nothing ran them on a schedule, so
 "self-organizing" stayed aspirational. This module is the missing pulse: a
-scheduler (cron on Railway, launchd locally — deploy/com.engram.heartbeat.plist)
-invokes one pass and the process exits.
+scheduler (cron on Railway, launchd locally) invokes one pass and the process exits.
 
-Tasks per pass (ENGRAM_HEARTBEAT_TASKS, default "vault,embed,consolidate"):
+Tasks per pass (PREPENDE_HEARTBEAT_TASKS, default "vault,embed,consolidate"):
   vault        refresh the vault RAG projection until embedding backfill
                converges (refresh() caps at 64/pass by design; we loop it)
   embed        memory embed_backfill per configured scope, looped to zero
   consolidate  memory consolidation per scope (near-duplicate clusters
                distilled; the store's own gates apply)
-  scrape       scrape-watch pass over ENGRAM_WATCHED_SITES — opt-in (network
+  scrape       scrape-watch pass over PREPENDE_WATCHED_SITES — opt-in (network
                fetches); stages Assess CANDIDATES only, never writes memory
 
 Scopes come from config, never SQL discovery (the RLS design rule):
-ENGRAM_HEARTBEAT_SCOPES comma list, default the brain's own MEMORY_SCOPE.
+PREPENDE_HEARTBEAT_SCOPES comma list, default the brain's own MEMORY_SCOPE.
 
 Every pass appends a truthful JSON receipt to .engram/heartbeat.jsonl and
 prints it. A task failure is recorded in the receipt and the pass continues —
@@ -37,6 +36,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from prepende_brain.env import brand_env
 from prepende_brain.private_fs import append_private_text
 
 _DEFAULT_TASKS = ("vault", "embed", "consolidate")
@@ -45,12 +45,12 @@ _JOURNAL = "./.engram/heartbeat.jsonl"
 
 
 def _tasks() -> list[str]:
-    raw = (os.environ.get("ENGRAM_HEARTBEAT_TASKS") or ",".join(_DEFAULT_TASKS))
+    raw = brand_env("HEARTBEAT_TASKS", ",".join(_DEFAULT_TASKS))
     return [t.strip() for t in raw.split(",") if t.strip()]
 
 
 def _scopes(default_scope: str) -> list[str]:
-    raw = (os.environ.get("ENGRAM_HEARTBEAT_SCOPES") or default_scope)
+    raw = brand_env("HEARTBEAT_SCOPES", default_scope)
     return [s.strip() for s in raw.split(",") if s.strip()]
 
 
@@ -93,7 +93,7 @@ async def _consolidate_task(memory: Any, scopes: list[str]) -> dict[str, Any]:
 async def _scrape_task(loop: Any) -> dict[str, Any]:
     from knowledge.scrape_watch import scrape_all, watched_sites
     if not watched_sites():
-        return {"skipped": "ENGRAM_WATCHED_SITES empty"}
+        return {"skipped": "PREPENDE_WATCHED_SITES empty"}
     results = await scrape_all(loop)
     return {"pages": len(results),
             "changed": sum(1 for r in results if r.get("changed")),
@@ -135,7 +135,7 @@ async def run_pass(loop: Any = None, *, tasks: list[str] | None = None,
             receipt["tasks"][name] = {"error": f"{type(exc).__name__}: {exc}"}
     receipt["durationMs"] = int((time.time() - started) * 1000)
 
-    path = Path(journal or os.environ.get("ENGRAM_HEARTBEAT_JOURNAL") or _JOURNAL)
+    path = Path(journal or brand_env("HEARTBEAT_JOURNAL") or _JOURNAL)
     append_private_text(
         path,
         json.dumps(receipt) + "\n",

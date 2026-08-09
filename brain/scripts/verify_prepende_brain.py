@@ -21,6 +21,7 @@ SMOKES = (
     "smoke_context_fast.py",
     "smoke_continuity_v2.py",
     "smoke_protocol_v2_boundary.py",
+    "smoke_prepende_naming.py",
     "smoke_model_defaults.py",
     "smoke_model_route.py",
     "smoke_model_thought_bus.py",

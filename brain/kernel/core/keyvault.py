@@ -5,7 +5,7 @@ external-brain tokens) are encrypted/decrypted. It exists to make custody
 STRUCTURAL, not a promise:
 
   - AEAD (AES-256-GCM): ciphertext is authenticated; tampering fails to decrypt.
-  - The master key lives ONLY in host env (ENGRAM_KEY_VAULT_MASTER_KEY), never in
+  - The master key lives ONLY in host env (PREPENDE_KEY_VAULT_MASTER_KEY), never in
     the repo or the database. A DB dump (or a BYPASSRLS service_role token) yields
     only opaque base64 — useless without the separately-held master key.
   - Associated data binds each ciphertext to (scope, purpose): a row physically
@@ -28,7 +28,9 @@ import hashlib
 import os
 import re
 
-_MASTER_ENV = "ENGRAM_KEY_VAULT_MASTER_KEY"
+from prepende_brain.env import brand_env
+
+_MASTER_ENV = "PREPENDE_KEY_VAULT_MASTER_KEY"
 _NONCE_LEN = 12  # AES-GCM standard nonce
 
 # Key-shaped strings, for the no-leak gate + log scrubbing. Common provider
@@ -53,7 +55,7 @@ class VaultDecryptError(RuntimeError):
 
 
 def _master_key() -> bytes:
-    raw = (os.environ.get(_MASTER_ENV, "") or "").strip()
+    raw = brand_env("KEY_VAULT_MASTER_KEY")
     if not raw:
         raise VaultUnavailable(
             f"{_MASTER_ENV} is not set — the key vault is unavailable (fail-closed). "

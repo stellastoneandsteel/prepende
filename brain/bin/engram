@@ -20,6 +20,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
+from prepende_brain.env import brand_env
+
 PYTHON = ROOT / ".venv" / "bin" / "python3"
 DEFAULT_SCOPE = "default"
 DEFAULT_CAPABILITIES = "safe"
@@ -117,10 +119,8 @@ def common(args: list[str]) -> dict[str, Any]:
     scope = pop_value(
         args,
         "--scope",
-        os.environ.get("PREPENDE_SCOPE")
-        or os.environ.get("PREPENDE_MCP_SCOPE")
-        or os.environ.get("ENGRAM_SCOPE")
-        or os.environ.get("ENGRAM_MCP_SCOPE")
+        brand_env("SCOPE")
+        or brand_env("MCP_SCOPE")
         or DEFAULT_SCOPE,
     )
     memory = pop_value(args, "--memory", "candidate")
@@ -168,10 +168,14 @@ def env_timeout(name: str, default: int) -> int:
 
 def env_timeout_alias(prepende_name: str, legacy_name: str, default: int) -> int:
     """Read the Prepende env name first while preserving the Engram alias."""
-
-    if os.environ.get(prepende_name, "").strip():
-        return env_timeout(prepende_name, default)
-    return env_timeout(legacy_name, default)
+    suffix = prepende_name.removeprefix("PREPENDE_")
+    raw = brand_env(suffix)
+    if not raw:
+        return default
+    try:
+        return max(1, int(raw))
+    except ValueError:
+        return default
 
 
 def runs_db_path() -> Path:
@@ -504,28 +508,24 @@ def mcp(args: list[str]) -> int:
         return die("mcp transport must be stdio or http")
     tenant = pop_value(
         args, "--tenant",
-        os.environ.get("PREPENDE_MCP_TENANT") or os.environ.get("ENGRAM_MCP_TENANT") or "",
+        brand_env("MCP_TENANT"),
     )
     workspace = pop_value(
         args, "--workspace",
-        os.environ.get("PREPENDE_MCP_WORKSPACE") or os.environ.get("ENGRAM_MCP_WORKSPACE") or "",
+        brand_env("MCP_WORKSPACE"),
     )
     scope = pop_value(
         args, "--scope",
-        os.environ.get("PREPENDE_MCP_SCOPE") or os.environ.get("ENGRAM_MCP_SCOPE") or "",
+        brand_env("MCP_SCOPE"),
     )
     deployment_revision = pop_value(
         args, "--deployment-revision",
-        os.environ.get("PREPENDE_DEPLOYMENT_REVISION")
-        or os.environ.get("ENGRAM_DEPLOYMENT_REVISION")
-        or "",
+        brand_env("DEPLOYMENT_REVISION"),
     )
     capabilities = pop_value(
         args,
         "--capabilities",
-        os.environ.get("PREPENDE_MCP_CAPABILITIES")
-        or os.environ.get("ENGRAM_MCP_CAPABILITIES")
-        or DEFAULT_CAPABILITIES,
+        brand_env("MCP_CAPABILITIES", DEFAULT_CAPABILITIES),
     )
     host = pop_value(args, "--host", None)
     port = pop_value(args, "--port", None)

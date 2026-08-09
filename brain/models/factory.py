@@ -13,6 +13,7 @@ from kernel.core.config import Config
 from models.echo import EchoGateway
 from models.anthropic import AnthropicGateway
 from models.openai import OpenAIGateway
+from prepende_brain.env import brand_env
 from models.google import GoogleGateway
 from models.catalog import model_fallbacks, resolve_model_id
 
@@ -127,11 +128,7 @@ def build_gateway(cfg: Config, provider: str | None = None, model: str | None = 
         # nested CLI specific tools so brain agents can actually source claims
         # (research needs live search). Equals-form so the trailing prompt
         # argument is never swallowed by the variadic flag. Unset -> unchanged.
-        tools = (
-            os.environ.get("PREPENDE_CLI_ALLOWED_TOOLS")
-            or os.environ.get("ENGRAM_CLI_ALLOWED_TOOLS")
-            or ""
-        ).strip()
+        tools = brand_env("CLI_ALLOWED_TOOLS").strip()
         if tools:
             cmd.append(f"--allowedTools={tools}")
         if m:

@@ -16,7 +16,7 @@ IMPORTANT — what this is and is not:
 
 Application status (honest): TODAY this is a *system-prompt posture* applied at
 the single-agent seam (`tactics/solo.py`) when opted in via `--meditate` or the
-`ENGRAM_MEDITATE` env var. It is opt-in, never automatic, so the product
+`PREPENDE_MEDITATE` env var (legacy alias accepted). It is opt-in, never automatic, so the product
 product persona is unaffected. When active, the strategist pins
 the tactic to `solo` (`kernel/core/strategist.py`) — that keeps the posture
 reliably applied and stops the keyword router from mis-routing a meditative
@@ -35,6 +35,8 @@ be A/B-measured the same way in the study harness.
 from __future__ import annotations
 
 import os
+
+from prepende_brain.env import brand_env
 
 # Canonical text of the posture. Append to a system prompt to apply it.
 MEDITATION_PRIOR = """Operating posture for this turn: meditation.
@@ -55,13 +57,14 @@ Sitting longer is for finding the true change, never for softening the truth."""
 PRIOR_ID = "meditation-v1"
 PRIOR_LABEL = "incubation-before-output posture (sit, then the smallest true change)"
 
-_ENV_FLAG = "ENGRAM_MEDITATE"
+_ENV_FLAG = "PREPENDE_MEDITATE"
+_LEGACY_ENV_FLAG = "ENGRAM_MEDITATE"
 _TRUE = frozenset({"1", "true", "yes", "on"})
 
 
 def is_active() -> bool:
     """True when the meditation posture is opted in for this process (env flag)."""
-    return (os.environ.get(_ENV_FLAG, "") or "").strip().lower() in _TRUE
+    return brand_env("MEDITATE").lower() in _TRUE
 
 
 def activate() -> None:
@@ -72,6 +75,7 @@ def activate() -> None:
 def deactivate() -> None:
     """Clear the meditation opt-in for this process (used by tests/surfaces)."""
     os.environ.pop(_ENV_FLAG, None)
+    os.environ.pop(_LEGACY_ENV_FLAG, None)
 
 
 def apply_to(system_prompt: str) -> str:

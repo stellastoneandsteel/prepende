@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from operations.continuity import load_recovery_evaluation, repository_snapshot
+from prepende_brain.env import brand_env
 
 
 SCHEMA_VERSION = "prepende-operational-status-v1"
@@ -601,12 +602,7 @@ def main(argv: list[str] | None = None, *, root: Path | None = None) -> int:
         args = _parser().parse_args(argv)
     except SystemExit as exc:
         return int(exc.code)
-    scope = (
-        args.scope
-        or os.environ.get("PREPENDE_SCOPE")
-        or os.environ.get("ENGRAM_SCOPE")
-        or "default"
-    )
+    scope = args.scope or brand_env("SCOPE", "default") or "default"
     payload, code = build_operational_status(
         root=(root or Path(__file__).resolve().parents[1]),
         scope=str(scope),

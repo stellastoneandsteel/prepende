@@ -17,6 +17,8 @@ import os
 import urllib.error
 from typing import Any, AsyncIterator, Sequence
 
+from prepende_brain.env import brand_env
+
 from kernel.contracts import ModelGateway
 from models.catalog import OPENAI_SOL, OPENAI_TERRA, OPENAI_LUNA, resolve_model_id
 from models._http import post_json
@@ -148,7 +150,7 @@ class OpenAIGateway(ModelGateway):
             yield word + " "
 
     async def embed(self, texts: Sequence[str], **opts: Any) -> Sequence[Sequence[float]]:
-        model = str(opts.get("model") or os.environ.get("ENGRAM_EMBEDDING_MODEL") or "text-embedding-3-small")
+        model = str(opts.get("model") or brand_env("EMBEDDING_MODEL") or "text-embedding-3-small")
         body = json.dumps({"model": model, "input": list(texts)}).encode()
         headers = {"content-type": "application/json"}
         if self.api_key:
