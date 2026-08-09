@@ -11,6 +11,13 @@ This is a release candidate. It distinguishes internal integrity, external ancho
 registered-stream completeness, and independent resolution. It does not claim that hidden
 unregistered streams cannot exist or that a named authority is honest.
 
+## Distribution
+
+[GitHub Releases](https://github.com/stellastoneandsteel/prepende/releases) is the only
+supported distribution channel. Each release contains a wheel, source distribution, and
+`SHA256SUMS`; verify the downloaded artifact before installation. Prepende is not published
+to PyPI. See the [publishing contract](docs/PUBLISHING.md).
+
 ## Install locally
 
 ```bash
