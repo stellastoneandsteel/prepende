@@ -11,6 +11,8 @@ from prepende import LegacyLedger, Ledger, build_report, grouped_summaries
 from prepende.canonical import canonical_bytes, digest
 from prepende.contract import Contract, build_contract
 from prepende.plot import reliability_svg
+from prepende.report import MIN_CALIBRATION_N
+from experiments import rebuild
 
 from helpers import Clock, evidence, lock_probability, new_ledger
 
@@ -111,18 +113,202 @@ class ReportingTests(unittest.TestCase):
             self.assertNotIn(stale_claim, public_copy)
 
     def test_quantitative_public_claim_floor_is_authoritative(self):
-        readme = (ROOT / "README.md").read_text(encoding="utf-8")
-        protocol = (ROOT / "docs" / "PROTOCOL_V2.md").read_text(encoding="utf-8")
-        site = (ROOT / "docs" / "index.html").read_text(encoding="utf-8")
-        self.assertIn("suppressed below 30 resolved probabilistic predictions", readme)
-        self.assertIn("Calibration curves and skill headlines are suppressed below 30 resolved", protocol)
-        self.assertIn("complete_through", protocol)
-        self.assertIn("INSUFFICIENT EVIDENCE", site)
-        self.assertIn("legacy v1: 26 locked, 14 resolved, 12 pending", site.lower())
-        fragment = site.split("<!--LEDGER:rel-->", 1)[1].split("<!--/LEDGER:rel-->", 1)[0].lower()
-        self.assertIn("curve requires n&gt;=30", fragment)
-        self.assertIn("forward resolved n=10", fragment)
-        self.assertNotIn("established benchmark", fragment)
+        evidence = rebuild.load_ledger()
+        self.assertIsNotNone(evidence)
+        self.assertEqual(MIN_CALIBRATION_N, 30)
+        self.assertEqual(
+            (evidence["n_locked"], evidence["n_resolved"], evidence["n_pending"]),
+            (26, 14, 12),
+        )
+        self.assertLess(evidence["n_forward_resolved"], MIN_CALIBRATION_N)
+        self.assertFalse(evidence["curve_publishable"])
+        violations = rebuild.audit_public_calibration_claims(
+            rebuild.public_claim_documents(ROOT),
+            curve_publishable=evidence["curve_publishable"],
+        )
+        self.assertEqual(violations, [])
+
+    def test_public_claim_discovery_covers_root_and_docs_text_surfaces(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            docs = root / "docs"
+            docs.mkdir()
+            fixtures = {
+                root / "RESULTS.md": "result",
+                docs / "claim.md": "markdown",
+                docs / "claim.htm": "html",
+                docs / "claim.svg": "svg",
+                docs / "claim.json": '{"description":"json"}',
+            }
+            for path, content in fixtures.items():
+                path.write_text(content, encoding="utf-8")
+            self.assertEqual(
+                set(rebuild.public_claim_documents(root)),
+                {path.relative_to(root).as_posix() for path in fixtures},
+            )
+
+    def test_quantitative_claim_gate_rejects_added_or_moved_benchmark_prose(self):
+        bad = "<p>Prepende has an established calibration benchmark: Brier 0.19 at n=14.</p>"
+        violations = rebuild.audit_public_calibration_claims(
+            {"docs/new.html": bad}, curve_publishable=False
+        )
+        self.assertEqual(len(violations), 1)
+        self.assertEqual(violations[0]["reason"], "below-floor-established-benchmark")
+
+        moved = "<p>INSUFFICIENT EVIDENCE at n=14.</p>" + bad
+        moved_violations = rebuild.audit_public_calibration_claims(
+            {"docs/moved.html": moved}, curve_publishable=False
+        )
+        self.assertEqual(len(moved_violations), 1)
+        self.assertEqual(moved_violations[0]["block"], 2)
+
+    def test_quantitative_claim_gate_covers_public_surface_shapes(self):
+        bad_documents = {
+            "numeric-first": (
+                "docs/numeric.html",
+                "<p>At n=14, 0.19 was the Brier score and is now an established benchmark.</p>",
+            ),
+            "metadata": (
+                "docs/meta.html",
+                '<meta name="description" content="Prepende Brier 0.19 at n=14 is an established calibration benchmark">',
+            ),
+            "fenced-markdown": (
+                "docs/example.md",
+                "```text\nPrepende Brier 0.19 at n=14 is established.\n```",
+            ),
+            "table-row": (
+                "docs/table.html",
+                "<table><tr><th>Brier</th><td>0.19</td><td>n=14</td></tr></table>",
+            ),
+            "forecast-table": (
+                "docs/forecast.html",
+                "<table><tr><th>Prediction accuracy</th><td>71%</td><td>14 predictions</td></tr></table>",
+            ),
+            "postpositive-established": (
+                "docs/postpositive.html",
+                "<p>At n=14, our forecast benchmark is definitive.</p>",
+            ),
+            "sets-benchmark": (
+                "docs/sets.html",
+                "<p>At n=14, our 71% prediction score sets the benchmark.</p>",
+            ),
+            "right-on-record": (
+                "docs/right.html",
+                "<p>We were right on 10 of 14 predictions, a definitive result.</p>",
+            ),
+            "success-rate-result": (
+                "docs/success.html",
+                "<p>Prediction success rate was 71% across 14 cases, an established result.</p>",
+            ),
+            "accessibility-attribute": (
+                "docs/accessible.html",
+                '<img alt="established calibration benchmark: Brier 0.19 at n=14">',
+            ),
+            "svg-title-attribute": (
+                "docs/chart.svg",
+                '<svg><path title="established calibration benchmark: Brier 0.19 at n=14"/></svg>',
+            ),
+            "json-description": (
+                "docs/result.json",
+                '{"description":"established calibration benchmark: Brier 0.19 at n=14"}',
+            ),
+            "structured-json": (
+                "docs/structured.json",
+                '{"metric":"Brier","value":0.19,"sampleSize":14,'
+                '"status":"established benchmark"}',
+            ),
+        }
+        for label, (path, content) in bad_documents.items():
+            with self.subTest(label=label):
+                violations = rebuild.audit_public_calibration_claims(
+                    {path: content}, curve_publishable=False
+                )
+                self.assertEqual(len(violations), 1, violations)
+
+    def test_quantitative_claim_caveat_is_bound_to_the_claim_sentence(self):
+        laundered = (
+            "<p>Competitors have insufficient evidence. "
+            "Prepende Brier was 0.19 at n=14.</p>"
+        )
+        violations = rebuild.audit_public_calibration_claims(
+            {"docs/laundered.html": laundered}, curve_publishable=False
+        )
+        self.assertEqual(len(violations), 1)
+        self.assertEqual(violations[0]["sentence"], 2)
+
+        for separator in (";", "—"):
+            with self.subTest(separator=separator):
+                separated = (
+                    f"<p>Competitors have insufficient evidence {separator} "
+                    "Prepende Brier was 0.19 at n=14.</p>"
+                )
+                clause_violations = rebuild.audit_public_calibration_claims(
+                    {"docs/clause.html": separated}, curve_publishable=False
+                )
+                self.assertEqual(len(clause_violations), 1, clause_violations)
+                self.assertEqual(clause_violations[0]["sentence"], 2)
+
+        missing_n = "<p>Prepende reports Brier 0.19.</p>"
+        missing_authority = rebuild.audit_public_calibration_claims(
+            {"docs/missing-n.html": missing_n}, curve_publishable=True
+        )
+        self.assertEqual(len(missing_authority), 1)
+        self.assertEqual(
+            missing_authority[0]["reason"], "claim-without-sample-authority"
+        )
+        threshold_spoof = (
+            "<p>Brier 0.19 is our benchmark; "
+            "n=30 is the publication threshold.</p>"
+        )
+        spoofed = rebuild.audit_public_calibration_claims(
+            {"docs/spoof.html": threshold_spoof}, curve_publishable=True
+        )
+        self.assertEqual(len(spoofed), 1)
+        self.assertEqual(spoofed[0]["reason"], "claim-without-sample-authority")
+
+    def test_quantitative_claim_gate_keeps_caveated_historical_result(self):
+        preliminary = (
+            "<p>Preliminary calibration result: Brier 0.19 at n=14; "
+            "insufficient evidence below the n>=30 floor.</p>"
+        )
+        self.assertEqual(
+            rebuild.audit_public_calibration_claims(
+                {"docs/history.html": preliminary}, curve_publishable=False
+            ),
+            [],
+        )
+        explicitly_not_established = (
+            "<p>Preliminary Brier 0.19 at n=14 is not an established "
+            "calibration benchmark; evidence is insufficient.</p>"
+        )
+        self.assertEqual(
+            rebuild.audit_public_calibration_claims(
+                {"docs/history.html": explicitly_not_established},
+                curve_publishable=False,
+            ),
+            [],
+        )
+        non_claims = (
+            "<p>The operator skill score improved by 2 points.</p>"
+            "<p>Our roadmap will create a calibration benchmark after 30 predictions.</p>"
+        )
+        self.assertEqual(
+            rebuild.audit_public_calibration_claims(
+                {"docs/roadmap.html": non_claims}, curve_publishable=False
+            ),
+            [],
+        )
+        for sufficient in (
+            "<p>At a sample size of 30, Brier 0.19 is our established calibration benchmark.</p>",
+            "<p>Across 30 observations, Brier 0.19 is our established calibration benchmark.</p>",
+        ):
+            with self.subTest(sufficient=sufficient):
+                self.assertEqual(
+                    rebuild.audit_public_calibration_claims(
+                        {"docs/sufficient.html": sufficient}, curve_publishable=True
+                    ),
+                    [],
+                )
 
     def test_calibration_is_suppressed_below_floor(self):
         with tempfile.TemporaryDirectory() as directory:

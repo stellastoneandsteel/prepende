@@ -67,12 +67,12 @@ _EXCLUSION_REASONS: dict[str, str] = {
         "runs only when the file exists."
     ),
     "smoke_clone_privacy.py": (
-        "Reviewed conditional: this smoke is required when `prepende-export-manifest.json` "
-        "is present because clone workflows are in-scope."
+        "Reviewed public-core exclusion: private/customer clone verification requires "
+        "`prepende-export-manifest.json`, which is intentionally not exported here."
     ),
     "smoke_public_core_export.py": (
-        "Reviewed conditional: this smoke is required when `prepende-export-manifest.json` "
-        "is absent so public-core export is validated instead."
+        "Reviewed private-clone exclusion: public-core export verification is replaced by "
+        "the private/customer clone privacy gate when that reviewed policy is present."
     ),
 }
 
@@ -88,13 +88,6 @@ def discover_smoke_files(root: Path) -> list[str]:
         for path in (root / "tests").glob("smoke_*.py")
         if path.is_file()
     )
-
-
-def _parse_env_skip_smokes() -> tuple[str, ...]:
-    raw = os.environ.get("PREPENDE_SMOKE_GATE_TEST_SKIP", "").strip()
-    if not raw:
-        return tuple()
-    return tuple(sorted({item.strip() for item in raw.split(",") if item.strip()}))
 
 
 def resolve_smoke_suite(root: Path) -> tuple[list[str], list[str], list[str], dict[str, str]]:
@@ -113,20 +106,19 @@ def resolve_smoke_suite(root: Path) -> tuple[list[str], list[str], list[str], di
     else:
         exclusions["smoke_standup_tenant_preflight.py"] = _EXCLUSION_REASONS["smoke_standup_tenant_preflight.py"]
 
-    if (root / "prepende-export-manifest.json").is_file():
+    private_clone = (root / "prepende-export-manifest.json").is_file()
+    public_core = (root / "prepende-public-core-manifest.json").is_file()
+    # The private source checkout intentionally contains both policies. Its
+    # stricter customer-clone profile takes precedence; a public-core export
+    # separately proves that the private policy was not exported.
+    if private_clone:
         executable.append("smoke_clone_privacy.py")
         exclusions["smoke_public_core_export.py"] = _EXCLUSION_REASONS["smoke_public_core_export.py"]
-    else:
+    elif public_core:
         executable.append("smoke_public_core_export.py")
         exclusions["smoke_clone_privacy.py"] = _EXCLUSION_REASONS["smoke_clone_privacy.py"]
-
-    for name in _parse_env_skip_smokes():
-        if name in executable:
-            executable = [smoke for smoke in executable if smoke != name]
-        if name not in exclusions:
-            exclusions[name] = (
-                f"Test-mode skip: {name} is omitted for a test-driven non-recursive pass."
-            )
+    else:
+        raise ValueError("no reviewed smoke profile manifest is present")
 
     executable = list(dict.fromkeys(executable))
     available = discover_smoke_files(root)
@@ -138,13 +130,7 @@ def resolve_smoke_suite(root: Path) -> tuple[list[str], list[str], list[str], di
         for name in available
         if name not in executable_set and name not in exclusions
     ]
-    if any(
-        not (
-            _EXCLUSION_REASONS.get(name, "").strip()
-            or str(reason).startswith("Test-mode skip:")
-        )
-        for name, reason in exclusions.items()
-    ):
+    if any(_EXCLUSION_REASONS.get(name) != reason for name, reason in exclusions.items()):
         raise ValueError("missing reviewed exclusion reason")
     return executable, missing, unregistered, exclusions
 

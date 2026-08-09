@@ -25,7 +25,7 @@ import argparse
 import asyncio
 import json
 import sys
-from typing import Any
+from pathlib import Path
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -52,24 +52,6 @@ def _parser() -> argparse.ArgumentParser:
     return p
 
 
-def _context_fast_status(scope: str) -> dict[str, Any]:
-    return {
-        "scope": scope or "default",
-        "model": "context-fast",
-        "memory": {
-            "backend": "sqlite",
-            "status": "provider_skipped",
-            "note": "Model providers are intentionally not initialized for context-fast.",
-        },
-        "knowledge": {
-            "rag": {"lexical_ready": False, "stale": True},
-            "graphify": {"ready": False, "reason": "context_fast"},
-        },
-        "runs": {"recent_count": 0, "recent": []},
-        "connectors": {"tools": 0, "ready": 0},
-    }
-
-
 async def _amain(args: argparse.Namespace) -> int:
     if args.context_fast and not args.status:
         print("--context-fast requires --status", file=sys.stderr)
@@ -77,7 +59,12 @@ async def _amain(args: argparse.Namespace) -> int:
 
     try:
         if args.context_fast:
-            state = _context_fast_status(args.scope)
+            from operations.local_status import collect_context_fast_status
+
+            state = collect_context_fast_status(
+                Path(__file__).resolve().parents[1],
+                args.scope,
+            )
             print(json.dumps(state, indent=2, default=str))
             return 0
 
