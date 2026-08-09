@@ -30,7 +30,7 @@ jobs:
       - name: Create isolated runtime
         run: python -m venv .venv
       - name: Install hash-locked runtime
-        run: .venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements-prepende.lock
+        run: ".venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements-prepende.lock"
       - name: Compile product-neutral packages
         run: .venv/bin/python -m compileall -q agents connectors interface kernel knowledge memory models operations prepende_brain prompts rag routes self_improve services support tactics tui workspace
       - name: Verify brain runtime
