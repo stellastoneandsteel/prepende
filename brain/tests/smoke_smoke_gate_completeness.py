@@ -87,6 +87,26 @@ def main() -> None:
             assert calls == [], "unknown smoke reached the suite runner"
             unknown.unlink()
 
+            # Recursive discovery must retain the relative path. A nested smoke
+            # that reuses a registered basename is still a distinct unregistered
+            # test and must not be mistaken for the registered root file.
+            nested = tests / "nested"
+            nested.mkdir()
+            nested_duplicate = nested / "smoke_phase0.py"
+            nested_duplicate.write_text(
+                "# nested duplicate must fail closed\n", encoding="utf-8"
+            )
+            try:
+                nested_registry = verifier.summarize_registry(fixture)
+                assert nested_registry["unknown"] == [
+                    "nested/smoke_phase0.py"
+                ], nested_registry
+                assert verifier.main() == 1
+                assert calls == [], "nested unknown smoke reached the suite runner"
+            finally:
+                nested_duplicate.unlink()
+                nested.rmdir()
+
             assert verifier.main() == 0
             assert len(calls) == 1, "registry validation recursively ran the suite"
             assert calls[0][0] == fixture

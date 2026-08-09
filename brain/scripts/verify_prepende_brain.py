@@ -83,9 +83,10 @@ def discover_smoke_files(root: Path) -> list[str]:
     Determinism is important here: missing a file or changing execution order must
     not be possible by filesystem reordering.
     """
+    tests_root = root / "tests"
     return sorted(
-        path.name
-        for path in (root / "tests").rglob("smoke_*.py")
+        path.relative_to(tests_root).as_posix()
+        for path in tests_root.rglob("smoke_*.py")
         if path.is_file()
     )
 

@@ -1315,7 +1315,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "477244fb67981478e0a72b77632520c591f8a7a8ea04446141e4628e1518c50b",
+      "sha256": "1d968dfe19d57a21ea460dd75498bc0dc97d7c602f4c26a16ae04747f926335c",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]
@@ -1915,7 +1915,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_smoke_gate_completeness.py",
-      "sha256": "559cd7924115af6de7045e89e8f4c43b3fb3f208e5c6ff2328f92decd14dd324",
+      "sha256": "3c6215e6967930559f158f7034a8bc48571bca0f07a60a51b28cb0d1a28b7316",
       "sourcePaths": [
         "tests/smoke_smoke_gate_completeness.py"
       ]
