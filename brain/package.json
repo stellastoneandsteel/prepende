@@ -1,0 +1,15 @@
+{
+  "name": "prepende-brain-runtime",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepende": "python3 bin/prepende",
+    "engram": "python3 bin/engram",
+    "bootstrap:prepende": "python3 scripts/bootstrap_prepende_clone.py",
+    "test:brain": "python3 scripts/verify_prepende_brain.py",
+    "verify:prepende:clone": "python3 tests/smoke_clone_env.py && python3 tests/smoke_clone_bootstrap.py && python3 tests/smoke_clone_privacy.py",
+    "verify:prepende:knowledge": "MODEL_PROVIDER=echo EMBEDDING_PROVIDER=echo python3 tests/smoke_vault_rag.py && MODEL_PROVIDER=echo EMBEDDING_PROVIDER=echo python3 tests/smoke_knowledge_scoped.py && MODEL_PROVIDER=echo EMBEDDING_PROVIDER=echo python3 tests/smoke_knowledge_converge.py && MODEL_PROVIDER=echo EMBEDDING_PROVIDER=echo python3 tests/smoke_rag_writer_integrity.py && MODEL_PROVIDER=echo EMBEDDING_PROVIDER=echo python3 tests/smoke_tenant_chat_rag.py && MODEL_PROVIDER=echo EMBEDDING_PROVIDER=echo python3 tests/smoke_graphify_recall.py",
+    "export:public-core": "python3 scripts/export_prepende_public_core.py"
+  }
+}

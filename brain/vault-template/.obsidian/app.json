@@ -1,0 +1,8 @@
+{
+  "alwaysUpdateLinks": true,
+  "attachmentFolderPath": "raw",
+  "newFileFolderPath": "wiki",
+  "newFileLocation": "folder",
+  "showUnsupportedFiles": true,
+  "useMarkdownLinks": false
+}

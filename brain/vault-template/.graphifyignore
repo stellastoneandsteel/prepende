@@ -1,0 +1,4 @@
+# Never project tenant or local Obsidian runtime state into an owner graph.
+tenants/
+.obsidian/
+.trash/
