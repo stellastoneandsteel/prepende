@@ -1,0 +1,29 @@
+name: protocol-ci
+
+on:
+  pull_request: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: python -m pip install --upgrade pip
+      - run: python -m pip install '.[signatures,test]'
+      - run: python -m prepende.tests
+      - run: python -m unittest discover -s tests -v
+      - run: python -m build
+      - run: python -m pip install --force-reinstall dist/*.whl
+      - run: prepende --help

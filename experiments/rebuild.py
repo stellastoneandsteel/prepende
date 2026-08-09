@@ -7,19 +7,17 @@ Run weekly by .github/workflows/rebuild.yml (and runnable locally). It does two 
      timestamp to experiments/data/_status.json. (The sims are ~deterministic, so this
      is a "the code still works" check, not a source of new numbers.)
 
-  2. If experiments/predictions.jsonl exists, loads it through the prepende ledger,
-     recomputes Brier / skill / calibration, and injects the live reliability polyline
-     and headline numbers into docs/index.html between the <!--LEDGER:rel--> markers,
-     plus a freshness stamp between <!--LEDGER:stamp--> markers.
+  2. Loads the immutable v1 corpus with explicit legacy limits. It publishes counts and
+     an insufficient-evidence state. It does not publish calibration or skill below the
+     n>=30 floor, pool retrospective rows, or label v1 as externally anchored.
 
 Dependency-light: only the sims need numpy. The ledger path uses pure stdlib via the
 prepende package. The script commits nothing — the workflow commits any resulting diff.
 
 Honesty notes baked in:
-  * If there are no resolved predictions, the ledger region is LEFT UNTOUCHED — the
-    script never invents a calibration curve.
-  * The reliability chart is drawn from the ACTUAL populated bins, so a sparse ledger
-    looks sparse. n is always shown.
+  * The v1 ledger has unprotected resolution rows and is always labeled UNANCHORED.
+  * Retrospective development rows are counted separately from forward rows.
+  * The stale curve is actively removed whenever the evidence floor is not met.
 """
 from __future__ import annotations
 
@@ -34,6 +32,10 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 EXP = os.path.join(ROOT, "experiments")
 DOCS = os.path.join(ROOT, "docs")
 LEDGER_PATH = os.path.join(EXP, "predictions.jsonl")
+V2_LEDGER_PATH = os.path.join(EXP, "predictions-v2.jsonl")
+TRUSTED_ANCHORS_PATH = os.path.join(EXP, "trusted-anchor-keys.json")
+TRUSTED_RESOLVERS_PATH = os.path.join(EXP, "trusted-resolver-keys.json")
+EXTERNAL_ANCHOR_RECEIPTS_PATH = os.path.join(EXP, "external-anchor-receipts.json")
 INDEX = os.path.join(DOCS, "index.html")
 STATUS = os.path.join(EXP, "data", "_status.json")
 
@@ -76,52 +78,102 @@ def smoke_sims():
 
 
 def load_ledger():
-    """Return (summary_dict, calibration_bins, n_resolved) or None if no usable ledger."""
+    """Return explicit legacy counts and integrity limits, never a pooled v1 curve."""
     if not os.path.exists(LEDGER_PATH) or os.path.getsize(LEDGER_PATH) == 0:
         return None
     sys.path.insert(0, ROOT)
     try:
-        from prepende import Ledger, summary, calibration_table
+        from prepende import Ledger, LegacyLedger, grouped_summaries
     except Exception as e:
         print("prepende package not importable: %s" % e)
         return None
-    records = Ledger(LEDGER_PATH).records()
-    n_resolved = sum(1 for _, r in records if r is not None)
-    s = summary(records)
-    if not s.get("n_prob"):
-        return {"summary": s, "bins": [], "n_resolved": n_resolved}
-    bins = [b for b in calibration_table(records, nbins=5) if b["n"]]
-    return {"summary": s, "bins": bins, "n_resolved": n_resolved}
+    ledger = LegacyLedger(LEDGER_PATH)
+    records = ledger.records()
+    integrity = ledger.integrity()
+    retrospective = [item for item in records if item[0].predictor == "prepende:dev-selftest"]
+    forward = [item for item in records if item[0].predictor != "prepende:dev-selftest"]
+    result = {
+        "protocol": "prepende/1",
+        "integrity": integrity,
+        "n_locked": len(records),
+        "n_resolved": sum(1 for _, terminal in records if terminal is not None),
+        "n_pending": sum(1 for _, terminal in records if terminal is None),
+        "n_retrospective": len(retrospective),
+        "n_forward": len(forward),
+        "n_forward_resolved": sum(1 for _, terminal in forward if terminal is not None),
+        "bins": [],
+        "evidence_status": "INSUFFICIENT_EVIDENCE",
+    }
+    if os.path.exists(V2_LEDGER_PATH):
+        anchors = json.load(open(TRUSTED_ANCHORS_PATH, encoding="utf-8")) if os.path.exists(TRUSTED_ANCHORS_PATH) else {}
+        resolvers = json.load(open(TRUSTED_RESOLVERS_PATH, encoding="utf-8")) if os.path.exists(TRUSTED_RESOLVERS_PATH) else {}
+        receipts = json.load(open(EXTERNAL_ANCHOR_RECEIPTS_PATH, encoding="utf-8")) if os.path.exists(EXTERNAL_ANCHOR_RECEIPTS_PATH) else []
+        v2 = Ledger(V2_LEDGER_PATH)
+        verified = v2.verify(
+            trusted_anchor_keys=anchors,
+            trusted_resolver_keys=resolvers,
+            external_anchor_receipts=receipts,
+        )
+        result["v2"] = verified.to_dict()
+        result["v2_groups"] = grouped_summaries(v2.records())
+        sufficient = [
+            group for group in result["v2_groups"]
+            if group["evidence_status"] == "SUFFICIENT" and group["provenance"] == "forward"
+        ]
+        result["curve_group"] = sufficient[0] if len(sufficient) == 1 else None
+        result["curve_publishable"] = (
+            verified.status == "OK"
+            and verified.independently_resolved
+            and result["curve_group"] is not None
+        )
+    else:
+        result["v2"] = None
+        result["v2_groups"] = []
+        result["curve_publishable"] = False
+    return result
 
 
 def reliability_fragment(led):
-    """Build the inline SVG fragment (polyline + circles + headline) for the site."""
-    s = led["summary"]
-    bins = led["bins"]
-    lines = []
-    pts = sorted(bins, key=lambda b: b["mean_pred"])
-    if len(pts) >= 2:
-        poly = " ".join("%.0f,%.0f" % (_x(b["mean_pred"]), _y(b["observed"])) for b in pts)
-        lines.append('<polyline points="%s" fill="none" stroke="#4a3f9e" stroke-width="2"/>' % poly)
-    for b in pts:
-        r = 4 + min(4, b["n"] - 1)
-        lines.append('<circle cx="%.0f" cy="%.0f" r="%d" fill="#4a3f9e"/>' % (
-            _x(b["mean_pred"]), _y(b["observed"]), r))
-    brier = s.get("brier")
-    skill = s.get("skill")
-    if brier is not None and skill is not None:
-        lines.append('<text x="48" y="28" font-size="10" fill="#16233a">Brier %.2f · skill %+.2f</text>'
-                     % (brier, skill))
-    return "\n      ".join(lines)
+    """Return a visible fail-closed state while the forward cohort is below n=30."""
+    v2 = led.get("v2") or {}
+    if led.get("curve_publishable"):
+        group = led["curve_group"]
+        bins = group["reliability"]["bins"]
+        points = [item for item in bins if item["n"]]
+        poly = " ".join("%.0f,%.0f" % (_x(item["mean_pred"]), _y(item["observed"])) for item in points)
+        circles = [
+            '<circle cx="%.0f" cy="%.0f" r="%d" fill="#4a3f9e"/>' % (
+                _x(item["mean_pred"]), _y(item["observed"]), 4 + min(4, item["n"] - 1)
+            ) for item in points
+        ]
+        return "\n      ".join([
+            '<polyline points="%s" fill="none" stroke="#4a3f9e" stroke-width="2"/>' % poly,
+            *circles,
+            '<text x="48" y="28" font-size="10" fill="#16233a">verified forward, independently resolved v2 cohort n=%d</text>' % group["n_prob"],
+        ])
+    return (
+        '<text x="145" y="92" text-anchor="middle" font-size="11" fill="#9a2d2d">'
+        'INSUFFICIENT EVIDENCE</text>\n      '
+        '<text x="145" y="112" text-anchor="middle" font-size="10" fill="#5b6675">'
+        'forward resolved n=%d; curve requires n&gt;=30</text>\n      '
+        '<text x="145" y="130" text-anchor="middle" font-size="10" fill="#5b6675">'
+        'legacy v1 resolutions are not hash-protected; v2=%s</text>'
+        % (led["n_forward_resolved"], v2.get("status", "absent"))
+    )
 
 
 def stamp_text(led, status):
-    s = led["summary"]
-    if s.get("n_prob"):
-        return ("ledger: %d resolved · Brier %.2f · skill %+.2f · auto-rebuilt %s (UTC)"
-                % (led["n_resolved"], s["brier"], s["skill"], status["rebuilt_utc"]))
-    return ("ledger: %d locked, %d resolved · auto-rebuilt %s (UTC)"
-            % (status.get("n_locked", 0), led["n_resolved"], status["rebuilt_utc"]))
+    v2 = led.get("v2") or {}
+    return (
+        "legacy v1: %d locked, %d resolved, %d pending (%.1f%% unresolved); "
+        "v1 has no locked forfeit state; %d retrospective excluded; "
+        "UNANCHORED; v2=%s with %d contracts; calibration suppressed unless a segregated "
+        "forward v2 cohort is OK, independently resolved, unique, and n>=30; auto-rebuilt %s (UTC)"
+        % (led["n_locked"], led["n_resolved"], led["n_pending"],
+           (100.0 * led["n_pending"] / led["n_locked"]) if led["n_locked"] else 0.0,
+           led["n_retrospective"], v2.get("status", "absent"),
+           (v2.get("counts") or {}).get("contracts", 0), status["rebuilt_utc"])
+    )
 
 
 def inject(html, marker, payload):
@@ -143,15 +195,24 @@ def main():
     if led is not None and os.path.exists(INDEX):
         with open(INDEX, encoding="utf-8") as f:
             html = f.read()
-        if led["bins"]:
-            html, c1 = inject(html, "LEDGER:rel", reliability_fragment(led))
-            changed = changed or c1
+        html, c1 = inject(html, "LEDGER:rel", reliability_fragment(led))
+        changed = changed or c1
         html, c2 = inject(html, "LEDGER:stamp", stamp_text(led, status))
         changed = changed or c2
         if changed:
             with open(INDEX, "w", encoding="utf-8") as f:
                 f.write(html)
             print("index.html ledger region refreshed")
+        status["ledger"] = {
+            "protocol": led["protocol"],
+            "status": led["integrity"]["status"],
+            "locked": led["n_locked"],
+            "resolved": led["n_resolved"],
+            "pending": led["n_pending"],
+            "retrospective": led["n_retrospective"],
+            "curvePublished": bool(led.get("curve_publishable")),
+            "v2Status": (led.get("v2") or {}).get("status", "absent"),
+        }
     else:
         print("no usable predictions.jsonl yet - ledger region left untouched (honest no-op)")
 

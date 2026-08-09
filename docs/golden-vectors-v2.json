@@ -1,0 +1,27 @@
+{
+  "canonical": {
+    "input": {
+      "a": "0.7",
+      "flag": true,
+      "n": 1,
+      "z": "é"
+    },
+    "json": "{\"a\":\"0.7\",\"flag\":true,\"n\":1,\"z\":\"é\"}",
+    "golden_domain_digest": "sha256:add79011cc0ce20743a4986bc8e36e868c90e0450abee8fc82a1a161585fcce6"
+  },
+  "genesis_row": {
+    "event": {
+      "anchor_policy": "required",
+      "created_at": "2023-11-14T22:13:20.000000Z",
+      "protocol": "prepende/2",
+      "registered_predictor": "agent-golden",
+      "stream_id": "golden-stream"
+    },
+    "event_hash": "sha256:2ccef58f1186c50758a3c6c0a27c5ff2ad52ca5c6473efe59c2db185a4fef64f",
+    "event_type": "genesis",
+    "prev_hash": null,
+    "protocol": "prepende/2",
+    "row_hash": "sha256:f4e4167ebde01b20035c46942f9604b14af60e87517190a8f421e01ac534415c",
+    "seq": 0
+  }
+}

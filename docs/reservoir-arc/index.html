@@ -3,7 +3,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Prepende — a physical reservoir's real edge, and the noise that takes it back</title>
-<meta name="description" content="Three pre-registered batches mapping where a coupled sub-threshold parametron reservoir earns its keep: a real nonlinear-memory advantage that does not survive noise at any scale. Honest, hash-locked, calibration-scored.">
+<meta name="description" content="Three legacy v1 pre-registration batches mapping where a coupled sub-threshold parametron reservoir earns its keep, including misses and explicit integrity limits.">
 <style>
   :root{--bg:#f4f3ef;--ink:#16233a;--blue:#1f5fae;--maroon:#7a2638;--teal:#0f6e56;--muted:#5b6675}
   *{box-sizing:border-box}
@@ -41,7 +41,7 @@
 
 <h2>Why bother — and why pre-register</h2>
 <p>An earlier build proposed that the same oscillator fabric used as an Ising machine might double as a physical <i>reservoir</i> — a fixed nonlinear dynamical system you read out with a trained linear layer. An adversarial gate demoted the claim to a hypothesis. Then we tested it: on NARMA10, the standard reservoir benchmark, the parametron reservoir was <b>valid but weak</b> — a real reservoir (the echo-state property held) that nonetheless lost to a trained linear filter (0.52 vs 0.38 NRMSE). A vanilla echo-state network beat it outright.</p>
-<p>That verdict was honest but incomplete. NARMA10 is dominated by short-memory, near-linear structure — exactly the regime a linear filter handles — so it cannot reveal whether a <i>nonlinear</i> reservoir has any edge at all. The sharper question is not "is it good?" but "<i>where</i> is it good?" To answer it without fooling ourselves, every claim below was hash-locked before its scored run, with its resolution rule and evaluation regime fixed at lock time. You cannot move the goalposts after the fact: editing any field breaks the hash, and the git commit of each lock is the external timestamp proving it preceded its outcome.</p>
+<p>That verdict was honest but incomplete. NARMA10 is dominated by short-memory, near-linear structure — exactly the regime a linear filter handles — so it cannot reveal whether a <i>nonlinear</i> reservoir has any edge at all. The sharper question is not "is it good?" but "<i>where</i> is it good?" Every claim below was recorded in the legacy v1 ledger before its scored run, with its resolution rule and evaluation regime in the contract hash. Repository history records the published ordering, but v1 resolution rows and timestamps were not independently protected. Protocol v2 adds chained outcomes and verifier-trusted checkpoints; it does not retroactively upgrade these rows.</p>
 
 <h2>Batch 5 — the boundary: a task linearity can't touch</h2>
 <p>We chose temporal parity, the textbook nonlinearly-separable problem. Binarise the input, <code>b(t)=1[u(t)&gt;0.25]</code>, and ask the system to predict <code>y(t)=b(t-2) XOR b(t-4)</code>. A linear readout of a linear delay line <b>cannot</b> represent XOR, so it pins the floor at chance. We pre-registered two contracts: the parametron reservoir beats the linear delay line by ≥15 points (p=0.70), and the linear baseline stays below 60% (p=0.85). Method was stricter than the NARMA10 run — hyperparameters chosen on a validation split, reported on held-out test.</p>
@@ -117,7 +117,7 @@
 </figure>
 
 <h2>The scorecard</h2>
-<p>Six forward predictions across the three batches, each locked before its run. Four hit, two missed — and both misses were on the optimistic side (the edge will survive noise; scale will save it). That is what honest calibration looks like: the bets we most wanted to win are the ones we lost.</p>
+<p>Six forward predictions across the three batches, each recorded before its run according to repository history. Four hit, two missed — and both misses were on the optimistic side (the edge will survive noise; scale will save it). Publishing the misses is the right research posture, but six related forecasts are below the stated sample floor and are not calibration evidence.</p>
 <table>
   <tr><th>Batch</th><th>Prediction</th><th>p</th><th>Outcome</th></tr>
   <tr><td>5</td><td>reservoir beats linear on XOR by ≥15 pts</td><td>0.70</td><td class="hit">HIT (+20)</td></tr>
@@ -127,7 +127,7 @@
   <tr><td>7</td><td>scale restores robustness (≥0.10 at N=200)</td><td>0.50</td><td class="miss">MISS (0.03)</td></tr>
   <tr><td>7</td><td>scale improves clean capacity (≥0.05)</td><td>0.70</td><td class="hit">HIT (+0.09)</td></tr>
 </table>
-<p class="muted">The full ledger — every lock, every resolution, the running Brier and skill scores, and the tamper-evidence chain — lives in <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/predictions.jsonl">experiments/predictions.jsonl</a> and is summarised on the <a href="../#ledger">front page</a>.</p>
+<p class="muted">The legacy v1 rows live in <a href="https://github.com/stellastoneandsteel/prepende/blob/main/experiments/predictions.jsonl">experiments/predictions.jsonl</a> and are summarised on the <a href="../#ledger">front page</a>. V1 contract hashes can be checked, but its resolution content, row order, completeness, and timestamps were not protocol-protected; no Brier, skill, or calibration claim is published from this below-floor cohort.</p>
 
 <h2>What it means</h2>
 <blockquote>The parametron reservoir has a real nonlinear-memory advantage that does not survive noise at any scale we tested. As software it works; as hardware it does not earn its keep.</blockquote>
