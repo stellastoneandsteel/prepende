@@ -51,6 +51,5 @@ targeted, negotiators working a deadline in Muscat, families watching fuel
 prices eat their paychecks — do not appear on the trend lists. The story
 does.
 
-*The desk's one forward call, logged in our public prediction ledger before
-tonight's edition closed: 65% that Iran and the strait are back on the
-American trend list by Monday night. We grade it Tuesday, hit or miss.*
+*The desk's call: a 65% chance Iran and the strait are back on the American
+trend list by Monday night. Graded Tuesday, hit or miss.*
