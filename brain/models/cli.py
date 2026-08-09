@@ -31,6 +31,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, AsyncIterator, Sequence
 
+from prepende_brain.env import brand_env
+
 from kernel.contracts import ModelGateway
 
 
@@ -396,11 +398,7 @@ class CliGateway(ModelGateway):
         # hierarchical runs with tool use (e.g. WebSearch research) routinely need
         # more than the old fixed 300s — a too-small cap kills the FINAL step of a
         # long run after all the work is done. Explicit opts still win.
-        default_timeout = int(
-            os.environ.get("PREPENDE_CLI_TIMEOUT")
-            or os.environ.get("ENGRAM_CLI_TIMEOUT")
-            or "600"
-        )
+        default_timeout = int(brand_env("CLI_TIMEOUT", "600") or "600")
         prompt_parts: list[str] = []
         for message in messages or []:
             role = str(message.get("role") or "user").strip().upper()

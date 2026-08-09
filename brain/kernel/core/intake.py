@@ -9,7 +9,7 @@ Two product-agnostic checks (the engram core names NO product):
     content is DATA, never instructions; this flags attempts to make it read as a
     command (so an inattentive reviewer / a downstream template can't be steered).
   - blocked: deploy-configured forbidden terms. A deployment that must keep
-    specific third-party IP out of its brain sets ENGRAM_INTAKE_BLOCKLIST
+    specific third-party IP out of its brain sets PREPENDE_INTAKE_BLOCKLIST
     (comma-separated) or passes extra_blocklist; the core ships with NONE.
 
 Stdlib only. Pure functions — testable without infra.
@@ -17,9 +17,10 @@ Stdlib only. Pure functions — testable without infra.
 
 from __future__ import annotations
 
-import os
 import re
 from typing import Any, Iterable
+
+from prepende_brain.env import brand_env
 
 # Specific injection idioms — kept tight to avoid flagging ordinary research prose.
 _INJECTION = re.compile(
@@ -35,7 +36,7 @@ _INJECTION = re.compile(
 
 
 def _blocklist(extra: Iterable[str] = ()) -> list[str]:
-    env = (os.environ.get("ENGRAM_INTAKE_BLOCKLIST") or "").strip()
+    env = brand_env("INTAKE_BLOCKLIST")
     terms = [t.strip() for t in env.split(",") if t.strip()]
     terms += [str(t).strip() for t in extra if str(t).strip()]
     return terms

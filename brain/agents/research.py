@@ -45,7 +45,7 @@ _pool_cache: dict[str, Any] = {"ts": 0.0, "items": []}
 
 def _fetch_feed(feed: dict, per_feed: int, timeout: int) -> list[dict]:
     try:
-        req = urllib.request.Request(feed["url"], headers={"User-Agent": "Engram/1.0"})
+        req = urllib.request.Request(feed["url"], headers={"User-Agent": "Prepende/1.0"})
         with urllib.request.urlopen(req, timeout=timeout) as r:
             xml = r.read().decode("utf-8", "replace")
         return _news.parse_rss(
@@ -153,7 +153,7 @@ def _arxiv_search(topic: str, n: int = 8, timeout: int = 12) -> list[dict]:
         "sortBy": sort, "sortOrder": "descending",
     })
     try:
-        req = urllib.request.Request(f"{_ARXIV_API}?{q}", headers={"User-Agent": "Engram/1.0"})
+        req = urllib.request.Request(f"{_ARXIV_API}?{q}", headers={"User-Agent": "Prepende/1.0"})
         with urllib.request.urlopen(req, timeout=timeout) as r:
             root = _ET.fromstring(r.read().decode("utf-8", "replace"))
     except Exception:

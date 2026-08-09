@@ -1,24 +1,25 @@
-"""Engram's voice — the conversational persona (system prompt).
+"""Prepende's voice — the conversational persona (system prompt).
 
-This is what makes Engram feel like talking to a thoughtful person, not a
+This is what makes Prepende feel like talking to a thoughtful person, not a
 task-executor. Calm and plain (the positioning), warm, natural, concise. It
 talks WITH you, asks a clarifying question when it helps, and doesn't drown you
 in headers and bullet lists unless they genuinely help.
 
 One brain, swappable voice. The kernel is general; a *product* built on it picks
-a persona. `resolve_persona()` reads ENGRAM_PERSONA and returns the right system
+a persona. `resolve_persona()` reads PREPENDE_PERSONA (or its deprecated alias)
 prompt, defaulting to the general companion so nothing changes unless a surface
 opts in. `tactics/solo.py` calls the resolver, so a dedicated process (e.g.
-ENGRAM_PERSONA=researcher) becomes a specialised brain without touching the
+PREPENDE_PERSONA=researcher) becomes a specialised brain without touching the
 multi-tenant default.
 """
 
 from __future__ import annotations
 
 import contextvars
-import os
 
-PERSONA = """You are Engram — a calm, sharp, genuinely helpful companion.
+from prepende_brain.env import brand_env
+
+PERSONA = """You are Prepende — a calm, sharp, genuinely helpful companion.
 
 Talk like a real person having a conversation, not like a document. Warm,
 natural, plain-spoken. Match the user's energy and level of formality.
@@ -36,11 +37,11 @@ You're here to help the user think, decide, and get things done — like a trust
 person who happens to be very capable."""
 
 
-# Engram Researcher & Editor — a brain pointed at one job: scientific research
+# Prepende Researcher & Editor — a brain pointed at one job: scientific research
 # and the writing/editing of articles, papers, and reports. Same warm, plain
-# Engram voice; specialist standards. Long-term memory and autonomous goal
+# Prepende voice; specialist standards. Long-term memory and autonomous goal
 # pursuit are part of the substrate, so the voice assumes them.
-RESEARCH_PERSONA = """You are Engram Researcher & Editor — a calm, rigorous research and writing partner.
+RESEARCH_PERSONA = """You are Prepende Researcher & Editor — a calm, rigorous research and writing partner.
 
 Your single domain is scientific research and the writing and editing of
 articles, papers, reviews, and reports. You help people find what's known,
@@ -121,22 +122,22 @@ _PERSONAS = {
 # HTTP/chat entrypoint sets this from the request's tenant scope; it propagates
 # through async/await (incl. the Goal Loop + tactics.solo) within one request's
 # task, and is isolated per request because each request runs its own
-# asyncio.run() context. Falls back to ENGRAM_PERSONA when unset.
+# asyncio.run() context. Falls back to PREPENDE_PERSONA when unset.
 _active_persona: "contextvars.ContextVar[str | None]" = contextvars.ContextVar(
-    "engram_active_persona", default=None
+    "prepende_active_persona", default=None
 )
 
 
 def persona_for_scope(scope: str | None) -> str:
     """Map a tenant scope to a persona NAME (not the prompt).
 
-    Order: explicit env map `ENGRAM_PERSONA_SCOPES` ("scope=persona,scope=persona"),
+    Order: explicit env map `PREPENDE_PERSONA_SCOPES` (legacy alias accepted),
     then a heuristic (any scope mentioning "researcher" -> researcher), then the
-    process default `ENGRAM_PERSONA`. Keeps every tenant
+    process default `PREPENDE_PERSONA`. Keeps every tenant
     on the default voice unless it opts in.
     """
     s = (scope or "").strip().lower()
-    raw = os.environ.get("ENGRAM_PERSONA_SCOPES", "") or ""
+    raw = brand_env("PERSONA_SCOPES")
     for pair in raw.split(","):
         if "=" in pair:
             k, v = pair.split("=", 1)
@@ -144,7 +145,7 @@ def persona_for_scope(scope: str | None) -> str:
                 return v.strip().lower()
     if "researcher" in s:
         return "researcher"
-    return (os.environ.get("ENGRAM_PERSONA", "default") or "default").strip().lower()
+    return (brand_env("PERSONA", "default") or "default").strip().lower()
 
 
 def set_active_persona(name: str | None) -> None:
@@ -156,13 +157,13 @@ def resolve_persona() -> str:
     """Return the active persona system prompt.
 
     Prefers the per-request override (set_active_persona, driven by tenant scope),
-    then falls back to ENGRAM_PERSONA (default "default"), so the general companion
+    then falls back to PREPENDE_PERSONA (default "default"), so the general companion
     voice is unchanged unless a surface opts into a named persona. Unknown names
     fall back to the default rather than failing — a misconfigured product still
-    talks, it just talks like base Engram.
+    talks, it just talks like base Prepende.
     """
     name = _active_persona.get()
     if not name:
-        name = os.environ.get("ENGRAM_PERSONA", "default")
+        name = brand_env("PERSONA", "default")
     name = (name or "default").strip().lower()
     return _PERSONAS.get(name, PERSONA)

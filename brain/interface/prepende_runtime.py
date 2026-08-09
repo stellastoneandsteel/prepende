@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import asyncio
 import hashlib
-import os
 import re
 from typing import Any
 
@@ -21,6 +20,7 @@ from kernel.core.intake import scan_intake
 from kernel.core.loop import GoalLoop
 from kernel.core.thinking_voice import render_thinking_voice
 from memory.candidates import default_queue
+from prepende_brain.env import brand_env
 
 
 _loop = None
@@ -46,9 +46,7 @@ def _approval_store() -> ApprovalStore:
     global _approvals
     if _approvals is None:
         _approvals = build_approval_store(
-            os.environ.get("PREPENDE_APPROVALS_DB")
-            or os.environ.get("ENGRAM_APPROVALS_DB")
-            or "./.engram/approvals.db"
+            brand_env("APPROVALS_DB", "./.engram/approvals.db")
         )
     return _approvals
 

@@ -1,6 +1,6 @@
 """Self-scraper — watch-listed sites stage brain-update drafts on change (W6).
 
-Watched sites live in ENGRAM_WATCHED_SITES (JSON: {"tenant-scope": ["url", ...]}).
+Watched sites live in PREPENDE_WATCHED_SITES (JSON: {"tenant-scope": ["url", ...]}).
 Each pass fetches every watched page, strips it to text, and compares against
 the stored snapshot (.engram/watch/<scope>/<urlhash>.json):
 
@@ -33,6 +33,7 @@ from pathlib import Path
 from typing import Any
 
 from knowledge.brain_update import draft_update
+from prepende_brain.env import brand_env
 from prepende_brain.private_fs import secure_directory, secure_file
 
 _TAG_RE = re.compile(r"<(script|style)[^>]*>.*?</\1>", re.S | re.I)
@@ -41,7 +42,7 @@ _USER_AGENT = "PrependeKnowledgeWatcher/1.0"
 
 
 def watched_sites() -> dict[str, list[str]]:
-    raw = os.environ.get("ENGRAM_WATCHED_SITES", "").strip()
+    raw = brand_env("WATCHED_SITES").strip()
     if not raw:
         return {}
     try:
@@ -52,7 +53,7 @@ def watched_sites() -> dict[str, list[str]]:
 
 
 def _watch_dir(scope: str) -> Path:
-    base = Path(os.environ.get("ENGRAM_WATCH_DIR", "./.engram/watch")) / scope
+    base = Path(brand_env("WATCH_DIR", "./.engram/watch")) / scope
     return secure_directory(base)
 
 

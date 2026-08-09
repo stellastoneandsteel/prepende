@@ -1,4 +1,4 @@
-"""PostgresMemoryStore — Engram's memory on Postgres / Supabase. Same interface.
+"""PostgresMemoryStore — Prepende's memory on Postgres / Supabase. Same interface.
 
 Drop-in for SqliteMemoryStore (implements kernel.contracts.MemoryStore) at full
 parity: typed rows (episodic | semantic | procedural), supersede-not-overwrite,
@@ -56,6 +56,8 @@ import time
 import uuid
 from typing import Any, Sequence
 
+from prepende_brain.env import brand_env
+
 from kernel.contracts import MemoryStore
 from memory._scoring import blend, cosine, keyword_score, query_terms, recency_score
 
@@ -75,7 +77,7 @@ _STOPWORDS = {
 # EMBEDDING_DIM). Default 1536 keeps the existing Supabase column unchanged. On a
 # hosted deploy set EMBEDDING_DIM as a real env var so it is present at import.
 _VECTOR_DIM = int(
-    (os.environ.get("EMBEDDING_DIM", "") or os.environ.get("ENGRAM_EMBEDDING_DIMENSIONS", "") or "1536")
+    (os.environ.get("EMBEDDING_DIM", "") or brand_env("EMBEDDING_DIMENSIONS") or "1536")
     or 1536
 )
 

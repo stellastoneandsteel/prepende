@@ -198,8 +198,8 @@ async def main() -> None:
     assert public_token not in serialized_accounts and private_token not in serialized_accounts
     print("OK account: public/private bearer principals are distinguishable without token leakage")
 
-    # Canonical whitespace must not make the startup guard and runtime choose
-    # different stdio namespaces when compatibility pins are present.
+    # Canonical values win when both names are configured. The legacy names
+    # remain a compatibility fallback only when the canonical names are absent.
     keys = (
         "PREPENDE_MCP_TENANT", "PREPENDE_MCP_WORKSPACE", "PREPENDE_MCP_SCOPE",
         "PREPENDE_MCP_TRANSPORT", "ENGRAM_MCP_TENANT", "ENGRAM_MCP_WORKSPACE",
@@ -208,15 +208,26 @@ async def main() -> None:
     saved = {key: os.environ.get(key) for key in keys}
     try:
         os.environ.update({
-            "PREPENDE_MCP_TENANT": "   ",
-            "PREPENDE_MCP_WORKSPACE": "   ",
-            "PREPENDE_MCP_SCOPE": "   ",
-            "PREPENDE_MCP_TRANSPORT": "   ",
+            "PREPENDE_MCP_TENANT": "canonical-steel",
+            "PREPENDE_MCP_WORKSPACE": "canonical-steel-sales",
+            "PREPENDE_MCP_SCOPE": "canonical-steel--canonical-steel-sales",
+            "PREPENDE_MCP_TRANSPORT": "stdio",
             "ENGRAM_MCP_TENANT": "legacy-steel",
             "ENGRAM_MCP_WORKSPACE": "legacy-steel-sales",
             "ENGRAM_MCP_SCOPE": "legacy-steel--legacy-steel-sales",
             "ENGRAM_MCP_TRANSPORT": "http",
         })
+        assert mcp_server._identity() == {
+            "tenant": "canonical-steel",
+            "workspace": "canonical-steel-sales",
+            "scope": "canonical-steel--canonical-steel-sales",
+        }
+        assert mcp_server._transport() == "stdio"
+        for key in (
+            "PREPENDE_MCP_TENANT", "PREPENDE_MCP_WORKSPACE",
+            "PREPENDE_MCP_SCOPE", "PREPENDE_MCP_TRANSPORT",
+        ):
+            os.environ.pop(key, None)
         assert mcp_server._identity() == {
             "tenant": "legacy-steel",
             "workspace": "legacy-steel-sales",
@@ -229,7 +240,7 @@ async def main() -> None:
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
-    print("OK stdio identity: canonical whitespace preserves legacy namespace pins")
+    print("OK stdio identity: canonical precedence and legacy fallback agree")
 
     wfs = await mcp_server.list_workflows()
     assert isinstance(wfs, list), wfs

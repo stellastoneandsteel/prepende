@@ -23,6 +23,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
 from prepende_brain.private_fs import append_private_text, enforce_private_umask  # noqa: E402
+from prepende_brain.env import brand_env  # noqa: E402
 
 enforce_private_umask()
 
@@ -92,16 +93,16 @@ async def heal() -> dict:
         except Exception:  # noqa: BLE001
             pass
         # Consolidation MUTATES live memory. It is OPT-IN, so the scheduled heal
-        # never touches the real brain unless the operator sets ENGRAM_CONSOLIDATE=1.
-        #   ENGRAM_CONSOLIDATE_MODE=dedup (default) — deterministic near-duplicate
+        # never touches the real brain unless the operator sets PREPENDE_CONSOLIDATE=1.
+        #   PREPENDE_CONSOLIDATE_MODE=dedup (default) — deterministic near-duplicate
         #     dedup, no model calls.
-        #   ENGRAM_CONSOLIDATE_MODE=topic — model-driven topic summarization (merges
+        #   PREPENDE_CONSOLIDATE_MODE=topic — model-driven topic summarization (merges
         #     same-topic distinct facts). More powerful, riskier; writes a reversible
         #     receipt. Preview it first with scripts/consolidate_brain.py (dry run).
-        #   ENGRAM_CONSOLIDATE_SCOPES=a,b — restrict to these scopes (default: all).
-        if os.environ.get("ENGRAM_CONSOLIDATE", "").strip() in ("1", "true", "yes"):
-            mode = os.environ.get("ENGRAM_CONSOLIDATE_MODE", "dedup").strip().lower()
-            only = os.environ.get("ENGRAM_CONSOLIDATE_SCOPES", "").strip()
+        #   PREPENDE_CONSOLIDATE_SCOPES=a,b — restrict to these scopes (default: all).
+        if brand_env("CONSOLIDATE").strip() in ("1", "true", "yes"):
+            mode = brand_env("CONSOLIDATE_MODE", "dedup").strip().lower()
+            only = brand_env("CONSOLIDATE_SCOPES").strip()
             run_scopes = [s.strip() for s in only.split(",") if s.strip()] or scopes
             sc_obj = None
             if mode == "topic":
@@ -141,7 +142,7 @@ async def heal() -> dict:
         else:
             report["steps"].append({
                 "step": "memory_consolidate", "ok": True, "scopes": scopes, "skipped": True,
-                "note": "skipped — opt-in (ENGRAM_CONSOLIDATE=1; MODE=dedup|topic). Preview with scripts/consolidate_brain.py before enabling.",
+                "note": "skipped — opt-in (PREPENDE_CONSOLIDATE=1; MODE=dedup|topic). Preview with scripts/consolidate_brain.py before enabling.",
             })
     except Exception as exc:  # noqa: BLE001
         report["steps"].append({"step": "memory_consolidate", "ok": False, "error": str(exc)})

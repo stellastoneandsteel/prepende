@@ -22,7 +22,8 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 os.environ["MODEL_PROVIDER"] = "echo"
-os.environ.pop("ENGRAM_MEDITATE", None)  # hermetic: never inherit an operator opt-in
+os.environ.pop("PREPENDE_MEDITATE", None)  # hermetic: never inherit an operator opt-in
+os.environ.pop("ENGRAM_MEDITATE", None)
 
 from kernel.core import meditation  # noqa: E402
 from kernel.core.strategist import RulesStrategist  # noqa: E402
@@ -83,9 +84,10 @@ async def main() -> None:
     meditation.deactivate()
     assert meditation.is_active() is False, "should be inactive when unset"
     meditation.activate()
-    assert meditation.is_active() is True, "activate() did not set the flag"
+    assert meditation.is_active() is True, "activate() did not set the canonical flag"
+    meditation.deactivate()
     os.environ["ENGRAM_MEDITATE"] = "true"
-    assert meditation.is_active() is True, "'true' should count as active"
+    assert meditation.is_active() is True, "legacy 'true' should count as active"
     meditation.deactivate()
     assert meditation.is_active() is False, "deactivate() did not clear the flag"
 

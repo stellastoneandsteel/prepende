@@ -9,7 +9,7 @@ The STANDARD agent-interop layer — an MCP server so OpenClaw and any MCP clien
 connect — is the next layer; it needs the `mcp` SDK (pip install mcp), so it lands
 on a machine where that's available. Same brain behind both.
 
-Auth: if ENGRAM_API_TOKEN is set, requests must send `Authorization: Bearer <token>`.
+Auth: if PREPENDE_API_TOKEN is set, requests must send `Authorization: Bearer <token>`.
 Binds to 127.0.0.1 by default — expose to a network deliberately, with a token.
 Run:  python -m interface.http_api
 """
@@ -18,11 +18,11 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 from kernel.core.brain import build_brain
+from prepende_brain.env import brand_env
 
 _loop = None
 _cfg = None
@@ -58,7 +58,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _auth_ok(self) -> bool:
-        token = os.environ.get("ENGRAM_API_TOKEN", "").strip()
+        token = brand_env("API_TOKEN")
         return (not token) or self.headers.get("Authorization", "") == f"Bearer {token}"
 
     def _send(self, code: int, obj: dict) -> None:
@@ -102,11 +102,11 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def serve(host: str = "127.0.0.1", port: int | None = None) -> None:
-    port = port or int(os.environ.get("ENGRAM_HTTP_PORT", "8088"))
+    port = port or int(brand_env("HTTP_PORT", "8088"))
     _brain()
     srv = ThreadingHTTPServer((host, port), Handler)
     print(f"Prepende HTTP API on http://{host}:{port}  ·  POST /goal · GET /memory · GET /health")
-    print("auth: " + ("bearer token required" if os.environ.get("ENGRAM_API_TOKEN", "").strip() else "OPEN (set ENGRAM_API_TOKEN to require a token)"))
+    print("auth: " + ("bearer token required" if brand_env("API_TOKEN") else "OPEN (set PREPENDE_API_TOKEN to require a token)"))
     srv.serve_forever()
 
 

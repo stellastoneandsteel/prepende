@@ -29,6 +29,7 @@ from kernel.core.model_thought_bus import run_thought_bus_async
 from kernel.core.semantic_meditation import SemanticMeditationPolicy
 from kernel.core.thought_bus import run_thought_bus
 from memory.candidates import default_queue
+from prepende_brain.env import brand_env
 from routes.conversations import (
     handle_delete as handle_conversation_delete,
     handle_get as handle_conversation_get,
@@ -43,11 +44,11 @@ from routes.memories import (
 from services.learning_service import LearningService
 
 # Allowed workspaces (memory scopes). Generic defaults only — NO product or client
-# names baked into the source (SEPARATION.md). Add your own via the ENGRAM_WORKSPACES
+# names baked into the source (SEPARATION.md). Add your own via PREPENDE_WORKSPACES
 # env var (comma-separated), which lives in .env and stays out of the repo.
 _DEFAULT_WORKSPACES = {"default", "personal", "research", "marketing", "work"}
 ALLOWED_WORKSPACES = set(
-    w.strip() for w in os.environ.get("ENGRAM_WORKSPACES", "").split(",") if w.strip()
+    w.strip() for w in brand_env("WORKSPACES").split(",") if w.strip()
 ) or _DEFAULT_WORKSPACES
 
 _loop = None
@@ -68,7 +69,7 @@ _NO_LOOP_POLICIES = {"never", "no_loop", "no-loop", "memory", "memory_only", "me
 _REGULAR_CHAT_POLICIES = {"chat", "regular_chat", "conversation", "answer"}
 _FORCE_LOOP_POLICIES = {"always", "loop", "goal_loop", "goal-loop"}
 _MEMORY_ONLY_PHRASES = (
-    "what do you remember", "what does engram remember", "what is in memory",
+    "what do you remember", "what does prepende remember", "what does engram remember", "what is in memory",
     "what is in our brain", "search memory", "search our memory", "memory search",
     "memory context", "recall memory", "look up memory", "from memory",
     "reference memory", "reference our brain", "what have we saved",
@@ -147,7 +148,7 @@ class ApprovalGatedConnectors:
             item = dict(tool)
             item["ready"] = False
             item["approvalRequired"] = True
-            item["approvalPolicy"] = "external connector calls require approval through /api/engram/approvals/create"
+            item["approvalPolicy"] = "external connector calls require approval through /api/prepende/approvals/create"
             gated.append(item)
         return gated
 
@@ -345,10 +346,10 @@ def _loop_decision(workspace_id: str, goal: str, data: dict[str, Any]) -> dict[s
     return decision
 
 
-def _log_path(env_name: str, default: str) -> Path:
+def _log_path(env_suffix: str, default: str) -> Path:
     from prepende_brain.private_fs import secure_directory
 
-    path = Path(os.environ.get(env_name, default))
+    path = Path(brand_env(env_suffix, default))
     secure_directory(path.parent)
     return path
 
@@ -381,7 +382,7 @@ def _log_exchange(path: str, workspace_id: str, request: dict[str, Any], respons
             req[key] = _summarize_for_log(req[key])
     req.pop("metadata", None)
     req.pop("action", None)
-    _append_jsonl(_log_path("ENGRAM_API_LOG", "./.engram/api_requests.jsonl"), {
+    _append_jsonl(_log_path("API_LOG", "./.engram/api_requests.jsonl"), {
         "ts": time.time(),
         "path": path,
         "workspaceId": workspace_id,
@@ -397,7 +398,7 @@ def _log_exchange(path: str, workspace_id: str, request: dict[str, Any], respons
 
 
 def _rate_limited(client_id: str) -> bool:
-    limit = int(os.environ.get("ENGRAM_API_RATE_LIMIT_PER_MINUTE", "120"))
+    limit = int(brand_env("API_RATE_LIMIT_PER_MINUTE", "120"))
     now = time.time()
     start, count = _rate_windows.get(client_id, (now, 0))
     if now - start >= 60:
@@ -419,7 +420,7 @@ def _create_approval(workspace_id: str, intent: str, action: dict[str, Any] | No
         "status": "pending",
         "createdAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
-    _append_jsonl(_log_path("ENGRAM_APPROVALS_LOG", "./.engram/approvals.jsonl"), approval)
+    _append_jsonl(_log_path("APPROVALS_LOG", "./.engram/approvals.jsonl"), approval)
     return approval
 
 
@@ -1282,7 +1283,7 @@ def learning_approve_knowledge_update(data: dict[str, Any]) -> tuple[int, dict[s
     return 200, _response(workspace_id, intent, result=result, memory_updates=[result["knowledgeItem"]])
 
 
-_POST_ROUTES = {
+_LEGACY_POST_ROUTES = {
     "/api/engram/orchestrate": orchestrate,
     "/api/engram/memory/context": memory_context,
     "/api/engram/memory/search": memory_search,
@@ -1311,6 +1312,11 @@ _POST_ROUTES = {
     "/api/engram/research-agents/review-findings": learning_review_agent_findings,
     "/api/engram/knowledge/approve-update": learning_approve_knowledge_update,
 }
+_POST_ROUTES = {
+    path.replace("/api/engram/", "/api/prepende/", 1): handler
+    for path, handler in _LEGACY_POST_ROUTES.items()
+}
+_POST_ROUTES.update(_LEGACY_POST_ROUTES)
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -1318,7 +1324,7 @@ class Handler(BaseHTTPRequestHandler):
         pass
 
     def _auth_error(self) -> tuple[int, str] | None:
-        token = os.environ.get("ENGRAM_API_TOKEN", "").strip()
+        token = brand_env("API_TOKEN")
         if not token:
             return None
         header = self.headers.get("Authorization", "")
@@ -1342,9 +1348,9 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urlparse(self.path).path
-        if path == "/api/engram/health":
+        if path in {"/api/prepende/health", "/api/engram/health"}:
             return self._send(200, {"ok": True, "model": getattr(_brain().gateway, "name", "?")})
-        if path == "/api/engram/auth/test":
+        if path in {"/api/prepende/auth/test", "/api/engram/auth/test"}:
             auth_error = self._auth_error()
             if auth_error:
                 status, message = auth_error
@@ -1456,19 +1462,19 @@ class Handler(BaseHTTPRequestHandler):
 
 
 def serve(host: str = "127.0.0.1", port: int | None = None) -> None:
-    port = port or int(os.environ.get("ENGRAM_ACTIONS_PORT") or os.environ.get("ENGRAM_HTTP_PORT", "8088"))
+    port = port or int(brand_env("ACTIONS_PORT") or brand_env("HTTP_PORT", "8088"))
     _brain()
     srv = ThreadingHTTPServer((host, port), Handler)
-    auth = "bearer token required" if os.environ.get("ENGRAM_API_TOKEN", "").strip() else "OPEN (set ENGRAM_API_TOKEN)"
+    auth = "bearer token required" if brand_env("API_TOKEN") else "OPEN (set PREPENDE_API_TOKEN)"
     print(f"Prepende Actions API on http://{host}:{port}")
     print("  GET/POST /conversations · GET/PATCH/DELETE /conversations/{id} · GET/POST /conversations/{id}/messages")
     print("  GET /memories/pending · POST /memories/pending/{id}/approve · POST /memories/pending/{id}/reject")
-    print("  GET /api/engram/health · /api/engram/auth/test")
-    print("  POST /api/engram/orchestrate · /api/engram/memory/context · /api/engram/memory/search")
-    print("  POST /api/engram/memory/write · /api/engram/memory/update · /api/engram/memory/delete")
-    print("  POST /api/engram/workflows/plan · /api/engram/approvals/create")
-    print("  POST /api/engram/journal/write · /api/engram/entities/extract · /api/engram/people/upsert")
-    print("  POST /api/engram/projects/* · /api/engram/knowledge/* · /api/engram/research-agents/*")
+    print("  GET /api/prepende/health · /api/prepende/auth/test")
+    print("  POST /api/prepende/orchestrate · /api/prepende/memory/context · /api/prepende/memory/search")
+    print("  POST /api/prepende/memory/write · /api/prepende/memory/update · /api/prepende/memory/delete")
+    print("  POST /api/prepende/workflows/plan · /api/prepende/approvals/create")
+    print("  POST /api/prepende/journal/write · /api/prepende/entities/extract · /api/prepende/people/upsert")
+    print("  POST /api/prepende/projects/* · /api/prepende/knowledge/* · /api/prepende/research-agents/*")
     print(f"  workspaceId required · auth: {auth}")
     srv.serve_forever()
 

@@ -16,13 +16,11 @@ from interface.mcp_scope import (
     startup_scope_guard,
 )
 from prepende_brain.identity import require_identity_namespace, validate_identity_slug
+from prepende_brain.env import brand_env
 
 
 def _env(suffix: str) -> str:
-    return (
-        (os.environ.get(f"PREPENDE_MCP_{suffix}") or "").strip()
-        or (os.environ.get(f"ENGRAM_MCP_{suffix}") or "").strip()
-    )
+    return brand_env(f"MCP_{suffix}")
 
 
 def receipt() -> dict[str, object]:

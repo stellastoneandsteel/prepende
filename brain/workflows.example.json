@@ -1,5 +1,5 @@
 {
-  "_comment": "Engram workflow selector. Copy to workflows.json (gitignored — holds URLs/keys). Each workflow: name, description (the brain matches goals against this), url (n8n webhook), optional params.",
+  "_comment": "Prepende workflow selector. Copy to workflows.json (gitignored — holds URLs/keys). Each workflow: name, description (the brain matches goals against this), url (n8n webhook), optional params.",
   "workflows": [
     {
       "name": "send_invoice",

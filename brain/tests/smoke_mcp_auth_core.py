@@ -136,12 +136,12 @@ def test_rich_map_consumers():
               ms.configured_physical_scopes("owner")
               == ["acme--acme-sales", "owner"])
 
-        os.environ["PREPENDE_TENANT_TOKENS"] = "   "
+        os.environ.pop("PREPENDE_TENANT_TOKENS", None)
         os.environ["ENGRAM_TENANT_TOKENS"] = '{"legacy-token":"legacy-scope"}'
-        check("MCP token resolver uses the same whitespace-safe fallback",
+        check("MCP token resolver accepts the legacy alias when canonical is absent",
               ms.token_to_principal("legacy-token", os.environ)["scope"]
               == "legacy-scope")
-        check("configured consumer uses the same whitespace-safe fallback",
+        check("configured consumer accepts the legacy alias when canonical is absent",
               ms.configured_physical_scopes("owner")
               == ["legacy-scope", "owner"])
     finally:

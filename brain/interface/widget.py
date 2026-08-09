@@ -12,11 +12,11 @@ public by definition) buys exactly two things, both scoped to that tenant:
      external action.
 
 Nothing else: no goal loop, no workflows, no approvals, no memory writes,
-no admin surface. The admin tenant tokens (ENGRAM_TENANT_TOKENS) are a
+no admin surface. The admin tenant tokens (PREPENDE_TENANT_TOKENS) are a
 different credential entirely and never appear in a browser.
 
-Keys: ENGRAM_WIDGET_KEYS env, JSON map {"pk_<random>": "tenant-scope"}.
-Rate limit: ENGRAM_WIDGET_RATE_LIMIT requests/minute per (key, ip), default 20.
+Keys: PREPENDE_WIDGET_KEYS env, JSON map {"pk_<random>": "tenant-scope"}.
+Rate limit: PREPENDE_WIDGET_RATE_LIMIT requests/minute per (key, ip), default 20.
 
 Visitor input is hostile by default: memory is folded in as data with the
 kernel's data-not-instructions guard, and visitor text never becomes memory.
@@ -31,6 +31,7 @@ import time
 from typing import Any
 
 from memory.candidates import default_queue
+from prepende_brain.env import brand_env
 
 _RATE_WINDOWS: dict[tuple[str, str], tuple[float, int]] = {}
 _DAY_USAGE: dict[tuple[str, str], dict[str, int]] = {}  # (scope, YYYY-MM-DD) -> counts
@@ -53,7 +54,7 @@ DECLINE_REPLY = (
 
 
 def widget_keys() -> dict[str, str]:
-    raw = os.environ.get("ENGRAM_WIDGET_KEYS", "").strip()
+    raw = brand_env("WIDGET_KEYS")
     if not raw:
         return {}
     try:
@@ -72,8 +73,8 @@ CAPPED_REPLY = (
 def daily_capped(scope: str, kind: str) -> bool:
     """kind: 'chats' | 'leads'. Per-process counter; production uses the
     durable engram_kernel_widget_usage table (same caps, same behavior)."""
-    cap = int(os.environ.get(
-        "ENGRAM_WIDGET_DAILY_CHAT_CAP" if kind == "chats" else "ENGRAM_WIDGET_DAILY_LEAD_CAP",
+    cap = int(brand_env(
+        "WIDGET_DAILY_CHAT_CAP" if kind == "chats" else "WIDGET_DAILY_LEAD_CAP",
         "300" if kind == "chats" else "50") or 0)
     day = time.strftime("%Y-%m-%d", time.gmtime())
     bucket = _DAY_USAGE.setdefault((scope, day), {"chats": 0, "leads": 0})
@@ -84,7 +85,7 @@ def daily_capped(scope: str, kind: str) -> bool:
 
 
 def rate_limited(key: str, ip: str) -> bool:
-    limit = int(os.environ.get("ENGRAM_WIDGET_RATE_LIMIT", "20") or 20)
+    limit = int(brand_env("WIDGET_RATE_LIMIT", "20") or 20)
     now = time.time()
     bucket = (key, ip)
     start, count = _RATE_WINDOWS.get(bucket, (now, 0))

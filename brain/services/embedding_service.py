@@ -11,6 +11,7 @@ import os
 from typing import Any
 
 from services.embedding_repository import EmbeddingRepository
+from prepende_brain.env import brand_env
 
 
 class EmbeddingService:
@@ -18,11 +19,11 @@ class EmbeddingService:
         self.repository = repository or EmbeddingRepository()
         self.model = (
             os.environ.get("EMBEDDING_MODEL", "")
-            or os.environ.get("ENGRAM_EMBEDDING_MODEL", "")
+            or brand_env("EMBEDDING_MODEL")
             or "text-embedding-3-small"
         ).strip() or "text-embedding-3-small"
         self.dimensions = int(
-            (os.environ.get("EMBEDDING_DIM", "") or os.environ.get("ENGRAM_EMBEDDING_DIMENSIONS", "") or "1536")
+            (os.environ.get("EMBEDDING_DIM", "") or brand_env("EMBEDDING_DIMENSIONS") or "1536")
             or 1536
         )
 

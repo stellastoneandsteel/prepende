@@ -1,7 +1,7 @@
-"""Thought Bus — recursive pre-action coordination for Engram.
+"""Thought Bus — recursive pre-action coordination for Prepende.
 
 This is the practical MVP of the "telepathy" layer: agents do not chat with
-each other or own durable state. Engram sends each agent the same structured
+each other or own durable state. Prepende sends each agent the same structured
 packet, collects structured imprints, fuses them, and decides whether to stop,
 recurse, or require approval before any external action.
 """
@@ -159,7 +159,7 @@ class ThoughtReceipt:
 
 @dataclass(frozen=True)
 class FusionDecision:
-    """Engram's single decision after fusing agent imprints."""
+    """Prepende's single decision after fusing agent imprints."""
 
     status: DecisionStatus
     confidence: float
@@ -243,7 +243,7 @@ class MockThoughtAgent:
                 status="ok",
                 confidence=0.82,
                 claims=[
-                    "Engram should preserve the goal, workspace, constraints, and provenance before action.",
+                    "Prepende should preserve the goal, workspace, constraints, and provenance before action.",
                     "The source of truth is the shared ThoughtPacket, not agent-to-agent chat.",
                 ],
                 evidence=[
@@ -269,7 +269,7 @@ class MockThoughtAgent:
                 proposed_artifacts=[{
                     "type": "sandbox_proposal",
                     "path": _stable_artifact_path(packet.run_id, self.role),
-                    "description": "Draft implementation proposal; Engram must inspect before merge.",
+                    "description": "Draft implementation proposal; Prepende must inspect before merge.",
                     "mergeAllowed": False,
                 }],
                 memory_candidates=[{
@@ -288,10 +288,10 @@ class MockThoughtAgent:
                 status="needs_revision" if external else "ok",
                 confidence=0.62 if external else 0.8,
                 claims=["Agents must not write durable memory or execute connector actions directly."],
-                evidence=["policy:externalActions=none", "policy:Engram owns final receipt"],
+                evidence=["policy:externalActions=none", "policy:Prepende owns final receipt"],
                 risks=["Approval is required before any external action."] if external else [],
                 blockers=["external_action_requires_approval"] if external else [],
-                next_thoughts=["Keep final decision centralized in Engram."],
+                next_thoughts=["Keep final decision centralized in Prepende."],
                 external_action_requested=external,
             )
         # verifier
@@ -367,7 +367,7 @@ class LocalArtifactSandboxRunner:
             "path": f"{public_dir}/result.json",
             "summaryPath": f"{public_dir}/summary.md",
             "packetPath": f"{public_dir}/packet.json",
-            "description": f"Isolated {result.role} agent output; Engram must inspect before merge.",
+            "description": f"Isolated {result.role} agent output; Prepende must inspect before merge.",
             "runner": "local_artifact_sandbox",
             "isolation": "local_artifact_directory",
             "mergeAllowed": False,
@@ -466,7 +466,7 @@ class ThoughtBusOrchestrator:
             goal=goal,
             task="coordinate sandboxed agents before action",
             constraints=constraints or [
-                "Engram owns final decision.",
+                "Prepende owns final decision.",
                 "Agents cannot write durable memory directly.",
                 "Agents cannot execute external actions.",
                 "externalActions must remain none.",
@@ -659,7 +659,7 @@ class ThoughtBusOrchestrator:
         risks = sorted(set(risks))
         claims = [claim for r in available_results for claim in r.claims]
         agreement = sorted({
-            "Engram owns final decision",
+            "Prepende owns final decision",
             "externalActions none",
             "durable memory candidates require Assess",
         })
@@ -693,7 +693,7 @@ class ThoughtBusOrchestrator:
             approval_required = True
         elif can_recurse:
             status = "needs_revision"
-            next_action = "Run one recursive repair pass with the same central Engram state."
+            next_action = "Run one recursive repair pass with the same central Prepende state."
             reason = "Conflict, low verifier confidence, or an agent revision request requires repair."
             approval_required = False
         elif low_confidence:
@@ -704,7 +704,7 @@ class ThoughtBusOrchestrator:
         else:
             status = "ready"
             next_action = "Return fused result; keep memory updates as ASSESS candidates."
-            reason = "Agents agree enough for an Engram-owned decision."
+            reason = "Agents agree enough for an Prepende-owned decision."
             approval_required = False
 
         summary = (

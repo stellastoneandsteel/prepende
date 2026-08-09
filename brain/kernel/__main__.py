@@ -32,7 +32,7 @@ from kernel.core.brain import build_brain
 def _parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="python3 -m kernel",
-        description="Run one goal through the Engram brain (Goal Loop) and print the answer.",
+        description="Run one goal through the Prepende brain (Goal Loop) and print the answer.",
     )
     p.add_argument("goal", nargs="*", help="the goal text (quoted or bare words)")
     p.add_argument("--json", action="store_true", dest="as_json",

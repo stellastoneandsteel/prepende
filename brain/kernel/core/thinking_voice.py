@@ -1,4 +1,4 @@
-"""Thinking Voice maps real Engram states to short surface status lines.
+"""Thinking Voice maps real Prepende states to short surface status lines.
 
 It is deliberately small and state-bound: callers provide a concrete state id,
 and this module returns one display line for that state. It never estimates
@@ -8,9 +8,10 @@ percent complete or invents work that is not represented by the current event.
 from __future__ import annotations
 
 import hashlib
-import os
 from dataclasses import dataclass
 from typing import Any
+
+from prepende_brain.env import brand_env
 
 
 SERIOUS_CONTEXTS = frozenset({
@@ -43,9 +44,9 @@ class ThinkingVoiceConfig:
     @classmethod
     def from_env(cls) -> "ThinkingVoiceConfig":
         return cls(
-            mode=(os.environ.get("ENGRAM_THINKING_VOICE_MODE") or "witty").strip().lower(),
-            allow_references=_truthy(os.environ.get("ENGRAM_THINKING_VOICE_REFERENCES")),
-            preferred_style=(os.environ.get("ENGRAM_THINKING_VOICE_STYLE") or "dry").strip().lower(),
+            mode=brand_env("THINKING_VOICE_MODE", "witty").lower(),
+            allow_references=_truthy(brand_env("THINKING_VOICE_REFERENCES")),
+            preferred_style=brand_env("THINKING_VOICE_STYLE", "dry").lower(),
         )
 
 

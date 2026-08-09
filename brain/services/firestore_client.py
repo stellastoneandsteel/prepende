@@ -2,7 +2,8 @@
 
 Production uses Google Firestore through the optional `google-cloud-firestore`
 package. Tests can select the in-memory backend with
-`ENGRAM_FIRESTORE_BACKEND=memory` while preserving Firestore document paths.
+`PREPENDE_FIRESTORE_BACKEND=memory` while preserving Firestore document paths.
+The legacy Engram name remains accepted during the compatibility window.
 """
 
 from __future__ import annotations
@@ -10,6 +11,8 @@ from __future__ import annotations
 import copy
 import os
 from typing import Any, Protocol
+
+from prepende_brain.env import brand_env
 
 
 class FirestoreClient(Protocol):
@@ -31,8 +34,8 @@ _CLIENTS: dict[str, FirestoreClient] = {}
 
 
 def get_firestore_client() -> FirestoreClient:
-    backend = os.environ.get("ENGRAM_FIRESTORE_BACKEND", "auto").strip().lower() or "auto"
-    namespace = os.environ.get("ENGRAM_FIRESTORE_NAMESPACE", "default").strip() or "default"
+    backend = brand_env("FIRESTORE_BACKEND", "auto").strip().lower() or "auto"
+    namespace = brand_env("FIRESTORE_NAMESPACE", "default").strip() or "default"
     key = f"{backend}:{namespace}"
     if key in _CLIENTS:
         return _CLIENTS[key]
@@ -47,7 +50,7 @@ def get_firestore_client() -> FirestoreClient:
                 raise
             client = MemoryFirestoreClient(_MEMORY_STORES.setdefault(namespace, {}))
     else:
-        raise RuntimeError("ENGRAM_FIRESTORE_BACKEND must be auto, google, or memory")
+        raise RuntimeError("PREPENDE_FIRESTORE_BACKEND must be auto, google, or memory")
 
     _CLIENTS[key] = client
     return client
@@ -81,7 +84,7 @@ class GoogleFirestoreClient:
     def __init__(self) -> None:
         from google.cloud import firestore  # type: ignore
 
-        project = os.environ.get("ENGRAM_FIRESTORE_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
+        project = brand_env("FIRESTORE_PROJECT_ID") or os.environ.get("GOOGLE_CLOUD_PROJECT")
         self.client = firestore.Client(project=project)
 
     def get_document(self, path: str) -> dict[str, Any] | None:

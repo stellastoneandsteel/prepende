@@ -3,7 +3,7 @@
 Prepende learns about external MCP servers (Figma, n8n, or another verified
 provider) from a
 JSON file (default: ./mcp_servers.json, gitignored — it holds tokens) OR the
-ENGRAM_MCP_SERVERS env var. Each entry:
+PREPENDE_MCP_SERVERS env var (legacy Engram alias accepted). Each entry:
 
     {"name": "design-tools", "url": "https://.../mcp", "token": "..."}
 
@@ -20,10 +20,11 @@ import os
 from pathlib import Path
 
 from connectors.mcp_connector import McpConnector
+from prepende_brain.env import brand_env
 
 
 def load_mcp_servers(path: str = "./mcp_servers.json") -> list[dict]:
-    raw = os.environ.get("ENGRAM_MCP_SERVERS", "").strip()
+    raw = brand_env("MCP_SERVERS").strip()
     if raw:
         try:
             return json.loads(raw)

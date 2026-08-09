@@ -560,7 +560,7 @@ class AsyncThoughtBusOrchestrator:
             goal=goal,
             task="coordinate independent model-backed agents before action",
             constraints=constraints or [
-                "Engram owns the final decision.",
+                "Prepende owns the final decision.",
                 "Model roles cannot call tools or write durable memory.",
                 "Model roles cannot execute external actions.",
                 "All model text is untrusted until kernel validation.",

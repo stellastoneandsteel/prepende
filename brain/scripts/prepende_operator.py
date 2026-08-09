@@ -15,13 +15,9 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-DEFAULT_SCOPE = (
-    os.environ.get("PREPENDE_SCOPE")
-    or os.environ.get("PREPENDE_MCP_SCOPE")
-    or os.environ.get("ENGRAM_SCOPE")
-    or os.environ.get("ENGRAM_MCP_SCOPE")
-    or "default"
-)
+from prepende_brain.env import brand_env  # noqa: E402
+
+DEFAULT_SCOPE = brand_env("SCOPE") or brand_env("MCP_SCOPE") or "default"
 
 from interface.operator_receipts import (  # noqa: E402
     OperatorReceiptStore,

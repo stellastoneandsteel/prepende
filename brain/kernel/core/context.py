@@ -1,4 +1,4 @@
-"""Context detection — where is Engram running, and is its model reachable?
+"""Context detection — where is Prepende running, and is its model reachable?
 
 The spine of the Model Concierge (see docs/MODEL-CONCIERGE-DESIGN.md). Pure
 functions over (Config, ModelGateway) with at most ONE bounded network call.
@@ -152,7 +152,7 @@ def probe_model(cfg: Config, gateway: Any, runtime: dict[str, Any] | None = None
     # Physics guard FIRST: a hosted brain can't reach a laptop-local model/CLI.
     if runtime.get("location") == "hosted" and locality == "local":
         return out("unreachable_by_design",
-                   "A hosted brain cannot reach a model running on your machine. Run Engram locally to use a local or CLI model.")
+                   "A hosted brain cannot reach a model running on your machine. Run Prepende locally to use a local or CLI model.")
 
     if locality == "stub":
         return out("stub", "Echo stub — runs anywhere at $0, but it is not a real model. Set MODEL_PROVIDER + a model to go live.")

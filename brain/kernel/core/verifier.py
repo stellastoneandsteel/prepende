@@ -3,7 +3,8 @@
 Heavy tactics use a fixed three-lens panel by default.  The lenses run
 concurrently, every model response crosses a strict hand-written JSON
 contract, and two explicit pass votes are required.  Solo remains opt-in via
-``ENGRAM_VERIFY=1`` so ordinary turns do not pay for three extra model calls.
+``PREPENDE_VERIFY=1`` (legacy alias accepted) so ordinary turns do not pay for
+three extra model calls.
 
 The panel is deliberately fail-safe for plumbing providers and malformed model
 output: invalid votes are flagged in the receipt, never coerced into a verdict,
@@ -15,8 +16,9 @@ from __future__ import annotations
 
 import asyncio
 import json
-import os
 from typing import Any
+
+from prepende_brain.env import brand_env
 
 # Below this, the loop attempts one repair pass.
 LOW_CONFIDENCE = 0.5
@@ -62,7 +64,7 @@ class _InvalidVote(ValueError):
 def verification_mode(raw: str | None = None) -> str:
     """Resolve the tri-state verifier setting: off, heavy-only, or all tactics."""
     value = (
-        os.environ.get("ENGRAM_VERIFY", "") if raw is None else raw
+        brand_env("VERIFY") if raw is None else raw
     ).strip().lower()
     if value in _FALSE_VALUES:
         return "off"
