@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Canonical Prepende CLI entrypoint.
+
+The implementation remains in ``bin/engram`` during the compatibility window
+so existing installs keep working. New integrations should invoke this file.
+"""
+
+from __future__ import annotations
+
+import os
+import sys
+from pathlib import Path
+
+
+LEGACY_ENTRYPOINT = Path(__file__).with_name("engram")
+if os.name == "posix":
+    # Customer state created anywhere below the compatibility entrypoint must
+    # be owner-only, including SQLite WAL/SHM sidecars created after startup.
+    os.umask(0o077)
+    environment = Path.cwd() / ".env"
+    if environment.is_file() and not environment.is_symlink():
+        environment.chmod(0o600)
+os.environ.setdefault("PREPENDE_CLI_ENTRYPOINT", "prepende")
+os.execv(str(LEGACY_ENTRYPOINT), [str(LEGACY_ENTRYPOINT), *sys.argv[1:]])

@@ -18,6 +18,17 @@ supported distribution channel. Each release contains a wheel, source distributi
 `SHA256SUMS`; verify the downloaded artifact before installation. Prepende is not published
 to PyPI. See the [publishing contract](docs/PUBLISHING.md).
 
+## Brain runtime
+
+The separately versioned, product-neutral brain runtime lives in [`brain/`](brain/README.md).
+It is imported as a reviewed, history-free snapshot from the private operating workspace;
+owner vaults, tenant data, runtime state, deployment material, credentials, receipts, and
+private Git history are excluded by an exact default-deny inventory. Run it from this
+repository with `./brain/bin/prepende`.
+
+The Protocol package and its `prepende` executable remain authoritative and unchanged at
+the repository root. Brain runtime code does not replace or satisfy Protocol v2 validation.
+
 ## Install locally
 
 ```bash

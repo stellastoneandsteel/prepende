@@ -1,0 +1,43 @@
+name: brain-runtime-ci
+
+on:
+  pull_request:
+    paths:
+      - "brain/**"
+      - ".github/workflows/brain-ci.yml"
+      - "README.md"
+  push:
+    branches: [main]
+    paths:
+      - "brain/**"
+      - ".github/workflows/brain-ci.yml"
+      - "README.md"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: brain
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Create isolated runtime
+        run: python -m venv .venv
+      - name: Install hash-locked runtime
+        run: ".venv/bin/python -m pip install --require-hashes --only-binary=:all: -r requirements-prepende.lock"
+      - name: Compile product-neutral packages
+        run: .venv/bin/python -m compileall -q agents connectors interface kernel knowledge memory models operations prepende_brain prompts rag routes self_improve services support tactics tui workspace
+      - name: Verify brain runtime
+        run: .venv/bin/python scripts/verify_prepende_brain.py
+      - name: Verify nested public-core export
+        run: .venv/bin/python tests/smoke_public_core_export.py
+      - name: Build brain wheel and source distribution
+        run: |
+          .venv/bin/python -m pip install build==1.3.0
+          .venv/bin/python -m build

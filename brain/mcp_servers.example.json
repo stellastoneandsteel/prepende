@@ -1,0 +1,7 @@
+{
+  "servers": [
+    { "name": "n8n",        "url": "https://YOUR-n8n-host/mcp",        "token": "" },
+    { "name": "higgsfield", "url": "https://YOUR-higgsfield-mcp/mcp",  "token": "" },
+    { "name": "figma",      "url": "https://mcp.figma.com/mcp",        "token": "" }
+  ]
+}

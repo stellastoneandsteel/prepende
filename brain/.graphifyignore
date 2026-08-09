@@ -1,0 +1,6 @@
+# Owner Graphify must never ingest tenant/runtime brains.
+/vault/tenants/
+/vault/.obsidian/
+/vault/.trash/
+/prepende-data/
+/graphify-out/

@@ -1,0 +1,635 @@
+#!/usr/bin/env python3
+"""Agent-agnostic Prepende CLI (legacy ``bin/engram`` compatibility path).
+
+This wrapper is the stable local contract for Codex, Claude Code, Grok Build,
+n8n, shell scripts, and future operators. It delegates to the repo-local
+virtualenv so every caller uses the same Prepende kernel and MCP server.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sqlite3
+import subprocess
+import sys
+import time
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+PYTHON = ROOT / ".venv" / "bin" / "python3"
+DEFAULT_SCOPE = "default"
+DEFAULT_CAPABILITIES = "safe"
+DEFAULT_CONTEXT_TIMEOUT_SECONDS = 60
+DEFAULT_CONTEXT_FAST_TIMEOUT_SECONDS = 8
+DEFAULT_STATUS_TIMEOUT_SECONDS = 15
+
+if os.name == "posix":
+    # This compatibility entrypoint remains directly callable, so it must hold
+    # the same private-file contract as bin/prepende.
+    os.umask(0o077)
+    _environment = Path.cwd() / ".env"
+    if _environment.is_file() and not _environment.is_symlink():
+        _environment.chmod(0o600)
+
+
+def usage(code: int = 2) -> int:
+    print(
+        """Usage:
+  prepende ask "<goal>" [--json] [--scope SCOPE]
+  prepende context-fast "<goal>" [--json] [--scope SCOPE] [--profile general|coding|deployment|recovery]
+  prepende context "<goal>" [--json] [--scope SCOPE]
+  prepende status [--json] [--scope SCOPE]
+  prepende operational-status [--json] [--scope SCOPE] [--protocol-repo PATH] [--trust-repo PATH] [--online]
+  prepende init [--data-dir PATH] [--json]
+  prepende knowledge status [--json]
+  prepende knowledge rebuild [--json]
+  prepende knowledge backfill [--max-rounds N] [--json]
+  prepende knowledge search "<query>" [--limit N] [--json]
+  prepende knowledge graphify-finalize [--root PATH] [--out PATH] [--json]
+  prepende operator start "<goal>" [--scope SCOPE] [--lane direct|sandbox]
+  prepende operator finish --receipt ID --status STATUS --outcome TEXT --learning TEXT
+  prepende operator sandbox "<goal>" [--scope SCOPE] [--timeout SECONDS]
+  prepende operator status [--limit N]
+  prepende mcp stdio [--tenant TENANT --workspace WORKSPACE] [--scope SCOPE] [--deployment-revision REV] [--capabilities safe|all|tool,list] [--preflight]
+  prepende mcp http [--scope SCOPE] [--capabilities safe|all|tool,list] [--host HOST] [--port PORT] [--preflight]
+
+Defaults:
+  scope: default (set PREPENDE_SCOPE for a product-specific default)
+  capabilities: safe
+  memory policy: candidate only
+""",
+        file=sys.stderr,
+    )
+    return code
+
+
+def die(message: str, code: int = 2) -> int:
+    print(f"prepende: {message}", file=sys.stderr)
+    return code
+
+
+def ensure_python() -> int | None:
+    if PYTHON.exists():
+        return None
+    return die(f"missing repo virtualenv python at {PYTHON}; create .venv before invoking Prepende")
+
+
+def pop_bool(args: list[str], flag: str) -> bool:
+    found = False
+    out: list[str] = []
+    for arg in args:
+        if arg == flag:
+            found = True
+        else:
+            out.append(arg)
+    args[:] = out
+    return found
+
+
+def pop_value(args: list[str], flag: str, default: str | None = None) -> str | None:
+    out: list[str] = []
+    value = default
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == flag:
+            if i + 1 >= len(args):
+                raise ValueError(f"{flag} requires a value")
+            value = args[i + 1]
+            i += 2
+            continue
+        prefix = f"{flag}="
+        if arg.startswith(prefix):
+            value = arg[len(prefix):]
+            i += 1
+            continue
+        out.append(arg)
+        i += 1
+    args[:] = out
+    return value
+
+
+def common(args: list[str]) -> dict[str, Any]:
+    scope = pop_value(
+        args,
+        "--scope",
+        os.environ.get("PREPENDE_SCOPE")
+        or os.environ.get("PREPENDE_MCP_SCOPE")
+        or os.environ.get("ENGRAM_SCOPE")
+        or os.environ.get("ENGRAM_MCP_SCOPE")
+        or DEFAULT_SCOPE,
+    )
+    memory = pop_value(args, "--memory", "candidate")
+    if memory != "candidate":
+        if memory == "auto":
+            return {"error": "--memory auto is refused by this wrapper unless the owner explicitly approves a durable memory run"}
+        return {"error": f"unsupported memory policy: {memory}"}
+    return {"scope": scope or DEFAULT_SCOPE, "memory": memory, "json": pop_bool(args, "--json")}
+
+
+def run_kernel(
+    kernel_args: list[str],
+    *,
+    capture: bool = False,
+    timeout: int | None = None,
+) -> subprocess.CompletedProcess[str]:
+    cmd = [str(PYTHON), "-m", "kernel", *kernel_args]
+    return subprocess.run(
+        cmd,
+        cwd=ROOT,
+        text=True,
+        capture_output=capture,
+        env=os.environ.copy(),
+        timeout=timeout,
+    )
+
+
+def parse_json(text: str) -> Any | None:
+    try:
+        return json.loads(text)
+    except Exception:
+        return None
+
+
+def env_timeout(name: str, default: int) -> int:
+    raw = os.environ.get(name, "").strip()
+    if not raw:
+        return default
+    try:
+        value = int(raw)
+    except ValueError:
+        return default
+    return max(1, value)
+
+
+def env_timeout_alias(prepende_name: str, legacy_name: str, default: int) -> int:
+    """Read the Prepende env name first while preserving the Engram alias."""
+
+    if os.environ.get(prepende_name, "").strip():
+        return env_timeout(prepende_name, default)
+    return env_timeout(legacy_name, default)
+
+
+def runs_db_path() -> Path:
+    raw = os.environ.get("RUNS_DB", "./.engram/runs.db").strip() or "./.engram/runs.db"
+    path = Path(raw)
+    return path if path.is_absolute() else ROOT / path
+
+
+def fail_timed_out_context_runs(goal: str, started_after: float, timeout_seconds: int) -> dict[str, Any]:
+    db_path = runs_db_path()
+    result: dict[str, Any] = {"updated": [], "error": None}
+    if not db_path.exists():
+        return result
+    try:
+        with sqlite3.connect(db_path, timeout=5.0) as conn:
+            conn.row_factory = sqlite3.Row
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA busy_timeout=3000")
+            rows = conn.execute(
+                "SELECT goal_id FROM runs WHERE status='running' AND goal=? AND started>=? ORDER BY started DESC",
+                (goal, max(0.0, started_after - 1.0)),
+            ).fetchall()
+            ids = [str(row["goal_id"]) for row in rows]
+            if ids:
+                now = time.time()
+                error = f"TimeoutExpired: Prepende context timed out after {timeout_seconds}s"
+                conn.executemany(
+                    "UPDATE runs SET status='failed', error=?, updated=? WHERE goal_id=? AND status='running'",
+                    [(error, now, goal_id) for goal_id in ids],
+                )
+            result["updated"] = ids
+    except Exception as exc:
+        result["error"] = f"{type(exc).__name__}: {exc}"
+    return result
+
+
+def status(args: list[str]) -> int:
+    err = ensure_python()
+    if err is not None:
+        return err
+    opts = common(args)
+    if opts.get("error"):
+        return die(str(opts["error"]))
+    if args:
+        return die("status does not accept a goal")
+    proc = run_kernel(["--status", "--scope", str(opts["scope"])])
+    return proc.returncode
+
+
+def ask(args: list[str]) -> int:
+    err = ensure_python()
+    if err is not None:
+        return err
+    opts = common(args)
+    if opts.get("error"):
+        return die(str(opts["error"]))
+    goal = " ".join(args).strip()
+    if not goal:
+        return die("ask requires a goal")
+    kernel_args = ["--memory", str(opts["memory"]), "--scope", str(opts["scope"])]
+    if opts["json"]:
+        kernel_args.append("--json")
+    kernel_args.append(goal)
+    proc = run_kernel(kernel_args)
+    return proc.returncode
+
+
+def context(args: list[str]) -> int:
+    err = ensure_python()
+    if err is not None:
+        return err
+    opts = common(args)
+    if opts.get("error"):
+        return die(str(opts["error"]))
+    goal = " ".join(args).strip()
+    if not goal:
+        return die("context requires a goal")
+    context_timeout = env_timeout_alias(
+        "PREPENDE_CONTEXT_TIMEOUT",
+        "ENGRAM_CONTEXT_TIMEOUT",
+        DEFAULT_CONTEXT_TIMEOUT_SECONDS,
+    )
+    context_started_at = time.time()
+    run_journal_timeout_update = None
+    try:
+        proc = run_kernel(
+            ["--json", "--memory", "candidate", "--scope", str(opts["scope"]), goal],
+            capture=True,
+            timeout=context_timeout,
+        )
+        proc_stdout = proc.stdout
+        proc_stderr = proc.stderr
+        proc_returncode = proc.returncode
+        brain = parse_json(proc_stdout)
+    except subprocess.TimeoutExpired as exc:
+        proc_stdout = (exc.stdout or "") if isinstance(exc.stdout, str) else (exc.stdout or b"").decode("utf-8", "replace")
+        proc_stderr = (exc.stderr or "") if isinstance(exc.stderr, str) else (exc.stderr or b"").decode("utf-8", "replace")
+        proc_returncode = 124
+        run_journal_timeout_update = fail_timed_out_context_runs(goal, context_started_at, context_timeout)
+        brain = {
+            "text": "",
+            "receipt": {
+                "error": "prepende context kernel timed out",
+                "timeoutSeconds": context_timeout,
+                "runJournalTimeoutUpdate": run_journal_timeout_update,
+                "externalActions": [],
+                "actionExecuted": False,
+            },
+            "error": f"Prepende context timed out after {context_timeout}s",
+        }
+    receipt = brain.get("receipt") if isinstance(brain, dict) else None
+    run_ok = proc_returncode == 0 and isinstance(brain, dict) and not brain.get("error") and not (isinstance(receipt, dict) and receipt.get("error"))
+    fallback_status = None
+    if not run_ok:
+        try:
+            status_proc = run_kernel(
+                ["--status", "--scope", str(opts["scope"])],
+                capture=True,
+                timeout=env_timeout_alias(
+                    "PREPENDE_STATUS_TIMEOUT",
+                    "ENGRAM_STATUS_TIMEOUT",
+                    DEFAULT_STATUS_TIMEOUT_SECONDS,
+                ),
+            )
+            fallback_status = parse_json(status_proc.stdout) or {
+                "ok": False,
+                "exitCode": status_proc.returncode,
+                "stderr": status_proc.stderr.strip()[-4000:],
+            }
+        except subprocess.TimeoutExpired as exc:
+            status_stderr = (exc.stderr or "") if isinstance(exc.stderr, str) else (exc.stderr or b"").decode("utf-8", "replace")
+            fallback_status = {
+                "ok": False,
+                "exitCode": 124,
+                "error": "Prepende status timed out",
+                "stderr": status_stderr.strip()[-4000:],
+            }
+    payload = {
+        "ok": run_ok,
+        "command": "context",
+        "scope": opts["scope"],
+        "goal": goal,
+        "memoryPolicy": "candidate",
+        "externalActions": receipt.get("externalActions", []) if isinstance(receipt, dict) else [],
+        "actionExecuted": bool(receipt.get("actionExecuted")) if isinstance(receipt, dict) else False,
+        "brain": brain,
+        "fallbackStatus": fallback_status,
+        "stderr": proc_stderr.strip()[-4000:] or None,
+    }
+    if opts["json"]:
+        print(json.dumps(payload, indent=2, default=str))
+    elif run_ok:
+        print(str(brain.get("text", "") if isinstance(brain, dict) else "").strip())
+    else:
+        print(json.dumps(payload, indent=2, default=str), file=sys.stderr)
+    return 0 if run_ok else 1
+
+
+def receipt_stage(stage: str, status: str, detail: str) -> dict[str, str]:
+    return {"stage": stage, "status": status, "detail": detail}
+
+
+def context_fast(args: list[str]) -> int:
+    err = ensure_python()
+    if err is not None:
+        return err
+    from operations.continuity import (
+        PACKET_SCHEMA_VERSION,
+        SUPPORTED_PROFILES,
+        build_continuity_packet,
+    )
+
+    profile = str(
+        pop_value(args, "--profile", os.environ.get("PREPENDE_CONTINUITY_PROFILE", "general"))
+        or "general"
+    ).strip().lower()
+    if profile not in SUPPORTED_PROFILES:
+        return die(
+            "unsupported continuity profile: "
+            f"{profile}; expected one of {', '.join(sorted(SUPPORTED_PROFILES))}"
+        )
+    opts = common(args)
+    if opts.get("error"):
+        return die(str(opts["error"]))
+    goal = " ".join(args).strip()
+    if not goal:
+        return die("context-fast requires a goal")
+
+    status_timeout = env_timeout_alias(
+        "PREPENDE_CONTEXT_FAST_TIMEOUT",
+        "ENGRAM_CONTEXT_FAST_TIMEOUT",
+        DEFAULT_CONTEXT_FAST_TIMEOUT_SECONDS,
+    )
+    status_payload = None
+    status_stderr = None
+    status_ok = False
+    try:
+        status_proc = run_kernel(
+            ["--status", "--scope", str(opts["scope"])],
+            capture=True,
+            timeout=status_timeout,
+        )
+        status_payload = parse_json(status_proc.stdout) or {
+            "ok": status_proc.returncode == 0,
+            "exitCode": status_proc.returncode,
+            "stdout": status_proc.stdout.strip()[-4000:] or None,
+            "stderr": status_proc.stderr.strip()[-4000:] or None,
+        }
+        status_stderr = status_proc.stderr.strip()[-4000:] or None
+        status_ok = status_proc.returncode == 0
+    except subprocess.TimeoutExpired as exc:
+        status_stderr = (
+            (exc.stderr or "")
+            if isinstance(exc.stderr, str)
+            else (exc.stderr or b"").decode("utf-8", "replace")
+        )
+        status_payload = {
+            "ok": False,
+            "exitCode": 124,
+            "error": "Prepende status timed out",
+            "timeoutSeconds": status_timeout,
+            "stderr": status_stderr.strip()[-4000:] or None,
+        }
+
+    continuity = build_continuity_packet(
+        root=ROOT,
+        goal=goal,
+        scope=str(opts["scope"]),
+        profile=profile,
+        status_payload=status_payload,
+        transport_ok=status_ok,
+    )
+    continuity_ready = bool(continuity["verdict"]["continuityReady"])
+    payload = {
+        "schemaVersion": PACKET_SCHEMA_VERSION,
+        "ok": status_ok,
+        "command": "context-fast",
+        "scope": opts["scope"],
+        "goal": goal,
+        "profile": profile,
+        "verdict": continuity["verdict"],
+        "continuity": continuity,
+        "memoryPolicy": "candidate",
+        "mode": "fast_context_packet",
+        "modelCall": "skipped",
+        "modelLane": {
+            "status": "skipped",
+            "reason": "context-fast is the no-inference preflight for continuity, receipts, and timeout resistance",
+        },
+        "externalActions": [],
+        "actionExecuted": False,
+        "status": status_payload,
+        "receipt": {
+            "Recalled": "Pulled bounded Prepende status for the requested scope.",
+            "Decided": "Skipped model synthesis to avoid preflight hangs.",
+            "Proposed": "Use this packet as the continuity handoff before local repo work.",
+            "Blocked": (
+                None
+                if continuity_ready
+                else "Transport or critical continuity prerequisites are not ready."
+            ),
+            "Verified": "No durable memory writes or external actions executed.",
+            "Next": (
+                "Use full `prepende context` only when slow synthesis is explicitly needed."
+                if continuity_ready
+                else "Resolve the continuity blockers in this packet before plan execution."
+            ),
+            "stages": [
+                receipt_stage(
+                    "Recalled",
+                    "ok" if status_ok else "failed",
+                    "Scope status returned before the fast timeout."
+                    if status_ok
+                    else "Scope status did not return cleanly.",
+                ),
+                receipt_stage(
+                    "Decided",
+                    "ok",
+                    "Model synthesis was skipped by command design.",
+                ),
+                receipt_stage(
+                    "Proposed",
+                    "ok",
+                    "Proceed with local operator work using this receipt as the handoff.",
+                ),
+                receipt_stage(
+                    "Blocked",
+                    "none" if continuity_ready else "blocked",
+                    "No critical continuity blocker."
+                    if continuity_ready
+                    else "Transport or critical continuity prerequisites are not ready.",
+                ),
+                receipt_stage(
+                    "Verified",
+                    "ok",
+                    "No memory writes, external actions, sends, posts, purchases, deploys, "
+                    "or deletes were executed.",
+                ),
+                receipt_stage(
+                    "Next",
+                    "ok",
+                    "Escalate to full context only for deliberate slow reasoning."
+                    if continuity_ready
+                    else "Resolve the continuity blockers in this packet before plan execution.",
+                ),
+            ],
+        },
+        "stderr": status_stderr,
+    }
+    if opts["json"]:
+        print(json.dumps(payload, indent=2, default=str))
+    elif status_ok:
+        print(
+            "Prepende context-fast OK: model lane skipped; "
+            "no durable memory writes or external actions executed."
+        )
+    else:
+        print(json.dumps(payload, indent=2, default=str), file=sys.stderr)
+    return 0 if status_ok else 1
+
+
+def mcp(args: list[str]) -> int:
+    err = ensure_python()
+    if err is not None:
+        return err
+    if not args:
+        return die("mcp requires stdio or http")
+    transport = args.pop(0)
+    if transport not in {"stdio", "http"}:
+        return die("mcp transport must be stdio or http")
+    tenant = pop_value(
+        args, "--tenant",
+        os.environ.get("PREPENDE_MCP_TENANT") or os.environ.get("ENGRAM_MCP_TENANT") or "",
+    )
+    workspace = pop_value(
+        args, "--workspace",
+        os.environ.get("PREPENDE_MCP_WORKSPACE") or os.environ.get("ENGRAM_MCP_WORKSPACE") or "",
+    )
+    scope = pop_value(
+        args, "--scope",
+        os.environ.get("PREPENDE_MCP_SCOPE") or os.environ.get("ENGRAM_MCP_SCOPE") or "",
+    )
+    deployment_revision = pop_value(
+        args, "--deployment-revision",
+        os.environ.get("PREPENDE_DEPLOYMENT_REVISION")
+        or os.environ.get("ENGRAM_DEPLOYMENT_REVISION")
+        or "",
+    )
+    capabilities = pop_value(
+        args,
+        "--capabilities",
+        os.environ.get("PREPENDE_MCP_CAPABILITIES")
+        or os.environ.get("ENGRAM_MCP_CAPABILITIES")
+        or DEFAULT_CAPABILITIES,
+    )
+    host = pop_value(args, "--host", None)
+    port = pop_value(args, "--port", None)
+    preflight = pop_bool(args, "--preflight")
+    if args:
+        return die("unexpected mcp args: " + " ".join(args))
+    env = os.environ.copy()
+    for prefix in ("PREPENDE", "ENGRAM"):
+        if scope:
+            env[f"{prefix}_MCP_SCOPE"] = scope
+        else:
+            env.pop(f"{prefix}_MCP_SCOPE", None)
+        if tenant:
+            env[f"{prefix}_MCP_TENANT"] = tenant
+        else:
+            env.pop(f"{prefix}_MCP_TENANT", None)
+        if workspace:
+            env[f"{prefix}_MCP_WORKSPACE"] = workspace
+        else:
+            env.pop(f"{prefix}_MCP_WORKSPACE", None)
+        env[f"{prefix}_MCP_CAPABILITIES"] = capabilities or DEFAULT_CAPABILITIES
+        env[f"{prefix}_MCP_TRANSPORT"] = transport
+        if deployment_revision:
+            env[f"{prefix}_DEPLOYMENT_REVISION"] = deployment_revision
+        else:
+            env.pop(f"{prefix}_DEPLOYMENT_REVISION", None)
+    if preflight:
+        env["PREPENDE_MCP_PREFLIGHT_ONLY"] = "1"
+    if host:
+        env["PREPENDE_MCP_HOST"] = host
+        env["ENGRAM_MCP_HOST"] = host
+    if port:
+        env["PREPENDE_MCP_PORT"] = port
+        env["ENGRAM_MCP_PORT"] = port
+    module = "interface.mcp_preflight" if preflight else "interface.mcp_server"
+    proc = subprocess.run([str(PYTHON), "-m", module], cwd=ROOT, env=env)
+    return proc.returncode
+
+
+def knowledge(args: list[str]) -> int:
+    """Run the explicit clone/RAG maintenance contract in the repo venv."""
+    err = ensure_python()
+    if err is not None:
+        return err
+    if not args:
+        return die("knowledge requires init, status, rebuild, backfill, search, or graphify-finalize")
+    proc = subprocess.run(
+        [str(PYTHON), "-m", "knowledge.cli", *args],
+        cwd=ROOT,
+        env=os.environ.copy(),
+    )
+    return proc.returncode
+
+
+def operator(args: list[str]) -> int:
+    """Run the local Prepende operator proof and sandbox bridge contract."""
+    err = ensure_python()
+    if err is not None:
+        return err
+    proc = subprocess.run(
+        [str(PYTHON), str(ROOT / "scripts" / "prepende_operator.py"), *args],
+        cwd=ROOT,
+        env=os.environ.copy(),
+    )
+    return proc.returncode
+
+
+def operational_status(args: list[str]) -> int:
+    """Report brain, Protocol, trust, pilot, and recovery truth without writes."""
+
+    err = ensure_python()
+    if err is not None:
+        return err
+    from operations.operational_status import main as operational_status_main
+
+    return operational_status_main(args, root=ROOT)
+
+
+def main(argv: list[str]) -> int:
+    if not argv:
+        return usage()
+    if argv[0] in {"-h", "--help", "help"}:
+        return usage(0)
+    command = argv.pop(0)
+    if command == "ask":
+        return ask(argv)
+    if command == "context-fast":
+        return context_fast(argv)
+    if command == "context":
+        return context(argv)
+    if command == "status":
+        return status(argv)
+    if command == "operational-status":
+        return operational_status(argv)
+    if command == "init":
+        return knowledge(["init", *argv])
+    if command == "knowledge":
+        return knowledge(argv)
+    if command == "operator":
+        return operator(argv)
+    if command == "mcp":
+        return mcp(argv)
+    return die(f"unknown command: {command}")
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
