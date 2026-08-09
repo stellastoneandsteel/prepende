@@ -13,10 +13,12 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 VERIFY = ROOT / "scripts" / "verify_prepende_brain.py"
+# Set before the first snapshot so `__pycache__` can stay inside the no-write
+# comparison below: stray bytecode is a repository write like any other.
+sys.dont_write_bytecode = True
 
 
 def _load_verifier():
-    sys.dont_write_bytecode = True
     spec = importlib.util.spec_from_file_location("prepende_brain_verifier", VERIFY)
     assert spec is not None and spec.loader is not None
     module = importlib.util.module_from_spec(spec)
@@ -27,9 +29,7 @@ def _load_verifier():
 def _repository_snapshot() -> dict[str, tuple[int, int, int, str]]:
     snapshot: dict[str, tuple[int, int, int, str]] = {}
     for directory, names, files in os.walk(ROOT):
-        names[:] = [
-            name for name in names if name not in {".git", ".venv", "__pycache__"}
-        ]
+        names[:] = [name for name in names if name not in {".git", ".venv"}]
         base = Path(directory)
         for name in sorted(files):
             path = base / name
@@ -99,6 +99,61 @@ def main() -> None:
             assert registry["excluded"]["smoke_clone_privacy.py"] == (
                 verifier._EXCLUSION_REASONS["smoke_clone_privacy.py"]
             )
+
+            # An exclusion may exist ONLY because a reviewed reason literal exists.
+            # Dropping the literal must refuse to skip the smoke rather than
+            # skipping it with an invented or empty justification.
+            reviewed = dict(verifier._EXCLUSION_REASONS)
+            unreviewed_profiles = (
+                # missing reason for the conditional smoke
+                {},
+                # present-but-empty reason for the profile smoke
+                {
+                    "smoke_standup_tenant_preflight.py": "reviewed conditional",
+                    "smoke_clone_privacy.py": "   ",
+                },
+            )
+            for unreviewed in unreviewed_profiles:
+                verifier._EXCLUSION_REASONS = unreviewed
+                try:
+                    verifier.resolve_smoke_suite(fixture)
+                except ValueError as error:
+                    assert "unreviewed smoke exclusion" in str(error), error
+                else:
+                    raise AssertionError("unreviewed exclusion was accepted")
+                finally:
+                    verifier._EXCLUSION_REASONS = reviewed
+
+            # The private checkout carries both policies; the stricter clone
+            # profile wins and the public-core export becomes the exclusion.
+            private = fixture / "prepende-export-manifest.json"
+            private.write_text('{"schemaVersion": 2}\n', encoding="utf-8")
+            try:
+                private_registry = verifier.summarize_registry(fixture)
+                assert private_registry["unknown"] == [], private_registry
+                assert "smoke_clone_privacy.py" in private_registry["executable"]
+                assert (
+                    "smoke_public_core_export.py"
+                    not in private_registry["executable"]
+                ), private_registry
+                assert private_registry["excluded"]["smoke_public_core_export.py"] == (
+                    verifier._EXCLUSION_REASONS["smoke_public_core_export.py"]
+                )
+            finally:
+                private.unlink()
+
+            # No reviewed profile at all must refuse to resolve a suite.
+            manifest = fixture / "prepende-public-core-manifest.json"
+            payload = manifest.read_text(encoding="utf-8")
+            manifest.unlink()
+            try:
+                verifier.resolve_smoke_suite(fixture)
+            except ValueError as error:
+                assert "no reviewed smoke profile manifest" in str(error), error
+            else:
+                raise AssertionError("suite resolved without a reviewed profile")
+            finally:
+                manifest.write_text(payload, encoding="utf-8")
         finally:
             verifier.ROOT = original_root
             verifier.run_smoke_suite = original_runner

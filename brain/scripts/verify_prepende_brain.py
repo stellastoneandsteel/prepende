@@ -85,9 +85,22 @@ def discover_smoke_files(root: Path) -> list[str]:
     """
     return sorted(
         path.name
-        for path in (root / "tests").glob("smoke_*.py")
+        for path in (root / "tests").rglob("smoke_*.py")
         if path.is_file()
     )
+
+
+def reviewed_exclusion(name: str) -> str:
+    """Return the source-reviewed reason for skipping ``name``, or refuse to skip it.
+
+    Every exclusion must be justified by a literal in `_EXCLUSION_REASONS`. This is
+    the only way a discovered smoke may go unexecuted, so it fails closed rather
+    than inventing a reason at the call site.
+    """
+    reason = str(_EXCLUSION_REASONS.get(name, "")).strip()
+    if not reason:
+        raise ValueError(f"unreviewed smoke exclusion: {name}")
+    return reason
 
 
 def resolve_smoke_suite(root: Path) -> tuple[list[str], list[str], list[str], dict[str, str]]:
@@ -104,7 +117,9 @@ def resolve_smoke_suite(root: Path) -> tuple[list[str], list[str], list[str], di
     if (root / "tests" / "smoke_standup_tenant_preflight.py").is_file():
         executable.append("smoke_standup_tenant_preflight.py")
     else:
-        exclusions["smoke_standup_tenant_preflight.py"] = _EXCLUSION_REASONS["smoke_standup_tenant_preflight.py"]
+        exclusions["smoke_standup_tenant_preflight.py"] = reviewed_exclusion(
+            "smoke_standup_tenant_preflight.py"
+        )
 
     private_clone = (root / "prepende-export-manifest.json").is_file()
     public_core = (root / "prepende-public-core-manifest.json").is_file()
@@ -113,10 +128,12 @@ def resolve_smoke_suite(root: Path) -> tuple[list[str], list[str], list[str], di
     # separately proves that the private policy was not exported.
     if private_clone:
         executable.append("smoke_clone_privacy.py")
-        exclusions["smoke_public_core_export.py"] = _EXCLUSION_REASONS["smoke_public_core_export.py"]
+        exclusions["smoke_public_core_export.py"] = reviewed_exclusion(
+            "smoke_public_core_export.py"
+        )
     elif public_core:
         executable.append("smoke_public_core_export.py")
-        exclusions["smoke_clone_privacy.py"] = _EXCLUSION_REASONS["smoke_clone_privacy.py"]
+        exclusions["smoke_clone_privacy.py"] = reviewed_exclusion("smoke_clone_privacy.py")
     else:
         raise ValueError("no reviewed smoke profile manifest is present")
 
@@ -130,8 +147,6 @@ def resolve_smoke_suite(root: Path) -> tuple[list[str], list[str], list[str], di
         for name in available
         if name not in executable_set and name not in exclusions
     ]
-    if any(_EXCLUSION_REASONS.get(name) != reason for name, reason in exclusions.items()):
-        raise ValueError("missing reviewed exclusion reason")
     return executable, missing, unregistered, exclusions
 
 
@@ -169,8 +184,9 @@ def run_smoke_suite(root: Path, smokes: list[str], *, env: dict[str, str] | None
         "GRAPHIFY_GRAPH_PATH": str(state / "graphify" / "graph.json"),
     })
 
+    # The suite aborts on the first failure, so a completed run has passed every
+    # executable smoke; reporting a failure count here could only ever print zero.
     passed = 0
-    failed = 0
     for name in smokes:
         path = root / "tests" / name
         if not path.is_file():
@@ -180,13 +196,12 @@ def run_smoke_suite(root: Path, smokes: list[str], *, env: dict[str, str] | None
         result = subprocess.run([sys.executable, str(path)], cwd=root, env=env)
         if result.returncode:
             print(f"[brain] FAIL {name} ({result.returncode})", file=sys.stderr)
-            failed += 1
             return result.returncode
         passed += 1
 
     print(
         "PREPENDE BRAIN VERIFY: OK "
-        f"(passed/failed={passed}/{failed}; "
+        f"(passed={passed}; "
         f"discovered={len(discover_smoke_files(root))}, "
         f"executable={len(smokes)})"
     )

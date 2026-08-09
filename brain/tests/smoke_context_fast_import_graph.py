@@ -66,16 +66,61 @@ def _matches_prefix(module_name: str, prefix: str) -> bool:
     return module_name == prefix or module_name.startswith(prefix + ".")
 
 
+def _assert_embedding_profile_parity() -> None:
+    """Pin the provider-free profile to the one the composition root persists.
+
+    ``_configured_embedding_profile`` mirrors ``kernel.core.brain._embedding_profile``
+    without building a gateway. A mirror that drifts silently reports a healthy
+    index as semantically unready, so compare the two across every provider the
+    factory accepts as an embedder, with no explicit model to fall back on.
+    """
+    from kernel.core.brain import _embedding_profile
+    from models.factory import build_gateway
+    from operations.local_status import (
+        _EMBEDDING_DEFAULT_MODELS,
+        _configured_embedding_profile,
+    )
+
+    for provider in sorted(_EMBEDDING_DEFAULT_MODELS):
+        cfg = SimpleNamespace(
+            provider="echo",
+            embedding_provider=provider,
+            embedding_model="",
+            model="",
+            embedding_dim=3,
+            # Set to a NON-default value on purpose: the factory ignores
+            # GROK_MODEL when it builds an embedding gateway, so a mirror that
+            # honours it here would drift.
+            grok_model="grok-4-fixture",
+            anthropic_key="fixture",
+            openai_key="fixture",
+            google_key="fixture",
+            xai_key="fixture",
+            openai_compat_key="fixture",
+            openai_compat_base="https://fixture.invalid/v1",
+            local_base="http://fixture.invalid/v1",
+        )
+        gateway = build_gateway(cfg, provider=provider, model=None)
+        expected = _embedding_profile(cfg, gateway)
+        observed, reason = _configured_embedding_profile(cfg)
+        assert reason is None, (provider, reason)
+        assert observed == expected, {
+            "provider": provider,
+            "observed": observed,
+            "canonical": expected,
+        }
+
+
 def _assert_connector_catalog_parity() -> None:
     sys.path.insert(0, str(ROOT))
-    from connectors.adapters import FigmaAdapter, N8nAdapter, NewsAdapter
+    from connectors.defaults import BUILTIN_ADAPTERS
     from models.catalog import DEFAULT_MODEL_BY_PROVIDER
     from models.google import GoogleGateway
     from models.openai import OpenAIGateway
     from operations.local_status import _BUILTIN_TOOLS, _EMBEDDING_DEFAULT_MODELS
 
     expected = {}
-    for adapter in (N8nAdapter, FigmaAdapter, NewsAdapter):
+    for adapter in BUILTIN_ADAPTERS:
         for tool in adapter.tools:
             capability = adapter.tool_capabilities[tool]
             expected[f"{adapter.name}.{tool}"] = {
@@ -504,7 +549,83 @@ def _assert_common_payload(payload: dict[str, object], scope: str) -> dict[str, 
     return status_payload
 
 
-def _assert_process_allowlist(events: list[dict[str, object]]) -> None:
+def _open_live_wal(path: Path) -> sqlite3.Connection:
+    """Hold an open WAL connection, exactly as a running brain does."""
+    connection = sqlite3.connect(path)
+    connection.execute("PRAGMA journal_mode=WAL")
+    connection.commit()
+    return connection
+
+
+def _assert_live_wal_status_is_real(root: Path, base_env: dict[str, str], scope: str) -> None:
+    """A running brain must not read as an unavailable one.
+
+    The runtime opens every store it writes with `journal_mode=WAL`, and SQLite
+    keeps the `-wal` file until the last connection closes. Reading such a
+    database with `immutable=1` skips the WAL, so the collector has to take
+    SQLite's locked read-only path instead -- and must still not write.
+    """
+    fixture = root / "live-wal"
+    fixture.mkdir()
+    runtime = _create_runtime_fixture(fixture, scope, "tenant-alpha")
+
+    live = [
+        _open_live_wal(runtime["memory"]),
+        _open_live_wal(runtime["runs"]),
+        _open_live_wal(runtime["readiness"]),
+        _open_live_wal(runtime["index"]),
+    ]
+    try:
+        # Commit through the live connections so the rows under test exist only
+        # in the WAL, which is precisely what `immutable=1` cannot see.
+        live[0].execute(
+            "INSERT INTO memories VALUES (?,?,?,?,?,?,?)",
+            ("memory-wal", scope, "Committed in the WAL", "{}", time.time() + 10, "active", None),
+        )
+        live[0].commit()
+
+        payloads = {
+            path: path.read_bytes()
+            for path in sorted(runtime["state"].rglob("*.db"))
+        }
+        wal_payloads = {
+            path: path.read_bytes()
+            for path in sorted(runtime["state"].rglob("*.db-wal"))
+        }
+        assert wal_payloads, "fixture did not produce a live -wal file"
+
+        env = base_env.copy()
+        env.update(
+            {
+                "MEMORY_DB": str(runtime["memory"]),
+                "RUNS_DB": str(runtime["runs"]),
+                "CONNECTOR_READINESS_DB": str(runtime["readiness"]),
+                "VAULT_PATH": str(runtime["vault"]),
+                "VAULT_INDEX_PATH": str(runtime["index"]),
+                "GRAPHIFY_GRAPH_PATH": str(fixture / "missing-graph.json"),
+            }
+        )
+        for key in ("PYTHONPATH", "PREPENDE_CONTEXT_FAST_AUDIT_DIR"):
+            env.pop(key, None)
+
+        status = _run_context_fast(env, scope)["status"]
+        memory = status["memory"]
+        assert memory["status"] == "ready", memory
+        assert memory["recent"][0] == "Committed in the WAL", memory
+        assert status["runs"]["recent_count"] == 1, status["runs"]
+        assert status["connectors"]["readiness_status"] == "observed", status["connectors"]
+        assert status["knowledge"]["rag"]["lexical_ready"] is True, status["knowledge"]
+
+        # The locked read may map the `-shm` wal-index the writer already owns.
+        # It must never alter database or WAL bytes.
+        assert {path: path.read_bytes() for path in payloads} == payloads
+        assert {path: path.read_bytes() for path in wal_payloads} == wal_payloads
+    finally:
+        for connection in live:
+            connection.close()
+
+
+def _assert_process_allowlist(events: list[dict[str, object]], audited_runs: int) -> None:
     launches = [item for item in events if item.get("event") == "subprocess.Popen"]
     kernel_launches = 0
     git_launches: list[tuple[str, ...]] = []
@@ -531,13 +652,16 @@ def _assert_process_allowlist(events: list[dict[str, object]]) -> None:
             kernel_launches += 1
             continue
         raise AssertionError(f"unreviewed process launch: {item}")
-    assert kernel_launches == 4, launches
-    assert len(git_launches) == 24, launches
+    # Derived from the audited runs rather than hardcoded, so adding a scenario
+    # does not fail on an opaque count.
+    assert kernel_launches == audited_runs, launches
+    assert len(git_launches) == audited_runs * len(allowed_git), launches
     assert set(git_launches) == allowed_git, git_launches
 
 
 def main() -> None:
     _assert_connector_catalog_parity()
+    _assert_embedding_profile_parity()
     owner_scope = "prepende"
     tenant_scope = "tenant-alpha"
     with tempfile.TemporaryDirectory(prefix="prepende-context-fast-real-") as directory:
@@ -654,7 +778,11 @@ def main() -> None:
         )
         assert forbidden == [], f"provider/composition imports on context-fast path: {forbidden}"
         assert network == [], f"network activity on context-fast path: {network}"
-        _assert_process_allowlist(events)
+        _assert_process_allowlist(events, audited_runs=4)
+
+        # Runs outside the audit hook, so it neither perturbs the process
+        # allowlist above nor relaxes the no-write snapshots taken there.
+        _assert_live_wal_status_is_real(fixture, env, owner_scope)
 
     print("smoke_context_fast_import_graph OK")
 

@@ -131,7 +131,7 @@
     {
       "mode": "100644",
       "outputPath": "connectors/defaults.py",
-      "sha256": "d1d928c12e591855a2eb46ea40e6f27d0539b51ee540e63ec1b8287f9d5d77a1",
+      "sha256": "5089d720e141833549ae1825fcf2624e3dfcecc22c2a00c11942d9218db68502",
       "sourcePaths": [
         "connectors/defaults.py"
       ]
@@ -1011,7 +1011,7 @@
     {
       "mode": "100644",
       "outputPath": "operations/local_status.py",
-      "sha256": "951d00e5fbc8f1e67caea33e7593a3dfeb95946504242f52956f665ee78ad6f4",
+      "sha256": "a840041306bb5ff9d4d9208552916946271397e67757643b3cabbe09bfffa93d",
       "sourcePaths": [
         "operations/local_status.py"
       ]
@@ -1315,7 +1315,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "e6436bbdd504556183a22aa93ee53251ee9c5a5233d0c724ab39131cd0ae63f6",
+      "sha256": "477244fb67981478e0a72b77632520c591f8a7a8ea04446141e4628e1518c50b",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]
@@ -1611,7 +1611,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_context_fast_import_graph.py",
-      "sha256": "9545faa6cf52fd4109e319e1f169f9fe3c22fa1a89cb114750629b451b0688f2",
+      "sha256": "2f9890b54f6f1e0135b7fdad86d14d42cf186f1c8d763b92f7e068b9436f7b5a",
       "sourcePaths": [
         "tests/smoke_context_fast_import_graph.py"
       ]
@@ -1915,7 +1915,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_smoke_gate_completeness.py",
-      "sha256": "815ca0093bf7fd8e46bdaca1b0a22418bd5d1c97bd917a08dad5ee7c3c7f21f5",
+      "sha256": "559cd7924115af6de7045e89e8f4c43b3fb3f208e5c6ff2328f92decd14dd324",
       "sourcePaths": [
         "tests/smoke_smoke_gate_completeness.py"
       ]

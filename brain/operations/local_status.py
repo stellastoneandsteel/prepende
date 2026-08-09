@@ -94,6 +94,15 @@ def _database_signature(
     return _file_signature(path), _file_signature(Path(f"{path}-wal"))
 
 
+def _read_readonly(uri: str, reader: Callable[[sqlite3.Connection], dict[str, Any]]) -> dict[str, Any]:
+    connection = sqlite3.connect(uri, uri=True, timeout=1.0)
+    connection.row_factory = sqlite3.Row
+    try:
+        return reader(connection)
+    finally:
+        connection.close()
+
+
 def _read_database(
     path: Path,
     reader: Callable[[sqlite3.Connection], dict[str, Any]],
@@ -104,28 +113,37 @@ def _read_database(
         return None, "database_unreadable"
     if before[0] is None:
         return None, "database_missing"
-    if before[1] is not None and before[1][2] > 0:
-        return None, "database_has_uncheckpointed_wal"
 
+    # Every store this module reads is opened by the runtime with
+    # `PRAGMA journal_mode=WAL`, and SQLite does not shrink `-wal` on a passive
+    # checkpoint -- it is only removed when the last connection closes. So a
+    # running brain always presents a non-empty `-wal`, and `immutable=1` (which
+    # ignores the WAL outright) would silently read a database missing every
+    # committed row still living there. Two paths, chosen by that fact:
+    #   * no WAL  -> `immutable=1`: zero filesystem effect, no locking at all.
+    #   * live WAL -> `mode=ro`: SQLite's own read transaction, which is the only
+    #     way to read a live WAL consistently. It maps the `-shm` wal-index the
+    #     writer already owns; it never writes the database or the WAL.
+    live_wal = before[1] is not None and before[1][2] > 0
+    uri = f"file:{path.as_posix()}?mode=ro"
     try:
-        connection = sqlite3.connect(
-            f"file:{path.as_posix()}?mode=ro&immutable=1",
-            uri=True,
-            timeout=1.0,
-        )
-        connection.row_factory = sqlite3.Row
-        try:
-            observed = reader(connection)
-        finally:
-            connection.close()
+        observed = _read_readonly(uri if live_wal else f"{uri}&immutable=1", reader)
     except (OSError, sqlite3.Error, ValueError, TypeError, json.JSONDecodeError):
         return None, "database_unreadable"
+
+    if live_wal:
+        # SQLite already guaranteed a consistent snapshot for the duration of the
+        # read. The file signature legitimately moves while a writer runs, so
+        # re-checking it here would report a healthy database as changed.
+        return observed, None
 
     try:
         after = _database_signature(path)
     except OSError:
         return None, "database_unreadable"
     if after[1] is not None and after[1][2] > 0:
+        # A writer opened the database mid-read; the immutable snapshot we just
+        # took cannot see anything it committed.
         return None, "database_has_uncheckpointed_wal"
     if after != before:
         return None, "database_changed_during_read"
@@ -156,9 +174,11 @@ def _configured_embedding_profile(cfg: Any) -> tuple[str, str | None]:
     provider_key = provider.lower()
     if not provider_key:
         return "", None
+    # `cfg.grok_model` is deliberately NOT consulted: models/factory.py builds the
+    # embedding gateway for grok/xai from `cfg.model or "grok-2-latest"` and never
+    # reads GROK_MODEL, so honouring it here would compute a profile the runtime
+    # never persists and report a healthy index as semantically unready.
     model = str(cfg.embedding_model or cfg.model or "").strip()
-    if not model and provider_key in {"grok", "xai"}:
-        model = str(cfg.grok_model or "grok-2-latest").strip()
     if not model:
         model = _EMBEDDING_DEFAULT_MODELS.get(provider_key, "")
     if not model:
