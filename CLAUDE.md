@@ -71,8 +71,10 @@ python3 -m prepende --ledger experiments/predictions.jsonl report
    prose, never executed; the regime gate is string equality after strip.
 4. No completeness commitment: unresolved predictions carry no penalty, dup
    locks inflate n, p outside [0,1] flows into scoring unvalidated.
-5. O(n^2) ledger reads, no file locking, 9-assertion test suite that never tests
-   resolution tampering, empty pyproject.
+5. O(n^2) ledger reads, no file locking, and a separated protocol-vs-brain verification surface:
+   root Protocol v2 suites now run via `python -m unittest discover -s tests -v` and
+   brain runtime behavior runs through `scripts/verify_prepende_brain.py`; `test_protocol_v2.py`
+   and this file's smoke gate intentionally remain independent proof boundaries.
 
 **Status update, 2026-08-08 (later same day):** branch `codex/prepende-protocol-v2`
 carries a large work-in-progress (Codex-authored) that implements much of section

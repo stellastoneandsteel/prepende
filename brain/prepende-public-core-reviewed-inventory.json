@@ -99,7 +99,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/engram",
-      "sha256": "f8f09c2bea8bea020cf2d60e9d471f96324cf641d737c0f180a4b812e8e65770",
+      "sha256": "f19bbb0851aba35fa177ecb40dbdba619923afd057a87d3861ade3141d171df5",
       "sourcePaths": [
         "bin/engram"
       ]
@@ -131,7 +131,7 @@
     {
       "mode": "100644",
       "outputPath": "connectors/defaults.py",
-      "sha256": "d1d928c12e591855a2eb46ea40e6f27d0539b51ee540e63ec1b8287f9d5d77a1",
+      "sha256": "5089d720e141833549ae1825fcf2624e3dfcecc22c2a00c11942d9218db68502",
       "sourcePaths": [
         "connectors/defaults.py"
       ]
@@ -371,7 +371,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/__main__.py",
-      "sha256": "b4d171e89b390616bf473efd379e0628951a7fcc4880c030488030f595915d7c",
+      "sha256": "641e9c5a65b2da0c20689479fa081e277e4b273a6364253cefedd06c5f7e2781",
       "sourcePaths": [
         "kernel/__main__.py"
       ]
@@ -1003,9 +1003,17 @@
     {
       "mode": "100644",
       "outputPath": "operations/continuity.py",
-      "sha256": "78cc9ffac6c91219f73ebab36086395251d688cf7b24b188315575882aabedd0",
+      "sha256": "7a7e2b8890c3f02cbacf0b10f3f3cef40d4e6b7c20ddf7e9861877cacb30d5ed",
       "sourcePaths": [
         "operations/continuity.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "operations/local_status.py",
+      "sha256": "a840041306bb5ff9d4d9208552916946271397e67757643b3cabbe09bfffa93d",
+      "sourcePaths": [
+        "operations/local_status.py"
       ]
     },
     {
@@ -1051,7 +1059,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "25d6b7efab1876dbf816da6374158efc6f736065595d6e54416b721ed54f9d7f",
+      "sha256": "26b61bb58120aa84fc18a67ee1155f2c670285a5c746d587dcb5433e602effb3",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1155,7 +1163,7 @@
     {
       "mode": "100644",
       "outputPath": "pyproject.toml",
-      "sha256": "e41b98fd1c4cb9610950d416836e89924f1453afc5a2b25b68f7a4061fe2055b",
+      "sha256": "a41445cf022af5b7abe88eb2550b72d25781219b0e0ff5b64c6b9c078736ffd3",
       "sourcePaths": [
         "pyproject.toml"
       ]
@@ -1307,7 +1315,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "b3e532f1bb858df23d41da767bd5d2a2b1d255255c91e8c03b0976e54789ae43",
+      "sha256": "1d968dfe19d57a21ea460dd75498bc0dc97d7c602f4c26a16ae04747f926335c",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]
@@ -1602,6 +1610,14 @@
     },
     {
       "mode": "100644",
+      "outputPath": "tests/smoke_context_fast_import_graph.py",
+      "sha256": "2f9890b54f6f1e0135b7fdad86d14d42cf186f1c8d763b92f7e068b9436f7b5a",
+      "sourcePaths": [
+        "tests/smoke_context_fast_import_graph.py"
+      ]
+    },
+    {
+      "mode": "100644",
       "outputPath": "tests/smoke_continuity_v2.py",
       "sha256": "d6378baf1efe810774b01cdb64e70fcfafe9b76ad737512bffa445ee3d65f0c1",
       "sourcePaths": [
@@ -1763,7 +1779,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_operational_status.py",
-      "sha256": "3f1c0042f1883a1a5cc89c7ae0038cb41b76386561f12f0bf8da5ab28f07c0cd",
+      "sha256": "c92bdae25b18fb425a29ed8904bbad20a103df40fdb3a5bce06c9f9a1eac2b75",
       "sourcePaths": [
         "tests/smoke_operational_status.py"
       ]
@@ -1851,7 +1867,7 @@
     {
       "mode": "100755",
       "outputPath": "tests/smoke_public_core_export.py",
-      "sha256": "54ec1225405d4b73061ede91ccd257939367dd34773dc75d078b2a0ee0ddc966",
+      "sha256": "6184767e4ffaaac77e77bf8d926ea818529046bea05e76ae5f5a568b06bda296",
       "sourcePaths": [
         "tests/smoke_public_core_export.py"
       ]
@@ -1894,6 +1910,14 @@
       "sha256": "9861507b5b8eca5f07df6323ac3a00747a506290eccc6cc136f0fa4b45eaf4bb",
       "sourcePaths": [
         "tests/smoke_reviewed_knowledge_bundle.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "tests/smoke_smoke_gate_completeness.py",
+      "sha256": "3c6215e6967930559f158f7034a8bc48571bca0f07a60a51b28cb0d1a28b7316",
+      "sourcePaths": [
+        "tests/smoke_smoke_gate_completeness.py"
       ]
     },
     {

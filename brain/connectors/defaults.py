@@ -14,13 +14,18 @@ from connectors.readiness import ConnectorReadinessStore
 from connectors.mcp_config import register_mcp_servers
 
 
+# The static connectors every brain boots with. NewsAdapter is public-RSS
+# research reach: no credential, read-only, direct-call, so goal runs get real
+# headlines instead of training-memory news (2026-08-06). Kept as a module-level
+# registry so provider-free status surfaces and their parity tests enumerate the
+# same set instead of each re-listing it.
+BUILTIN_ADAPTERS = (N8nAdapter, FigmaAdapter, NewsAdapter)
+
+
 def default_hub(readiness_path: str = "./.engram/connector_readiness.db") -> ConnectorHub:
     hub = ConnectorHub(ConnectorReadinessStore(readiness_path))
-    hub.add(N8nAdapter())
-    hub.add(FigmaAdapter())
-    # Public-RSS research reach: no credential, read-only, direct-call. Gives
-    # goal runs real headlines instead of training-memory news (2026-08-06).
-    hub.add(NewsAdapter())
+    for adapter in BUILTIN_ADAPTERS:
+        hub.add(adapter())
     # Live MCP servers (Figma/n8n/anything) from mcp_servers.json or
     # ENGRAM_MCP_SERVERS — Engram as an MCP client. Best-effort; never blocks startup.
     try:

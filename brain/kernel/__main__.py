@@ -25,8 +25,7 @@ import argparse
 import asyncio
 import json
 import sys
-
-from kernel.core.brain import build_brain
+from pathlib import Path
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -48,11 +47,28 @@ def _parser() -> argparse.ArgumentParser:
                         "change (opt-in; pins the tactic to solo)")
     p.add_argument("--status", action="store_true",
                    help="print a read-only snapshot of what the brain knows, then exit")
+    p.add_argument("--context-fast", action="store_true",
+                   help="provider-free read-only snapshot for prepende context-fast")
     return p
 
 
 async def _amain(args: argparse.Namespace) -> int:
+    if args.context_fast and not args.status:
+        print("--context-fast requires --status", file=sys.stderr)
+        return 2
+
     try:
+        if args.context_fast:
+            from operations.local_status import collect_context_fast_status
+
+            state = collect_context_fast_status(
+                Path(__file__).resolve().parents[1],
+                args.scope,
+            )
+            print(json.dumps(state, indent=2, default=str))
+            return 0
+
+        from kernel.core.brain import build_brain
         loop, cfg, gateway = build_brain(memory_policy=args.memory)
     except Exception as exc:
         print(f"setup error: {exc}", file=sys.stderr)
