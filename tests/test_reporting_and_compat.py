@@ -116,10 +116,11 @@ class ReportingTests(unittest.TestCase):
         evidence = rebuild.load_ledger()
         self.assertIsNotNone(evidence)
         self.assertEqual(MIN_CALIBRATION_N, 30)
-        self.assertEqual(
-            (evidence["n_locked"], evidence["n_resolved"], evidence["n_pending"]),
-            (26, 14, 12),
-        )
+        # Corpus integrity is NOT asserted here. `CompatibilityTests.
+        # test_public_v1_corpus_is_byte_stable_and_explicitly_unanchored` pins the
+        # SHA-256 of the whole ledger, which strictly dominates any row count: it
+        # catches edits, deletions and reordering alike. This test owns one
+        # contract, the floor, so it fails only when the floor is what moved.
         self.assertLess(evidence["n_forward_resolved"], MIN_CALIBRATION_N)
         self.assertFalse(evidence["curve_publishable"])
         violations = rebuild.audit_public_calibration_claims(
