@@ -134,6 +134,88 @@ different emotional angles, one artifact. He is not writing more, he is re-aimin
 interactive sim site, a Vercel summary site, plus a print PDF. Same content, many
 doors.
 
+## 4.5 Why it actually spreads
+
+First, a correction to the framing. **His papers do not go viral.** No Hacker News
+thread, no physics-forum debate, no peer critique surfaced in any search. The
+papers and the 4,300 Lean theorems are ballast, not payload. What spreads is a
+one-line reframe, and the largest number attached to any of it (78.4M) was bought,
+not earned. The honest organic proof points are much smaller: 654 repo stars, a
+YouTube playlist, and diffusion into non-physics corners (a fine-art drawing blog
+posted about Observer Patch Holography in April 2026).
+
+So the spread is consumer-side, not peer-side. Six devices do the work.
+
+**1. The status-inversion sentence.** Verbatim from the README:
+
+> "Physics has revised its idea of what is fundamental before. Space was absolute
+> until it was relative; matter was continuous until it was quantized. Each revision
+> looked outrageous from inside the previous picture and obvious from inside the
+> next one. OPH makes the next revision."
+
+This is pre-emptive immunization. It tells the reader in advance that finding the
+claim absurd is the *expected* reaction of someone standing on the wrong side of
+history. Skepticism gets converted into evidence for the claim. It is the single
+highest-leverage rhetorical structure in his entire corpus, and it costs nothing.
+
+**2. He wrote the theory of his own distribution.** In 2022 he published *The
+Selfish Meme: A Simulation Theory of Everything*, taking Dawkins' replicators to
+the extreme: culture as variation and selection, ideas as things that survive by
+being copyable. His actual research subject is how ideas self-replicate. That does
+not prove his publishing is engineered, but it explains why it looks engineered.
+He is running his own theory on his own output.
+
+**3. Format arbitrage: dorm-room idea plus institutional armor.** "We're in a
+simulation" is among the most-shared ideas on the internet and carries zero status.
+Lean-checked theorems carry status and zero reach. Neither half spreads on its own.
+Bolting them together produces a claim a general audience can repeat at a party and
+cannot easily dismiss. **The seam is the product.** That is the transferable
+insight, not the physics.
+
+**4. Falsifiability used offensively, not defensively.** "40 hard OPH-killing
+outcomes." From the README: *"A mismatch with the Standard Model is an allowed
+outcome rather than something the protocol may tune away."* This does three jobs
+simultaneously. It reads as maximally scientific. It makes attacking him expensive,
+since a critic now has to engage his list rather than wave him off. And it
+manufactures argument, which is distribution. Worth noting coldly: none of the 40
+killers will be observed this quarter, so the posture is rhetorically potent and
+practically unfalsifiable on any timescale that matters.
+
+**5. Initiation framing on the consumer layer.** Verbatim:
+
+> "Once you 'glitch' outside the matrix for the first time, and understand the
+> fundamental thinking error everyone makes, a process starts. Every day, you see
+> the true reality a little clearer. Little steps. Start the process now. It's time."
+
+That is not science communication. It is a conversion sequence: a promise of ongoing
+revelation, staged progress, and personal transformation. It turns a reader into a
+returning reader. This is the device that most explains the mass-audience numbers,
+and it is also the one we must not touch (see below).
+
+**6. Zero friction, zero paywall, many doors.** An 800-page book free on the web,
+a print PDF, a public repo, a simulation site, a YouTube playlist, Telegram and X
+bots. Nothing is for sale, which removes the obvious motive attack, and every format
+is an independent entry point.
+
+### What transfers to us, and what does not
+
+**Take:** the status-inversion sentence (we have a real one available: every field
+that got serious made its practitioners record predictions before the outcome, and
+AI has not yet). The falsification list as an offensive asset, where ours is
+strictly stronger because our killers resolve in weeks rather than never. The format
+arbitrage, where our seam is "stated AI confidence is a marketing number" bolted to
+a hash any reader can verify in 30 seconds. Zero friction.
+
+**Do not take:** the initiation register. "Exit the matrix" language would falsify
+our product. Our entire claim is that we do not overclaim, and the honesty floor is
+the asset. One post in that voice costs more than it earns.
+
+**The strategic fact underneath all of it:** he has built reach without
+adjudication. Nobody scores him, and by design nobody can for decades. We are
+building adjudication without reach. Those two meet in exactly one place, which is
+franchise C: pointing a working scoreboard at claims that currently enjoy reach and
+no score. That is why the teardown series is the growth engine and not a side quest.
+
 ## 5. Does he pay for ads: yes, and here is the evidence
 
 Post `x.com/muellerberndt/status/2040766214193250750`, dated 2026-04-05:
