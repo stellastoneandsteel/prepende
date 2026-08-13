@@ -99,7 +99,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/engram",
-      "sha256": "f8f09c2bea8bea020cf2d60e9d471f96324cf641d737c0f180a4b812e8e65770",
+      "sha256": "71e887759b93401f73309b60f71d79ec5b7fa32df121abe46bfbe0be190eb2fb",
       "sourcePaths": [
         "bin/engram"
       ]
@@ -1011,7 +1011,7 @@
     {
       "mode": "100644",
       "outputPath": "operations/operational_status.py",
-      "sha256": "5785afde5c7b26ee5e543e1cba90c29acc40c9e4efab02af4621684083a7b47f",
+      "sha256": "c0ae4109f73d6d3eee6fa863f569688308c8b9d4aa83536459eb58b148b2b146",
       "sourcePaths": [
         "operations/operational_status.py"
       ]
@@ -1051,7 +1051,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "25d6b7efab1876dbf816da6374158efc6f736065595d6e54416b721ed54f9d7f",
+      "sha256": "7674592d43886c42a125d48aa63a0358ec1d7cb1d71beee1c0a005dcace18e72",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1307,7 +1307,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "b3e532f1bb858df23d41da767bd5d2a2b1d255255c91e8c03b0976e54789ae43",
+      "sha256": "fdcac65959b3abafc457f131defe4b7c7de91563285024591a259b1118f6f504",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]
@@ -1618,6 +1618,14 @@
     },
     {
       "mode": "100644",
+      "outputPath": "tests/smoke_fast_lane_provider_independence.py",
+      "sha256": "47902f9423b0edaa0ef2aac5f0f8d7b407e4e442684298bcec50e96385d3b6cd",
+      "sourcePaths": [
+        "tests/smoke_fast_lane_provider_independence.py"
+      ]
+    },
+    {
+      "mode": "100644",
       "outputPath": "tests/smoke_graphify_recall.py",
       "sha256": "9662d48f89ef47aa872988218a773abe78da890755afc393c0e7c1c78e845dcf",
       "sourcePaths": [
@@ -1763,7 +1771,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_operational_status.py",
-      "sha256": "3f1c0042f1883a1a5cc89c7ae0038cb41b76386561f12f0bf8da5ab28f07c0cd",
+      "sha256": "5152bc06191ebbe0bafe0f428f78a5410c411728012f44edf360d9ca8ea11a97",
       "sourcePaths": [
         "tests/smoke_operational_status.py"
       ]

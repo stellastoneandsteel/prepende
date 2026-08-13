@@ -69,6 +69,7 @@
     "tests/smoke_context_fast.py",
     "tests/smoke_continuity_v2.py",
     "tests/smoke_embedding_opt_in.py",
+    "tests/smoke_fast_lane_provider_independence.py",
     "tests/smoke_graphify_recall.py",
     "tests/smoke_kernel_cli.py",
     "tests/smoke_knowledge_converge.py",
