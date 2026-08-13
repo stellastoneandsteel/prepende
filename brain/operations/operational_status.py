@@ -240,6 +240,47 @@ def _collect_brain(root: Path, scope: str, _python: Path) -> dict[str, Any]:
     }
 
 
+def build_fast_context_status(*, root: Path, scope: str) -> dict[str, Any]:
+    """Return the model-free subset consumed by ``context-fast``.
+
+    This keeps the fast lane on direct, read-only inspection instead of
+    constructing the full kernel composition root just to obtain status.
+    """
+
+    brain = _collect_brain(root, scope, Path(sys.executable))
+    knowledge = brain["knowledge"]
+    graphify = brain["graphify"]
+    connectors = brain["connectors"]
+    return {
+        "scope": scope,
+        "model": "skipped",
+        "knowledge": {
+            "pages": int(knowledge.get("discoveredSources", 0) or 0),
+            "titles": [],
+            "rag": {
+                "source_files": int(knowledge.get("discoveredSources", 0) or 0),
+                "indexed_files": int(knowledge.get("indexedSources", 0) or 0),
+                "chunks": int(knowledge.get("chunks", 0) or 0),
+                "lexical_ready": bool(knowledge.get("lexicalReady")),
+                "semantic_ready": bool(knowledge.get("semanticReady")),
+                "stale": bool(knowledge.get("stale")),
+            },
+            "graphify": {
+                "ready": graphify.get("status") == "ready",
+                "reason": graphify.get("reason"),
+            },
+        },
+        "connectors": {
+            "tools": int(connectors.get("available", 0) or 0),
+            "ready": int(connectors.get("ready", 0) or 0),
+        },
+        "fastLane": {
+            "modelCall": False,
+            "liveProviderCall": False,
+        },
+    }
+
+
 def _collect_protocol(path: Path | None, configured_by: str, private_root: Path) -> dict[str, Any]:
     embedded = private_root / "prepende"
     embedded_version = None

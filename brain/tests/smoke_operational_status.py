@@ -215,7 +215,16 @@ def _offline_brain_collection_is_byte_identical(temp: Path) -> None:
         }
 
     before = tree_snapshot()
-    report = status._collect_brain(temp, "scope-a", Path(sys.executable))
+    with mock.patch.dict(
+        os.environ,
+        {
+            "VAULT_PATH": "",
+            "MEMORY_DB": "",
+            "VAULT_INDEX_PATH": "",
+            "GRAPHIFY_GRAPH": "",
+        },
+    ):
+        report = status._collect_brain(temp, "scope-a", Path(sys.executable))
     after = tree_snapshot()
     assert report["status"] == "ready", report
     assert before == after, "offline brain collector changed repository/runtime bytes"
