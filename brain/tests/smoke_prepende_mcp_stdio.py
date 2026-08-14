@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import os
 import sqlite3
+import sys
 import tempfile
 from pathlib import Path
 
@@ -28,20 +29,39 @@ except ImportError:
         os.execv(str(venv_py), [str(venv_py), os.path.abspath(__file__)])
     raise SystemExit("mcp package missing: python3.10+ and `.venv/bin/pip install mcp` required")
 
-EXPECTED_TOOLS = {
-    "account",
-    "chat",
-    "knowledge_related",
-    "knowledge_search",
-    "list_workflows",
-    "memory_candidates",
-    "memory_propose",
-    "memory_reject",
-    "memory_search",
-    "pursue_goal",
-    "remember",
-    "run_workflow",
+sys.path.insert(0, str(ROOT))
+from interface.mcp_scope import ALL_TOOLS, SAFE_TOOLS  # noqa: E402
+from interface.mcp_server import _TOOL_CONTRACTS  # noqa: E402
+
+EXPECTED_TOOLS = set(ALL_TOOLS)
+
+READ_ONLY_TOOLS = {
+    name
+    for name, contract in _TOOL_CONTRACTS.items()
+    if contract["annotations"].readOnlyHint
 }
+DESTRUCTIVE_TOOLS = {
+    name
+    for name, contract in _TOOL_CONTRACTS.items()
+    if contract["annotations"].destructiveHint
+}
+OPEN_WORLD_TOOLS = {
+    name
+    for name, contract in _TOOL_CONTRACTS.items()
+    if contract["annotations"].openWorldHint
+}
+
+
+def _expected_tools(capabilities: str) -> set[str]:
+    if capabilities == "all":
+        return set(EXPECTED_TOOLS)
+    if capabilities in {"safe", "untrusted"}:
+        return set(SAFE_TOOLS)
+    return {
+        name.strip()
+        for name in capabilities.split(",")
+        if name.strip() in EXPECTED_TOOLS
+    }
 
 
 async def _with_session(env: dict[str, str], capabilities: str, exercise) -> None:
@@ -69,7 +89,16 @@ async def _with_session(env: dict[str, str], capabilities: str, exercise) -> Non
             initialized = await session.initialize()
             assert initialized.serverInfo.name == "prepende", initialized.serverInfo
             listed = await session.list_tools()
-            assert {tool.name for tool in listed.tools} == EXPECTED_TOOLS, listed.tools
+            assert {tool.name for tool in listed.tools} == _expected_tools(capabilities), listed.tools
+            for tool in listed.tools:
+                assert tool.title, tool
+                assert tool.description and tool.description.startswith("Use this when"), tool
+                assert tool.annotations is not None, tool
+                assert tool.annotations.readOnlyHint is (tool.name in READ_ONLY_TOOLS), tool
+                assert tool.annotations.destructiveHint is (tool.name in DESTRUCTIVE_TOOLS), tool
+                assert tool.annotations.idempotentHint is (tool.name in READ_ONLY_TOOLS), tool
+                assert tool.annotations.openWorldHint is (tool.name in OPEN_WORLD_TOOLS), tool
+                assert not tool.inputSchema.get("additionalProperties", True), tool
             await exercise(session)
 
 
@@ -109,10 +138,7 @@ async def main() -> None:
                     "scope": "prepende-capability-test",
                     "principalId": account.structuredContent["principalId"],
                     "principalFingerprint": account.structuredContent["principalFingerprint"],
-                    "capabilities": sorted({
-                        "account", "chat", "knowledge_related", "knowledge_search",
-                        "memory_candidates", "memory_propose", "memory_search", "pursue_goal",
-                    }),
+                    "capabilities": sorted(SAFE_TOOLS),
                     "identity": "mcp",
                     "model": "echo",
                     "deploymentRevision": "stdio-smoke-1",
@@ -185,7 +211,7 @@ async def main() -> None:
             denied = await session.call_tool(
                 "remember", {"content": "this write must be capability-gated"}
             )
-            assert denied.structuredContent["httpStatus"] == 403, denied.structuredContent
+            assert denied.isError is True, denied
 
             gated = await session.call_tool(
                 "chat", {"message": "send the invoice to the client now"}
@@ -215,7 +241,7 @@ async def main() -> None:
             denied = await session.call_tool(
                 "remember", {"content": "this write remains denied without remember"}
             )
-            assert denied.structuredContent["httpStatus"] == 403, denied.structuredContent
+            assert denied.isError is True, denied
 
             loop_chat = await session.call_tool(
                 "chat",
@@ -320,7 +346,8 @@ async def main() -> None:
 
     print("PREPENDE MCP STDIO SMOKE: OK")
     print("  handshake       : serverInfo.name=prepende")
-    print("  tools           : 12 listed; approval/import absent")
+    print("  tools           : discovery filtered to each stdio capability set")
+    print("  annotations     : titles, descriptions, and safety hints explicit")
     print("  chat memory     : candidate-only when allowed; otherwise no state change")
     print("  durable memory  : one write only through capability-gated remember")
     print("  owner boundary  : approval/import unlisted and uncallable")

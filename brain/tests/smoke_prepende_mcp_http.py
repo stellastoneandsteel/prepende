@@ -15,6 +15,7 @@ import os
 import socket
 import sqlite3
 import subprocess
+import sys
 import tempfile
 import time
 from pathlib import Path
@@ -22,28 +23,17 @@ from pathlib import Path
 import httpx
 from mcp import ClientSession
 from mcp.client.streamable_http import streamable_http_client
-
-
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from interface.mcp_scope import ALL_TOOLS  # noqa: E402
+
+
 NO_PROPOSE_TOKEN = "tok-http-no-propose-fixture-0123456789abcdef"
 PROPOSE_TOKEN = "tok-http-propose-fixture-0123456789abcdef"
 REMEMBER_TOKEN = "tok-http-remember-fixture-0123456789abcdef"
 ALL_TOKEN = "tok-http-all-fixture-0123456789abcdef"
 CONTROL_TOKEN = "tok-http-control-fixture-0123456789abcdef"
-EXPECTED_TOOLS = {
-    "account",
-    "chat",
-    "knowledge_related",
-    "knowledge_search",
-    "list_workflows",
-    "memory_candidates",
-    "memory_propose",
-    "memory_reject",
-    "memory_search",
-    "pursue_goal",
-    "remember",
-    "run_workflow",
-}
+EXPECTED_TOOLS = set(ALL_TOOLS)
 
 
 def _free_port() -> int:
