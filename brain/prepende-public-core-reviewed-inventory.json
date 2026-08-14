@@ -99,7 +99,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/engram",
-      "sha256": "71e887759b93401f73309b60f71d79ec5b7fa32df121abe46bfbe0be190eb2fb",
+      "sha256": "86ea995bc568a66d2622ce6e26d81b914177548a88af6e69766e85b68462ce75",
       "sourcePaths": [
         "bin/engram"
       ]
@@ -250,6 +250,14 @@
     },
     {
       "mode": "100644",
+      "outputPath": "docs/TENANT-STANDUP.md",
+      "sha256": "38077285cf4086feca571c0693878c7ddf479f4123f3426e3611663198c96bd2",
+      "sourcePaths": [
+        "docs/TENANT-STANDUP.md"
+      ]
+    },
+    {
+      "mode": "100644",
       "outputPath": "interface/__init__.py",
       "sha256": "4ac18d85a4374454fe65d46f47d319ea8f1f511ac767d81fd2c76833e4adba9d",
       "sourcePaths": [
@@ -315,7 +323,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_scope.py",
-      "sha256": "0ba8617bd9c33867c06c2b9c967755a11f2cb9d1f0be4d23edb7976d2f8f02a5",
+      "sha256": "18f38f73953fb948e9ceb1b8a62288ef952f956b54e00b0e6be4f5b8a09c3542",
       "sourcePaths": [
         "interface/mcp_scope.py"
       ]
@@ -323,7 +331,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_server.py",
-      "sha256": "34e9a11b216003b498995d00de997d3b3104b0c127fb64a6b85e91d8cb389037",
+      "sha256": "f19646f815c78a25ae45343674b197412a57130065fe64344db71c6143601f32",
       "sourcePaths": [
         "interface/mcp_server.py"
       ]
@@ -331,7 +339,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/operator_receipts.py",
-      "sha256": "63c9458a48b7ff2128929136602ebaa961f343ad6bb6658c27742d9337ff6b88",
+      "sha256": "1044eaf84a1f23716fcb0974a14baaebecd63163eab062695d9c38773f54e364",
       "sourcePaths": [
         "interface/operator_receipts.py"
       ]
@@ -627,7 +635,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/scope.py",
-      "sha256": "51b30601ba4d6708c655e72cf32a0e8843d0b37c2a313006e18ad9627daf38cf",
+      "sha256": "9ad1740f6d18de9df15601dbd08012bf387ea4aa816cee7fe86d568d3fa6bb65",
       "sourcePaths": [
         "kernel/core/scope.py"
       ]
@@ -1051,7 +1059,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "7674592d43886c42a125d48aa63a0358ec1d7cb1d71beee1c0a005dcace18e72",
+      "sha256": "003d25ec75dd3f3de10df191d26c98654595474f98cc38b716a8ea0055cfa810",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1115,7 +1123,7 @@
     {
       "mode": "100644",
       "outputPath": "prompts/evals/hermes_processing_layer_fixtures.md",
-      "sha256": "aeaf2423280ec61fc26f419623abd9a621ec57989cc39b64d791bae9823e173e",
+      "sha256": "d98af843f9cb31991bdd370fee4deb0174d0bac080aecee8e125f0e770f4a6ec",
       "sourcePaths": [
         "prompts/evals/hermes_processing_layer_fixtures.md"
       ]
@@ -1290,6 +1298,14 @@
     },
     {
       "mode": "100755",
+      "outputPath": "scripts/standup_tenant.sh",
+      "sha256": "7437d8345bf6db05edbcee9097e0d6f6fa92e066803729e913bcd73ba85fb24b",
+      "sourcePaths": [
+        "scripts/standup_tenant.sh"
+      ]
+    },
+    {
+      "mode": "100755",
       "outputPath": "scripts/update_prepende_export_inventory.py",
       "sha256": "f6e61f92d6177c5d8440505db351520250d7bcfc926811b9820fc7799f9388a9",
       "sourcePaths": [
@@ -1355,7 +1371,7 @@
     {
       "mode": "100644",
       "outputPath": "self_improve/store.py",
-      "sha256": "92956bb6392568fddc509335837ce4f44a4b5446caa3262b41c9b287ba8aec05",
+      "sha256": "5471aa75f1a185ef59794c2371ff5d3f5ab0ec2768b5143712ac7943abbc27fe",
       "sourcePaths": [
         "self_improve/store.py"
       ]
@@ -1667,7 +1683,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_mcp.py",
-      "sha256": "e13717f4990e2c857b43c1f7f4cf5c0cac2709bf436cb50189f0758cbe71f5d2",
+      "sha256": "eac1f36342437342875ff41904e176c26d12f1cbfaded6ded5fe4ddcbd10cce7",
       "sourcePaths": [
         "tests/smoke_mcp.py"
       ]
@@ -1683,7 +1699,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_mcp_capabilities.py",
-      "sha256": "a9a5437a576e3b291e0f5eddec85f016a16ee67a6d8cb0a79d3e47eac60ef30b",
+      "sha256": "7dbbdf8bdff2a728cc3a6b0077c239effb58e0d24da24e80bcbfd252b29fceed",
       "sourcePaths": [
         "tests/smoke_mcp_capabilities.py"
       ]
@@ -1819,7 +1835,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_prepende_mcp_http.py",
-      "sha256": "3543c7e3bcdcebfebcfea6cc92a5c7e962d69f71b6c61c86aa3f6d75f062dc3b",
+      "sha256": "465a95297acb7ecdaa30d18182faed62a4184afa6e2169c02afa53d180fcad3d",
       "sourcePaths": [
         "tests/smoke_prepende_mcp_http.py"
       ]
@@ -1827,7 +1843,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_prepende_mcp_stdio.py",
-      "sha256": "41c593ca62f4f80bcd5b7b1b2514b758522664980cfd9f34989674af08b4759d",
+      "sha256": "78ce003ec092907926856abeb421e35bcf18831879fcf0b2fda258c5b82d9689",
       "sourcePaths": [
         "tests/smoke_prepende_mcp_stdio.py"
       ]
@@ -1902,6 +1918,14 @@
       "sha256": "9861507b5b8eca5f07df6323ac3a00747a506290eccc6cc136f0fa4b45eaf4bb",
       "sourcePaths": [
         "tests/smoke_reviewed_knowledge_bundle.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "tests/smoke_standup_tenant_preflight.py",
+      "sha256": "6be49ac702bd999510eff33b1187ae55c5a844cee97c0c8250d04f751afa93af",
+      "sourcePaths": [
+        "tests/smoke_standup_tenant_preflight.py"
       ]
     },
     {

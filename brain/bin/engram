@@ -542,8 +542,12 @@ def mcp(args: list[str]) -> int:
         env["PREPENDE_MCP_PORT"] = port
         env["ENGRAM_MCP_PORT"] = port
     module = "interface.mcp_preflight" if preflight else "interface.mcp_server"
-    proc = subprocess.run([str(PYTHON), "-m", module], cwd=ROOT, env=env)
-    return proc.returncode
+    # MCP clients own this process through stdio or explicit HTTP lifecycle
+    # signals. Replace the compatibility CLI in-place so a client EOF or
+    # terminate reaches the actual server instead of stranding a child behind
+    # a waiting wrapper.
+    os.chdir(ROOT)
+    os.execve(str(PYTHON), [str(PYTHON), "-m", module], env)
 
 
 def knowledge(args: list[str]) -> int:

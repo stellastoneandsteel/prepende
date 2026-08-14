@@ -230,14 +230,33 @@ class OperatorReceiptStore:
         self._event(current, "finished")
         return {**current, "receiptPath": str(self._path(receipt_id).resolve())}
 
-    def latest(self, limit: int = 10) -> list[dict[str, Any]]:
+    def latest(
+        self,
+        limit: int = 10,
+        *,
+        scope: str | None = None,
+        workspace: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """Return newest receipts, optionally constrained to one identity lane."""
+
+        if scope is not None:
+            scope = _scope(scope, "scope")
+        if workspace is not None:
+            workspace = _scope(workspace, "workspace")
+        bounded_limit = max(1, min(int(limit), 50))
         files = sorted(
             (path for path in self.root.glob("op_*.json") if not path.name.endswith("-sandbox-output.json")),
             key=lambda path: path.stat().st_mtime,
             reverse=True,
         )
         out = []
-        for path in files[: max(1, min(int(limit), 50))]:
+        for path in files:
             value = json.loads(path.read_text(encoding="utf-8"))
+            if scope is not None and value.get("scope") != scope:
+                continue
+            if workspace is not None and value.get("workspace") != workspace:
+                continue
             out.append({**value, "receiptPath": str(path.resolve())})
+            if len(out) >= bounded_limit:
+                break
         return out

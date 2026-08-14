@@ -176,7 +176,7 @@ class SelfImprovementStore:
                 raise ValueError("candidate run scope mismatch or run is not active")
             c.execute(
                 "INSERT INTO improvement_candidates "
-                "(id,run_id,tenant_id,workspace_id,prompt_id,previous_version,candidate_version,kind,"
+                "(id,run_id,tenant_id,workspace_id,prompt_id,previous_version,candidate_version,kind," 
                 "candidate_better,status,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                 (
                     candidate_id, run_id, scope.tenant_id, scope.workspace_id,
