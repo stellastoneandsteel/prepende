@@ -38,6 +38,13 @@ def main() -> None:
     with tempfile.TemporaryDirectory(prefix="prepende_operator_") as tmp:
         receipts = Path(tmp) / "receipts"
         candidates = Path(tmp) / "candidates.db"
+        empty_index = Path(tmp) / "empty-vault-index.db"
+        with sqlite3.connect(empty_index) as conn:
+            conn.execute(
+                "CREATE TABLE source_files ("
+                "path TEXT, mtime_ns INTEGER, size INTEGER, content_hash TEXT)"
+            )
+            conn.execute("CREATE TABLE chunks (embedding BLOB)")
         env = {
             **os.environ,
             "MODEL_PROVIDER": "echo",
@@ -46,6 +53,7 @@ def main() -> None:
             "RUNS_DB": str(Path(tmp) / "runs.db"),
             "WORKSPACE_ROOT": str(Path(tmp) / "workspaces"),
             "VAULT_PATH": str(Path(tmp) / "vault"),
+            "VAULT_INDEX_PATH": str(empty_index),
             "PREPENDE_OPERATOR_CANDIDATES_DB": str(candidates),
         }
         started = run([
@@ -54,9 +62,15 @@ def main() -> None:
             "--scope", "tenant-alpha",
             "--workspace", "tenant-alpha",
             "--operator", "smoke",
+            "--profile", "coding",
         ], env)
         assert started["status"] == "started"
         assert started["preflight"]["ok"] is True
+        assert started["preflight"]["profile"] == "coding"
+        assert started["preflight"]["ready"] is True
+        assert started["preflight"]["transportOk"] is True
+        assert started["preflight"]["continuityReady"] is True
+        assert started["preflight"]["planReady"] is True
         assert started["lane"] == "direct"
         assert started["learning"]["durableMemoryWrite"] is False
 
@@ -84,6 +98,7 @@ def main() -> None:
             "--scope", "tenant-alpha",
             "--workspace", "tenant-alpha",
             "--operator", "smoke",
+            "--profile", "coding",
         ], env)
         action_finished = run([
             "--receipts-dir", str(receipts),
@@ -93,6 +108,7 @@ def main() -> None:
             "--outcome", "Operator action receipt smoke passed.",
             "--learning", "Executed external actions require explicit stable identifiers in the terminal receipt.",
             "--evidence", "release receipt with commit and deploy identifiers",
+            "--check", "release receipt validated",
             "--external-action", "git_push",
             "--external-action", "pull_request_merge",
             "--external-action", "production_deploy",
@@ -121,6 +137,7 @@ def main() -> None:
             "--scope", "tenant-alpha",
             "--workspace", "tenant-alpha",
             "--operator", "smoke",
+            "--profile", "coding",
         ], env)
         with sqlite3.connect(candidates) as conn:
             candidate_count_before_invalid = conn.execute("SELECT COUNT(*) FROM candidates").fetchone()[0]
@@ -144,6 +161,7 @@ def main() -> None:
             "--scope", "tenant-alpha",
             "--workspace", "tenant-alpha",
             "--operator", "smoke",
+            "--profile", "coding",
         ], env)
         unsupported = run([
             "--receipts-dir", str(receipts),
@@ -171,6 +189,20 @@ def main() -> None:
         assert proof_by_id[action_started["receiptId"]]["externalActions"] == action_finished["externalActions"]
         assert proof_by_id[invalid_started["receiptId"]]["status"] == "started"
         assert proof_by_id[unsupported_started["receiptId"]]["status"] == "started"
+
+        receipt_count_before_block = len(list(receipts.glob("op_*.json")))
+        blocked = run([
+            "--receipts-dir", str(receipts),
+            "start", "Reject an unready general preflight",
+            "--scope", "tenant-alpha",
+            "--workspace", "tenant-alpha",
+            "--operator", "smoke",
+            "--profile", "general",
+        ], env, expected_returncode=1)
+        assert blocked["status"] == "blocked"
+        assert blocked["receiptCreated"] is False
+        assert blocked["preflight"]["verdict"]["continuityReady"] is False
+        assert len(list(receipts.glob("op_*.json"))) == receipt_count_before_block
 
         # A sandbox output artifact must not be mistaken for another receipt.
         (receipts / f"{started['receiptId']}-sandbox-output.json").write_text("{}\n")

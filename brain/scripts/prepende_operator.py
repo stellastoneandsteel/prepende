@@ -25,6 +25,7 @@ from interface.operator_receipts import (  # noqa: E402
 )
 from kernel.core.intake import scan_intake  # noqa: E402
 from memory.candidates import CandidateQueue, default_queue  # noqa: E402
+from operations.continuity import SUPPORTED_PROFILES  # noqa: E402
 
 
 def _json_output(value: Any) -> None:
@@ -43,9 +44,18 @@ def _candidate_queue() -> Any:
     return CandidateQueue(str(candidate_path))
 
 
-def _preflight(goal: str, scope: str) -> dict[str, Any]:
+def _preflight(goal: str, scope: str, profile: str) -> dict[str, Any]:
     proc = subprocess.run(
-        [str(ROOT / "bin" / "prepende"), "context-fast", goal, "--json", "--scope", scope],
+        [
+            str(ROOT / "bin" / "prepende"),
+            "context-fast",
+            goal,
+            "--json",
+            "--scope",
+            scope,
+            "--profile",
+            profile,
+        ],
         cwd=ROOT,
         capture_output=True,
         text=True,
@@ -57,6 +67,7 @@ def _preflight(goal: str, scope: str) -> dict[str, Any]:
         payload = {
             "ok": False,
             "scope": scope,
+            "profile": profile,
             "externalActions": [],
             "actionExecuted": False,
             "error": "context-fast did not return JSON",
@@ -65,6 +76,31 @@ def _preflight(goal: str, scope: str) -> dict[str, Any]:
     if proc.returncode != 0:
         payload["ok"] = False
     return payload
+
+
+def _preflight_ready(preflight: Any, *, scope: str, profile: str) -> bool:
+    if not isinstance(preflight, dict):
+        return False
+    verdict = preflight.get("verdict")
+    return bool(
+        preflight.get("ok") is True
+        and preflight.get("scope") == scope
+        and preflight.get("profile") == profile
+        and isinstance(verdict, dict)
+        and verdict.get("transportOk") is True
+        and verdict.get("continuityReady") is True
+        and verdict.get("planReady") is True
+    )
+
+
+def _blocked_preflight(preflight: Any) -> dict[str, Any]:
+    return {
+        "ok": False,
+        "status": "blocked",
+        "receiptCreated": False,
+        "error": "Prepende context-fast did not authorize operator work.",
+        "preflight": preflight,
+    }
 
 
 async def _stage_learning(scope: str, receipt_id: str, content: str) -> dict[str, Any]:
@@ -109,7 +145,13 @@ async def _stage_learning(scope: str, receipt_id: str, content: str) -> dict[str
 
 
 def cmd_start(args: argparse.Namespace) -> int:
-    preflight = _preflight(args.goal, args.scope)
+    preflight = _preflight(args.goal, args.scope, args.profile)
+    preflight["ready"] = _preflight_ready(
+        preflight, scope=args.scope, profile=args.profile
+    )
+    if not preflight["ready"]:
+        _json_output(_blocked_preflight(preflight))
+        return 1
     receipt = OperatorReceiptStore(args.receipts_dir).start(
         goal=args.goal,
         scope=args.scope,
@@ -120,7 +162,7 @@ def cmd_start(args: argparse.Namespace) -> int:
         cwd=str(ROOT),
     )
     _json_output(receipt)
-    return 0 if preflight.get("ok") else 1
+    return 0
 
 
 def cmd_finish(args: argparse.Namespace) -> int:
@@ -173,8 +215,14 @@ def sandbox_message(goal: str) -> str:
 
 
 def cmd_sandbox(args: argparse.Namespace) -> int:
+    preflight = _preflight(args.goal, args.scope, args.profile)
+    preflight["ready"] = _preflight_ready(
+        preflight, scope=args.scope, profile=args.profile
+    )
+    if not preflight["ready"]:
+        _json_output(_blocked_preflight(preflight))
+        return 1
     store = OperatorReceiptStore(args.receipts_dir)
-    preflight = _preflight(args.goal, args.scope)
     receipt = store.start(
         goal=args.goal,
         scope=args.scope,
@@ -195,7 +243,7 @@ def cmd_sandbox(args: argparse.Namespace) -> int:
         "resultPath": None,
     }
     store.update_sandbox(receipt_id, probe_state)
-    if not preflight.get("ok") or probe.returncode != 0:
+    if probe.returncode != 0:
         final = store.finish(
             receipt_id,
             status="blocked",
@@ -309,6 +357,7 @@ def parser() -> argparse.ArgumentParser:
     start.add_argument("--workspace")
     start.add_argument("--lane", choices=("direct", "sandbox"), default="direct")
     start.add_argument("--operator", default="codex")
+    start.add_argument("--profile", choices=tuple(sorted(SUPPORTED_PROFILES)), default="general")
     start.set_defaults(func=cmd_start)
 
     finish = sub.add_parser("finish")
@@ -331,6 +380,7 @@ def parser() -> argparse.ArgumentParser:
     sandbox.add_argument("--scope", default=DEFAULT_SCOPE)
     sandbox.add_argument("--workspace")
     sandbox.add_argument("--operator", default="codex")
+    sandbox.add_argument("--profile", choices=tuple(sorted(SUPPORTED_PROFILES)), default="general")
     sandbox.add_argument("--sandbox", default="openclaw-sandbox")
     sandbox.add_argument("--agent", default="main")
     sandbox.add_argument("--timeout", type=int, default=1800)
