@@ -168,6 +168,8 @@ def _allowed(relative: str, policy: dict[str, object]) -> bool:
     excluded = tuple(str(value) for value in policy.get("excludePrefixes", []))
     if any(relative.startswith(prefix) for prefix in excluded):
         return False
+    if relative in {str(value) for value in policy.get("privateOverlayFiles", [])}:
+        return False
     if relative in {str(value) for value in policy.get("excludeFiles", [])}:
         return False
     included_files = {str(value) for value in policy.get("includeFiles", [])}
