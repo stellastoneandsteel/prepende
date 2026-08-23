@@ -530,7 +530,7 @@
     {
       "mode": "0644",
       "path": "models/cli.py",
-      "sha256": "2ff064dc9e1abc715bc7ff7ab388594a71667feffe757e83b843dbae968ad2c5"
+      "sha256": "854d02c914d2cf43483798b3743077392b580d8ed2dddd5b7743ed62bff35807"
     },
     {
       "mode": "0644",
@@ -595,7 +595,7 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "7ebe23c2c34303ec4405e014b2982a330d7c3c62835719d895a74b15ab28cd9e"
+      "sha256": "aca0005f98a42a3af1df3c4ef840f967a86b45460616827e16925ad7a0cf85b1"
     },
     {
       "mode": "0644",
@@ -885,7 +885,7 @@
     {
       "mode": "0644",
       "path": "tests/smoke_cli_gateway.py",
-      "sha256": "c7360739770cac83f40572582c1744ee68a06f48f789ff8211b81442c3f01228"
+      "sha256": "38cda086b5589be81772b605d0fb628a9a8bf8a5b94c859ce805f625a9afe25a"
     },
     {
       "mode": "0644",
@@ -1166,7 +1166,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "7ebe23c2c34303ec4405e014b2982a330d7c3c62835719d895a74b15ab28cd9e",
+  "inventorySha256": "aca0005f98a42a3af1df3c4ef840f967a86b45460616827e16925ad7a0cf85b1",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1174,10 +1174,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 232
   },
-  "reviewedInventorySha256": "69397167eb946eb21cd244ab86414546ce3da446f915543bb6fef70fc6c13c19",
+  "reviewedInventorySha256": "b3ef8a2a26577e425674c037ff4b2e461e2ea777274b89a55631f15ea6ebc899",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "b21afd3d7747c49472987551a7686d3f8abfe3f8",
-  "sourceRevision": "ea0045b346a18bed77f477abebdb766eadb22078",
+  "sourceIndexTree": "7348fd6f420eb60895a59e9db196b8d5d8b9561a",
+  "sourceRevision": "f39115627e73fcf3c2f97f683372d040fc4c5521",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "ace2f75e64712aa56ee0e51dc8ec5b0ffc635a9cde89691705ca808ea3803ddd"
+  "sourceTreeSha256": "bc0c42277e9bbb3c2a4714b6d76a1e71dbae3f6cf7e756d50cb81504f6e99a49"
 }

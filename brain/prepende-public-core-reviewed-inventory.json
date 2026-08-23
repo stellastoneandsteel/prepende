@@ -843,7 +843,7 @@
     {
       "mode": "100644",
       "outputPath": "models/cli.py",
-      "sha256": "2ff064dc9e1abc715bc7ff7ab388594a71667feffe757e83b843dbae968ad2c5",
+      "sha256": "854d02c914d2cf43483798b3743077392b580d8ed2dddd5b7743ed62bff35807",
       "sourcePaths": [
         "models/cli.py"
       ]
@@ -1403,7 +1403,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_cli_gateway.py",
-      "sha256": "c7360739770cac83f40572582c1744ee68a06f48f789ff8211b81442c3f01228",
+      "sha256": "38cda086b5589be81772b605d0fb628a9a8bf8a5b94c859ce805f625a9afe25a",
       "sourcePaths": [
         "tests/smoke_cli_gateway.py"
       ]
