@@ -157,6 +157,7 @@ def evaluate_recovery_manifest(
     *,
     now: datetime | None = None,
     manifest_dir: Path | None = None,
+    expected_scope: str | None = None,
 ) -> dict[str, Any]:
     """Evaluate a cached manifest.  No checks are performed against live systems."""
 
@@ -171,6 +172,11 @@ def evaluate_recovery_manifest(
         }
     if manifest.get("schemaVersion") != RECOVERY_SCHEMA_VERSION:
         reasons.append("recovery_manifest_schema_mismatch")
+    manifest_scope = manifest.get("scope")
+    if not isinstance(manifest_scope, str) or not manifest_scope.strip():
+        reasons.append("recovery_manifest_scope_missing")
+    elif expected_scope is not None and manifest_scope != expected_scope:
+        reasons.append("recovery_manifest_scope_mismatch")
     receipt_set = manifest.get("receiptSet")
     if isinstance(receipt_set, dict):
         invalid_count = receipt_set.get("invalidCount", 0)
@@ -260,6 +266,7 @@ def evaluate_recovery_manifest(
     return {
         "proven": proven,
         "status": "proven" if proven else "unproven",
+        "scope": manifest.get("scope"),
         "generatedAt": manifest.get("generatedAt"),
         "expiresAt": manifest.get("expiresAt"),
         "manifestDigest": _digest(manifest),
@@ -269,19 +276,34 @@ def evaluate_recovery_manifest(
     }
 
 
-def load_recovery_evaluation(root: Path, *, now: datetime | None = None) -> tuple[dict[str, Any], dict[str, Any]]:
+def load_recovery_evaluation(
+    root: Path,
+    *,
+    scope: str,
+    now: datetime | None = None,
+) -> tuple[dict[str, Any], dict[str, Any]]:
     path = recovery_manifest_path(root)
     source = {"id": "recovery-manifest", "path": str(path), "available": path.is_file(), "observedAt": _iso(now or datetime.now(timezone.utc))}
     if not path.is_file():
-        return evaluate_recovery_manifest(None, now=now), source
+        return evaluate_recovery_manifest(None, now=now, expected_scope=scope), source
     try:
         manifest = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
-        result = evaluate_recovery_manifest({}, now=now, manifest_dir=path.parent)
+        result = evaluate_recovery_manifest(
+            {},
+            now=now,
+            manifest_dir=path.parent,
+            expected_scope=scope,
+        )
         result["reasons"] = [f"recovery_manifest_unreadable:{type(exc).__name__}"]
         return result, source
     source["digest"] = _digest(manifest)
-    return evaluate_recovery_manifest(manifest, now=now, manifest_dir=path.parent), source
+    return evaluate_recovery_manifest(
+        manifest,
+        now=now,
+        manifest_dir=path.parent,
+        expected_scope=scope,
+    ), source
 
 
 def _add_blocker(
@@ -320,7 +342,11 @@ def build_continuity_packet(
     repository = repository_snapshot(root)
     goal_hash = "sha256:" + hashlib.sha256(goal.encode("utf-8")).hexdigest()
     checkpoint = _latest_operator_receipt(root, scope, goal_hash)
-    recovery, recovery_source = load_recovery_evaluation(root, now=observed_now)
+    recovery, recovery_source = load_recovery_evaluation(
+        root,
+        scope=scope,
+        now=observed_now,
+    )
     blockers: list[dict[str, Any]] = []
 
     if not transport_ok:

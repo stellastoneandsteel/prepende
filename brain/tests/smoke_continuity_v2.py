@@ -68,6 +68,7 @@ def healthy_manifest(now: datetime, manifest_path: Path) -> dict:
     manifest, diagnostics = build_manifest(
         receipts_dir=receipts_dir,
         output_path=manifest_path,
+        scope="prepende-operations",
         now=now,
     )
     assert diagnostics["invalidReceiptCount"] == 0, diagnostics
