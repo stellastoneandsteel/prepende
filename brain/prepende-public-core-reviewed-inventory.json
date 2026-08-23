@@ -307,7 +307,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_scope.py",
-      "sha256": "c4f15d68024199eb0c832f55434a55038278bc316bf336bc88b249e3f1894f01",
+      "sha256": "ac0b2e6b1274bf3b2c020a89fd4db665b9e87b8ad031e3c5e75717e45721019b",
       "sourcePaths": [
         "interface/mcp_scope.py"
       ]

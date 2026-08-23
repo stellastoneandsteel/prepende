@@ -44,17 +44,16 @@ PRIVATE_SAFE_TOOLS = (
     if _private_mcp_tools is not None
     else frozenset()
 )
+PRIVATE_WRITE_TOOLS = (
+    frozenset(getattr(_private_mcp_tools, "WRITE_TOOLS", ()))
+    if _private_mcp_tools is not None
+    else frozenset()
+)
 OPERATOR_SAFE_TOOLS = frozenset({
     "operator_status",
 })
 OPERATOR_WRITE_TOOLS = frozenset({
     "operator_start", "operator_finish",
-})
-FRONTIER_SAFE_TOOLS = frozenset({
-    "goal_status", "brain_status", "daily_receipt",
-})
-FRONTIER_WRITE_TOOLS = frozenset({
-    "goal_start", "goal_resume", "goal_stop",
 })
 
 SAFE_TOOLS = frozenset({
@@ -62,12 +61,11 @@ SAFE_TOOLS = frozenset({
     "memory_candidates", "knowledge_search", "knowledge_related", "account",
     *PRIVATE_SAFE_TOOLS,
     *OPERATOR_SAFE_TOOLS,
-    *FRONTIER_SAFE_TOOLS,
 })
 WRITE_TOOLS = frozenset({
     "remember", "memory_reject", "run_workflow", "list_workflows",
     *OPERATOR_WRITE_TOOLS,
-    *FRONTIER_WRITE_TOOLS,
+    *PRIVATE_WRITE_TOOLS,
 })
 ALL_TOOLS = SAFE_TOOLS | WRITE_TOOLS
 
