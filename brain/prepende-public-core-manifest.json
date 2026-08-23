@@ -36,7 +36,6 @@
     "scripts/loop_benchmark.py",
     "scripts/production_loop_benchmark.py",
     "scripts/prove_prepende_live_react.py",
-    "scripts/verify_prepende_brain.py",
     "tactics/_context.py",
     "tactics/_receipt_json.py",
     "tactics/council.py",

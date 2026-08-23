@@ -947,7 +947,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "b8ae2f862f880f6e8a8a05abe62e287940405296df95eb1cd85090b462185a78",
+      "sha256": "c213cc227ec78346350e669c54e8fee1397bd7118b07244eff9e8e9ff58a3199",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1206,6 +1206,14 @@
       "sha256": "443fec8b0d0cef720b8b6550ba73bdc7c4f5843b966bac8811cbf11f4a575d84",
       "sourcePaths": [
         "scripts/update_prepende_public_core_inventory.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "scripts/verify_prepende_brain.py",
+      "sha256": "1f5d0f55f7e0dc7f9508cdc91a59fbb490dc7430f55e235e5521b9410ac59624",
+      "sourcePaths": [
+        "scripts/verify_prepende_brain.py"
       ]
     },
     {

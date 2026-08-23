@@ -64,6 +64,33 @@ BASELINE_SMOKES = (
 )
 
 _EXCLUSION_REASONS: dict[str, str] = {
+    "smoke_phase1_durable.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
+    "smoke_kernel_cli.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
+    "smoke_model_route.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
+    "smoke_meditation_tooluse.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
+    "smoke_loop_receipts.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
+    "smoke_embedding_opt_in.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
+    "smoke_mcp.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
+    "smoke_prepende_mcp_http.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
+    "smoke_prepende_mcp_stdio.py": (
+        "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
+    ),
     "smoke_standup_tenant_preflight.py": (
         "Reviewed conditional: this smoke validates an optional tenant preflight setup and "
         "runs only when the file exists."
@@ -143,6 +170,16 @@ def resolve_smoke_suite(root: Path) -> tuple[list[str], list[str], list[str], di
     executable = list(dict.fromkeys(executable))
     available = discover_smoke_files(root)
     available_set = set(available)
+    # A public-core export carries only the public suite. Smokes that exercise
+    # a private-overlay surface are absent there by design, so classify them as
+    # reviewed exclusions instead of reporting them missing -- but only in that
+    # profile, and only with a literal reason, so a genuinely missing smoke in
+    # any other tree still fails closed.
+    if public_core and not private_clone:
+        for name in list(executable):
+            if name not in available_set:
+                exclusions[name] = reviewed_exclusion(name)
+        executable = [name for name in executable if name in available_set]
     executable_set = set(executable)
     missing = [name for name in executable if name not in available_set]
     unregistered = [
