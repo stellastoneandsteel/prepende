@@ -310,7 +310,11 @@ class CliGateway(ModelGateway):
                     prompt, timeout, candidate, output_schema=output_schema,
                     system_prompt=system_prompt, tool_policy=tool_policy,
                 )
-                resolved = candidate if candidate and candidate != self.requested_model else None
+                # The candidate is placed explicitly on the CLI command line,
+                # so a successful call proves the actual model even when it is
+                # the preferred model. Reserve None for a genuinely
+                # CLI-managed/unknown selection.
+                resolved = candidate or None
                 return answer, resolved
             except Exception as exc:
                 last_error = exc
