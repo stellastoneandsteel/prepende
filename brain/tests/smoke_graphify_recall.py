@@ -116,10 +116,28 @@ async def main() -> None:
     assert status["newFileCheck"] == "verified" and status["sourceFiles"] == 1, status
     manifest = json.loads((out / "manifest.json").read_text(encoding="utf-8"))
     metadata = json.loads((out / "projection.json").read_text(encoding="utf-8"))
+    projection_manifest = json.loads(
+        (out / "projection-manifest.json").read_text(encoding="utf-8")
+    )
     assert all("vault/tenants" not in path for path in manifest), manifest
     assert metadata["scope"] == "owner" and metadata["files"] == ["wiki/rag-design.md"], metadata
     assert metadata["schemaVersion"] == 2 and metadata["buildId"] == status["buildId"], metadata
     assert metadata["sourceHashes"]["wiki/rag-design.md"] == sha256_file(source), metadata
+    assert projection_manifest["kind"] == "knowledge", projection_manifest
+    assert Path(projection_manifest["sourceRoot"]).resolve() == root.resolve()
+    assert projection_manifest["checksum"] == "sha256:" + sha256_file(out / "graph.json")
+    code_refresh_path = ROOT / "scripts" / "graphify_refresh.py"
+    if code_refresh_path.is_file():
+        code_refresh = code_refresh_path.read_text(encoding="utf-8")
+        assert 'OUT = ROOT / "graphify-out" / "code"' in code_refresh
+        assert '"kind": "code"' in code_refresh
+    for consumer_path in (
+        ROOT / "scripts" / "brain_slo_check.py",
+        ROOT / "scripts" / "recall_eval.py",
+    ):
+        if consumer_path.is_file():
+            consumer = consumer_path.read_text(encoding="utf-8")
+            assert "expected_root=cfg.vault" in consumer, consumer_path
     assert status["attestation"] == "graphify-content-addressed-cache", status
     print("OK finalized owner projection: exact source + graph + cache build identity sealed")
 
@@ -179,8 +197,10 @@ async def main() -> None:
 
     graph_path = out / "graph.json"
     projection_path = out / "projection.json"
+    frontier_manifest_path = out / "projection-manifest.json"
     original_graph = graph_path.read_bytes()
     original_projection = projection_path.read_bytes()
+    original_frontier_manifest = frontier_manifest_path.read_bytes()
     original_source = source.read_bytes()
     source_stat = source.stat()
 
@@ -222,6 +242,32 @@ async def main() -> None:
     assert GraphifyProjection(graph_path, expected_root=root).status()["ready"] is True
     print("OK artifact binding: graph-byte tamper invalidates the sealed build")
 
+    wrong_kind_manifest = json.loads(original_frontier_manifest)
+    wrong_kind_manifest["kind"] = "code"
+    frontier_manifest_path.write_text(
+        json.dumps(wrong_kind_manifest),
+        encoding="utf-8",
+    )
+    manifest_stale = GraphifyProjection(graph_path, expected_root=root).status()
+    assert manifest_stale["ready"] is False, manifest_stale
+    assert manifest_stale["reason"] == "projection_manifest_invalid", manifest_stale
+    frontier_manifest_path.write_bytes(original_frontier_manifest)
+    assert GraphifyProjection(graph_path, expected_root=root).status()["ready"] is True
+    print("OK projection manifest: knowledge/code identity is fail-closed")
+
+    wrong_count_manifest = json.loads(original_frontier_manifest)
+    wrong_count_manifest["counts"]["nodes"] += 1
+    frontier_manifest_path.write_text(
+        json.dumps(wrong_count_manifest),
+        encoding="utf-8",
+    )
+    count_stale = GraphifyProjection(graph_path, expected_root=root).status()
+    assert count_stale["ready"] is False, count_stale
+    assert count_stale["reason"] == "projection_manifest_invalid", count_stale
+    frontier_manifest_path.write_bytes(original_frontier_manifest)
+    assert GraphifyProjection(graph_path, expected_root=root).status()["ready"] is True
+    print("OK projection manifest: counts bind to the exact graph")
+
     def reseal_digest_only(mutated_graph: dict) -> None:
         """Model a forged digest so provenance must defend independently."""
         graph_path.write_text(json.dumps(mutated_graph), encoding="utf-8")
@@ -233,6 +279,12 @@ async def main() -> None:
             forged["extractionEvidence"]["sha256"],
         )
         projection_path.write_text(json.dumps(forged), encoding="utf-8")
+        forged_frontier = json.loads(original_frontier_manifest)
+        forged_frontier["checksum"] = "sha256:" + forged["graphSha256"]
+        frontier_manifest_path.write_text(
+            json.dumps(forged_frontier),
+            encoding="utf-8",
+        )
 
     provenance_attacks = []
     private_node = json.loads(original_graph)
@@ -254,6 +306,7 @@ async def main() -> None:
         assert attacked["invalidProvenance"] >= 1, attacked
     graph_path.write_bytes(original_graph)
     projection_path.write_bytes(original_projection)
+    frontier_manifest_path.write_bytes(original_frontier_manifest)
     assert GraphifyProjection(graph_path, expected_root=root).status()["ready"] is True
     print("OK provenance allowlist: private, outside, and unlisted node/edge claims are rejected")
 

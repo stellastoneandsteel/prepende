@@ -65,6 +65,9 @@ Defaults:
 """,
         file=sys.stderr,
     )
+    extra_usage = _private_usage()
+    if extra_usage:
+        print("Private overlay commands:\n" + extra_usage + "\n", file=sys.stderr)
     return code
 
 
@@ -589,6 +592,66 @@ def operational_status(args: list[str]) -> int:
     return operational_status_main(args, root=ROOT)
 
 
+def _private_module():
+    """Load the optional private command overlay, or None.
+
+    Failure is silent by design: a public checkout has no module, and a broken
+    private overlay must not take down the whole CLI.
+    """
+
+    source = Path(__file__).resolve().parent / "_private_commands.py"
+    if not source.is_file():
+        return None
+    try:
+        import importlib.util
+
+        spec = importlib.util.spec_from_file_location(
+            "prepende_private_commands", source
+        )
+        if spec is None or spec.loader is None:
+            return None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+    except Exception:
+        return None
+
+
+def _private_usage() -> str:
+    """Usage lines contributed by the optional private overlay module."""
+
+    module = _private_module()
+    text = getattr(module, "USAGE", "") if module is not None else ""
+    return text if isinstance(text, str) else ""
+
+
+def _private_commands() -> dict:
+    """Commands contributed by an optional private overlay module.
+
+    The public core ships this hook and no module to fill it, so the public CLI
+    is unchanged. A private checkout may provide bin/_private_commands.py
+    exposing COMMANDS: dict[str, Callable[[list[str]], int]]. Keeping the
+    contributed commands out of this file is what lets bin/engram stay
+    byte-identical across the public/private boundary while private-only
+    surfaces still get a CLI.
+
+    Failure to import is silent by design: a public checkout has no module, and
+    a broken private overlay must not take down the whole CLI.
+    """
+
+    module = _private_module()
+    if module is None:
+        return {}
+    commands = getattr(module, "COMMANDS", None)
+    if not isinstance(commands, dict):
+        return {}
+    return {
+        str(name): handler
+        for name, handler in commands.items()
+        if isinstance(name, str) and callable(handler)
+    }
+
+
 def main(argv: list[str]) -> int:
     if not argv:
         return usage()
@@ -613,6 +676,9 @@ def main(argv: list[str]) -> int:
         return operator(argv)
     if command == "mcp":
         return mcp(argv)
+    extra = _private_commands()
+    if command in extra:
+        return extra[command](argv)
     return die(f"unknown command: {command}")
 
 

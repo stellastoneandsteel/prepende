@@ -187,13 +187,14 @@ def validate_graph_provenance(
 
 
 class GraphifyProjection:
-    """Load and query ``graphify-out/graph.json`` without importing Graphify."""
+    """Load and query the owner knowledge projection without importing Graphify."""
 
     def __init__(
         self,
-        graph_path: str = "./graphify-out/graph.json",
+        graph_path: str = "./graphify-out/knowledge/graph.json",
         *,
         expected_root: str | Path | None = None,
+        expected_kind: str = "knowledge",
     ) -> None:
         self.path = Path(graph_path).expanduser().resolve()
         # Bind the artifact to one checkout/corpus. A graph copied from a
@@ -201,8 +202,9 @@ class GraphifyProjection:
         self.expected_root = (
             Path(expected_root).expanduser().resolve()
             if expected_root is not None
-            else self.path.parent.parent.resolve()
+            else self.path.parent.parent.parent.resolve()
         )
+        self.expected_kind = expected_kind
         self._nodes: dict[str, dict[str, Any]] = {}
         self._edges: list[dict[str, Any]] = []
         self._adj: dict[str, list[dict[str, Any]]] = {}
@@ -210,13 +212,14 @@ class GraphifyProjection:
         self._signature: tuple[int, ...] | None = None
         self._schema_error = ""
 
-    def _paths(self) -> tuple[Path, Path, Path, Path]:
+    def _paths(self) -> tuple[Path, Path, Path, Path, Path]:
         out = self.path.parent
         return (
             out / "manifest.json",
             out / ".graphify_root",
             out / ".graphify_python",
             out / "projection.json",
+            out / "projection-manifest.json",
         )
 
     @staticmethod
@@ -233,7 +236,13 @@ class GraphifyProjection:
             return False
 
     def _freshness(self) -> dict[str, Any]:
-        manifest_path, root_path, _, projection_path = self._paths()
+        (
+            manifest_path,
+            root_path,
+            _,
+            projection_path,
+            frontier_manifest_path,
+        ) = self._paths()
         if not manifest_path.is_file() or not root_path.is_file():
             return {
                 "ready": False,
@@ -248,10 +257,20 @@ class GraphifyProjection:
                 "staleFiles": 0,
                 "newFileCheck": "unavailable",
             }
+        if not frontier_manifest_path.is_file():
+            return {
+                "ready": False,
+                "reason": "projection_manifest_missing",
+                "staleFiles": 0,
+                "newFileCheck": "unavailable",
+            }
         try:
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             root = Path(root_path.read_text(encoding="utf-8").strip()).expanduser().resolve()
             projection = json.loads(projection_path.read_text(encoding="utf-8"))
+            frontier_manifest = json.loads(
+                frontier_manifest_path.read_text(encoding="utf-8")
+            )
         except Exception:
             return {
                 "ready": False,
@@ -259,7 +278,12 @@ class GraphifyProjection:
                 "staleFiles": 0,
                 "newFileCheck": "unavailable",
             }
-        if not isinstance(manifest, dict) or not isinstance(projection, dict) or not root.is_dir():
+        if (
+            not isinstance(manifest, dict)
+            or not isinstance(projection, dict)
+            or not isinstance(frontier_manifest, dict)
+            or not root.is_dir()
+        ):
             return {
                 "ready": False,
                 "reason": "manifest_or_root_invalid",
@@ -328,6 +352,7 @@ class GraphifyProjection:
             }
         if (
             str(projection.get("scope")) != "owner"
+            or str(projection.get("projectionKind")) != self.expected_kind
             or len(raw_expected_files) != len(expected_files)
             or any(canonical_source_path(path, root) != path for path in expected_files)
             or set(source_hashes) != expected_files
@@ -341,6 +366,49 @@ class GraphifyProjection:
             return {
                 "ready": False,
                 "reason": "projection_metadata_invalid",
+                "staleFiles": 0,
+                "newFileCheck": "unavailable",
+            }
+        try:
+            manifest_root = Path(
+                str(frontier_manifest["sourceRoot"])
+            ).expanduser().resolve()
+            manifest_counts = dict(frontier_manifest["counts"])
+        except (KeyError, TypeError, ValueError):
+            return {
+                "ready": False,
+                "reason": "projection_manifest_invalid",
+                "staleFiles": 0,
+                "newFileCheck": "unavailable",
+            }
+        if (
+            frontier_manifest.get("schemaVersion")
+            != "prepende-projection-manifest-v1"
+            or frontier_manifest.get("kind") != self.expected_kind
+            or manifest_root != root
+            or frontier_manifest.get("revision") != expected_corpus_digest
+            or frontier_manifest.get("projectionSchema")
+            != "graphify-projection-v2"
+            or frontier_manifest.get("checksum")
+            != "sha256:" + expected_graph_digest
+            or not str(frontier_manifest.get("generatedAt") or "").strip()
+            or set(manifest_counts)
+            != {"sources", "nodes", "edges", "hyperedges"}
+            or any(
+                isinstance(value, bool)
+                or not isinstance(value, int)
+                or value < 0
+                for value in manifest_counts.values()
+            )
+            or manifest_counts.get("sources") != len(expected_files)
+            or manifest_counts.get("nodes") != len(self._nodes)
+            or manifest_counts.get("edges") != len(self._edges)
+            or manifest_counts.get("hyperedges")
+            != len(graph_hyperedges(self._raw_graph))
+        ):
+            return {
+                "ready": False,
+                "reason": "projection_manifest_invalid",
                 "staleFiles": 0,
                 "newFileCheck": "unavailable",
             }
@@ -534,11 +602,28 @@ class GraphifyProjection:
 
     def _load(self) -> None:
         graph_mtime = self.path.stat().st_mtime_ns if self.path.is_file() else -1
-        manifest_path, root_path, _, projection_path = self._paths()
+        (
+            manifest_path,
+            root_path,
+            _,
+            projection_path,
+            frontier_manifest_path,
+        ) = self._paths()
         manifest_mtime = manifest_path.stat().st_mtime_ns if manifest_path.is_file() else -1
         root_mtime = root_path.stat().st_mtime_ns if root_path.is_file() else -1
         projection_mtime = projection_path.stat().st_mtime_ns if projection_path.is_file() else -1
-        signature = (graph_mtime, manifest_mtime, root_mtime, projection_mtime)
+        frontier_manifest_mtime = (
+            frontier_manifest_path.stat().st_mtime_ns
+            if frontier_manifest_path.is_file()
+            else -1
+        )
+        signature = (
+            graph_mtime,
+            manifest_mtime,
+            root_mtime,
+            projection_mtime,
+            frontier_manifest_mtime,
+        )
         if signature == self._signature:
             return
         self._signature = signature

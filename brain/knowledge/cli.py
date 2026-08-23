@@ -47,7 +47,11 @@ def _parser() -> argparse.ArgumentParser:
         help="bind an existing semantic graph to the active owner vault",
     )
     graph.add_argument("--root", default="", help="corpus root (default: VAULT_PATH)")
-    graph.add_argument("--out", default="./graphify-out", help="Graphify output directory")
+    graph.add_argument(
+        "--out",
+        default="./graphify-out/knowledge",
+        help="owner knowledge Graphify output directory",
+    )
     graph.add_argument("--json", action="store_true")
     return parser
 

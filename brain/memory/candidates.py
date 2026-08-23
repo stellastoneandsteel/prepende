@@ -450,6 +450,24 @@ class CandidateQueue:
                     " ORDER BY created_at DESC LIMIT ?", (scope, limit)).fetchall()
         return [self._row(r) for r in rows]
 
+    async def list_oldest(
+        self,
+        *,
+        scope: str,
+        status: str,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        """Return an oldest-first review sample for conservative age gates."""
+
+        limit = max(1, min(int(limit), 200))
+        with self._conn() as c:
+            rows = c.execute(
+                "SELECT * FROM candidates WHERE scope = ? AND status = ?"
+                " ORDER BY created_at ASC LIMIT ?",
+                (scope, status, limit),
+            ).fetchall()
+        return [self._row(r) for r in rows]
+
     # pending is decidable; deferred is the one reopenable state.
     _DECIDABLE = ("pending", "deferred")
 
