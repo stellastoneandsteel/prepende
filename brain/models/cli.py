@@ -78,7 +78,14 @@ class CliGateway(ModelGateway):
 
     @staticmethod
     def _subscription_env() -> dict[str, str]:
-        """Keep CLI login state while preventing accidental API-key billing."""
+        """Keep persisted CLI login paths without forwarding unrelated authority.
+
+        Codex and Claude subscription auth is persisted under the user's config
+        directories, so ``HOME``, ``CODEX_HOME``, ``CLAUDE_CONFIG_DIR`` and the
+        normal process/runtime variables remain available.  Direct API routes,
+        database credentials, service-role/admin secrets, and tenant/application
+        credentials must never cross this subprocess boundary.
+        """
         env = dict(os.environ)
         blocked_exact = {
             "CLAUDE_API_KEY",
@@ -93,6 +100,18 @@ class CliGateway(ModelGateway):
             "CODEX_AUTH_API_BASE_URL",
             "CODEX_OSS_BASE_URL",
             "CODEX_URL",
+            "DATABASE_URL",
+            "PGPASSWORD",
+            "SERVICE_ROLE_KEY",
+            "API_KEY",
+            "API_SECRET",
+            "CLIENT_SECRET",
+            "ENCRYPTION_KEY",
+            "MASTER_KEY",
+            "PASSWORD",
+            "SECRET",
+            "SIGNING_KEY",
+            "TOKEN",
         }
         blocked_prefixes = (
             "ANTHROPIC_",
@@ -108,9 +127,65 @@ class CliGateway(ModelGateway):
             "CLAUDE_CODE_SKIP_FOUNDRY_",
             "CLAUDE_CODE_SKIP_MANTLE_",
             "CLAUDE_CODE_SKIP_VERTEX_",
+            # Hosted data, mail, and business/application authority.  These
+            # families are intentionally broader than the known key names so a
+            # newly-added service-role token cannot silently cross the boundary.
+            "SUPABASE_",
+            "RESEND_",
+            "STELLA_",
+            "DEALROOM_",
+            "SAILES_",
+            "MIMI_",
+            "MORNING_PAIPER_",
+            "PREPENDE_",
+            "ENGRAM_",
+            "NEWSROOM_",
+            "ARTICLE_",
+            "N8N_",
+            "STRIPE_",
+            "SENDGRID_",
+            "TWILIO_",
+            "SLACK_",
+            "GITHUB_",
+            "GITLAB_",
+            "FIGMA_",
+            "CLOUDFLARE_",
         )
+        blocked_suffixes = (
+            "_API_KEY",
+            "_API_TOKEN",
+            "_API_SECRET",
+            "_ACCESS_TOKEN",
+            "_AUTH_TOKEN",
+            "_BEARER_TOKEN",
+            "_ADMIN_TOKEN",
+            "_ADMIN_KEY",
+            "_SERVICE_ROLE_KEY",
+            "_CLIENT_SECRET",
+            "_WEBHOOK_SECRET",
+            "_SECRET_KEY",
+            "_MASTER_KEY",
+            "_ENCRYPTION_KEY",
+            "_SIGNING_KEY",
+            "_PRIVATE_KEY",
+            "_PASSWORD",
+            "_PASSWD",
+            "_TOKEN",
+            "_SECRET",
+        )
+
+        def is_database_url(key: str) -> bool:
+            return bool(
+                re.search(r"(?:^|_)(?:DB|DATABASE)(?:_|$).*_?URL$", key)
+            )
+
         for key in tuple(env):
-            if key in blocked_exact or key.startswith(blocked_prefixes):
+            if (
+                key in blocked_exact
+                or key.startswith(blocked_prefixes)
+                or key.endswith(blocked_suffixes)
+                or is_database_url(key)
+            ):
                 env.pop(key, None)
         return env
 

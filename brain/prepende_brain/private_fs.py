@@ -81,7 +81,14 @@ def secure_file(path: str | os.PathLike[str], *, required: bool = False) -> Path
     if stat.S_ISLNK(info.st_mode) or not stat.S_ISREG(info.st_mode):
         raise RuntimeError(f"refusing non-regular Prepende state file: {target}")
     if os.name == "posix":
-        target.chmod(PRIVATE_FILE_MODE)
+        try:
+            target.chmod(PRIVATE_FILE_MODE)
+        except FileNotFoundError:
+            # SQLite sidecars can disappear between lstat and chmod when a
+            # concurrent connection checkpoints. Optional artifacts are safe
+            # to ignore; required durable files still fail closed.
+            if required:
+                raise
     return target
 
 
@@ -186,6 +193,75 @@ def write_private_text(
             stream.flush()
             os.fsync(stream.fileno())
         os.replace(temporary_path, target)
+        secure_file(target, required=True)
+    finally:
+        if descriptor >= 0:
+            os.close(descriptor)
+        try:
+            temporary_path.unlink()
+        except FileNotFoundError:
+            pass
+    return target
+
+
+def write_new_private_text(
+    path: str | os.PathLike[str],
+    value: str,
+    *,
+    repair_parent: bool = False,
+    allow_identical: bool = True,
+) -> Path:
+    """Atomically create one private UTF-8 file without replacing a target.
+
+    The complete, fsynced temporary inode is linked into place only if the
+    destination does not exist. Replays may accept an existing byte-identical
+    file, but a differing file always raises ``FileExistsError``.
+    """
+
+    enforce_private_umask()
+    target = Path(path)
+    secure_directory(target.parent, repair_existing=repair_parent)
+    descriptor, temporary = tempfile.mkstemp(
+        prefix=f".{target.name}.", suffix=".tmp", dir=str(target.parent)
+    )
+    temporary_path = Path(temporary)
+    try:
+        if os.name == "posix":
+            os.fchmod(descriptor, PRIVATE_FILE_MODE)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as stream:
+            descriptor = -1
+            stream.write(value)
+            stream.flush()
+            os.fsync(stream.fileno())
+        try:
+            os.link(temporary_path, target, follow_symlinks=False)
+        except FileExistsError:
+            if not allow_identical:
+                raise
+            flags = os.O_RDONLY | getattr(os, "O_CLOEXEC", 0)
+            flags |= getattr(os, "O_NOFOLLOW", 0)
+            existing_descriptor = os.open(target, flags)
+            try:
+                existing_info = os.fstat(existing_descriptor)
+                if not stat.S_ISREG(existing_info.st_mode):
+                    raise RuntimeError(
+                        f"refusing non-regular Prepende state file: {target}"
+                    )
+                with os.fdopen(existing_descriptor, "r", encoding="utf-8") as stream:
+                    existing_descriptor = -1
+                    existing_value = stream.read()
+            finally:
+                if existing_descriptor >= 0:
+                    os.close(existing_descriptor)
+            if existing_value != value:
+                raise
+        if os.name == "posix":
+            directory_flags = os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+            directory_descriptor = os.open(target.parent, directory_flags)
+            try:
+                os.fsync(directory_descriptor)
+            finally:
+                os.close(directory_descriptor)
         secure_file(target, required=True)
     finally:
         if descriptor >= 0:
