@@ -11,7 +11,7 @@
     {
       "mode": "100644",
       "outputPath": ".env.example",
-      "sha256": "a4c5ae395b738f456dc0b4e37027e634faaaad5cf51d09c77581c6f1cea1b672",
+      "sha256": "fe33559145df6945d4f7a1a9e8747fdc7730979052acfe404af3d7c35adba16b",
       "sourcePaths": [
         ".env.example"
       ]
