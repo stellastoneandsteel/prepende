@@ -1,5 +1,15 @@
 {
-  "rebuilt_utc": "2026-08-03T12:36:48+00:00",
+  "ledger": {
+    "curvePublished": false,
+    "locked": 26,
+    "pending": 12,
+    "protocol": "prepende/1",
+    "resolved": 14,
+    "retrospective": 4,
+    "status": "UNANCHORED",
+    "v2Status": "UNANCHORED"
+  },
+  "rebuilt_utc": "2026-08-23T18:36:58+00:00",
   "sims": {
     "sim_oim_benchmark.py": "ok",
     "sim_oim_maxcut.py": "ok",
