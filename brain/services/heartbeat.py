@@ -3,7 +3,7 @@
 The vault reindex, embedding backfill, memory consolidation, and the site
 scraper all existed as on-demand calls; nothing ran them on a schedule, so
 "self-organizing" stayed aspirational. This module is the missing pulse: a
-scheduler (cron on Railway, launchd locally) invokes one pass and the process exits.
+scheduler (launchd locally) invokes one pass and the process exits.
 
 Tasks per pass (PREPENDE_HEARTBEAT_TASKS, default "vault,embed,consolidate"):
   vault        refresh the vault RAG projection until embedding backfill
@@ -23,8 +23,8 @@ one broken subsystem must not silence the rest of the heartbeat. Nothing here
 calls the generation model or executes external actions.
 
 Run:    python3 -m services.heartbeat
-Deploy: second Railway service on this repo, start command
-        `python3 -m services.heartbeat`, cron schedule (e.g. hourly).
+This is host-machine-dependent local maintenance, not a production cloud
+service. Do not claim computer-off autonomy from this process.
 """
 
 from __future__ import annotations
