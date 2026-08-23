@@ -110,6 +110,8 @@ def build_brain(cfg: Config | None = None, memory_policy: str | None = None):
         default_scope=cfg.memory_scope,
         default_knowledge=knowledge,
         gateway=gateway,
+        default_tenant_id=cfg.memory_scope,
+        default_workspace_id=cfg.workspace_scope,
     )
     # Self-improvement: versioned prompts + the gated propose->evaluate->commit loop.
     loop.prompts = FilePromptRegistry(cfg.prompts_dir)

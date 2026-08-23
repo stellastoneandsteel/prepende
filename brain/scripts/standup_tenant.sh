@@ -8,9 +8,10 @@
 #
 # Customer prerequisites (see docs/TENANT-STANDUP.md):
 #   - .env with DATABASE_URL pointing at THIS installation's own Postgres;
-#   - migrations 019/020/021 (+026/027 for BYO) applied and the least-privilege
-#     role created by a database owner. This script validates source presence
-#     and forces the Postgres backend; it does not hold admin credentials.
+#   - migrations 019/020/021/20260823143000 (+026/027 for BYO) applied and the
+#     least-privilege role created by a database owner. This script validates
+#     source presence and forces the Postgres backend; it does not hold admin
+#     credentials.
 #
 # Usage:
 #   scripts/standup_tenant.sh --scope <physical-scope> [--tenant <tenant>] [--workspace <workspace>] [--pack packs/small-business.json] [--backfill] [--capabilities <spec>]
@@ -131,7 +132,12 @@ else
 fi
 
 echo "-- 1/5 required migration files (source-presence check only; apply/verify the target DB as owner):"
-for m in 019_engram_kernel_memory 020_engram_kernel_queues 021_kernel_scope_guards; do
+for m in \
+  019_engram_kernel_memory \
+  020_engram_kernel_queues \
+  021_kernel_scope_guards \
+  20260823143000_engram_candidate_atomic_dedupe
+do
   if [ -f "supabase/migrations/${m}.sql" ]; then
     echo "     present: supabase/migrations/${m}.sql"
   else

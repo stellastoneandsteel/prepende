@@ -89,6 +89,17 @@ class _PreparedSource:
     vectors: tuple[list[float] | None, ...]
 
 
+@dataclass(frozen=True)
+class _SearchSnapshot:
+    """Connection-free rows captured by one SQLite read transaction."""
+
+    rows: tuple[dict[str, Any], ...]
+    expected_dimension: int | None
+    semantic_allowed: bool
+    embedder: Any
+    identity: dict[str, Any]
+
+
 # Rebuild/refresh can be reached through more than one VaultKnowledge instance.
 # Keep the expensive prepare + commit sequence single-writer per resolved index
 # path within an event loop, and keep every synchronous SQLite mutation guarded
@@ -378,6 +389,66 @@ class VaultRagIndex:
         conn.execute("PRAGMA synchronous=NORMAL")
         prepare_private_sqlite(self.path)
         return conn
+
+    @staticmethod
+    def _identity_hash(namespace: str, value: Any) -> str:
+        encoded = json.dumps(
+            {"namespace": namespace, "value": value},
+            sort_keys=True,
+            separators=(",", ":"),
+            ensure_ascii=True,
+        ).encode("utf-8")
+        return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+    def _physical_identity(
+        self,
+        *,
+        source_rows: Sequence[dict[str, Any]],
+        chunk_rows: Sequence[dict[str, Any]],
+        persisted_profile: str,
+        persisted_dimension: int | None,
+    ) -> dict[str, Any]:
+        vault_path = str(self.vault.expanduser().resolve())
+        index_path = str(Path(self.path).expanduser().resolve())
+        revision_payload = {
+            "schema": "vault-rag-index-revision-v1",
+            "embeddingProfile": persisted_profile,
+            "embeddingDimension": persisted_dimension,
+            "sources": [
+                [str(row["path"]), str(row["content_hash"]), int(row["chunk_count"])]
+                for row in sorted(source_rows, key=lambda item: str(item["path"]))
+            ],
+            "chunks": [
+                [
+                    str(row["path"]),
+                    str(row["page"]),
+                    str(row["section"] or ""),
+                    str(row["content"]),
+                    None if row["embedding"] is None else str(row["embedding"]),
+                    str(row["metadata"] or "{}"),
+                ]
+                for row in sorted(
+                    chunk_rows,
+                    key=lambda item: (
+                        str(item["path"]), str(item["page"]),
+                        str(item["section"] or ""), str(item["content"]),
+                        str(item["id"]),
+                    ),
+                )
+            ],
+        }
+        return {
+            "corpusRootHash": self._identity_hash("vault-root-v1", vault_path),
+            "indexPathHash": self._identity_hash("vault-index-path-v1", index_path),
+            "indexRevision": self._identity_hash("vault-index-state-v1", revision_payload),
+            "sourceFiles": len(source_rows),
+            "chunks": len(chunk_rows),
+        }
+
+    def retrieval_identity(self) -> dict[str, Any]:
+        """Return the physical identity of one complete search snapshot."""
+
+        return dict(self._read_search_snapshot().identity)
 
     @staticmethod
     def _metadata(source: _SourceSnapshot) -> tuple[int, int, str]:
@@ -1016,26 +1087,28 @@ class VaultRagIndex:
             "status": final,
         }
 
-    async def search(self, query: str, k: int = 8) -> list[dict[str, Any]]:
-        # Alphanumeric tokenization: raw split() kept trailing punctuation
-        # ('prepende?' never substring-matches), and >2 dropped acronyms like
-        # 'AI'/'ML' entirely — a lexical-only query of short terms returned
-        # nothing. Keep >=2 so acronyms score; 1-char tokens are still noise.
-        terms = [t for t in re.findall(r"[a-z0-9]+", query.lower()) if len(t) >= 2]
-        # Profile metadata and chunks must come from one SQLite read snapshot.
-        # Otherwise a concurrent profile switch can pair an old query vector
-        # with rows from a new vector space.
+    def _read_search_snapshot(self) -> _SearchSnapshot:
+        """Capture rows on the calling worker's private SQLite connection."""
+
         with closing(self._conn()) as c:
             c.execute("BEGIN")
             try:
                 persisted_profile = self._persisted_profile(c)
                 persisted_dimension = self._persisted_dimension(c)
-                rows = c.execute("SELECT * FROM chunks").fetchall()
+                source_rows = tuple(
+                    dict(row) for row in c.execute(
+                        "SELECT path,content_hash,chunk_count FROM source_files"
+                    ).fetchall()
+                )
+                rows = tuple(
+                    dict(row) for row in c.execute("SELECT * FROM chunks").fetchall()
+                )
             finally:
                 c.rollback()
-        if not rows:
-            return []
-        expected_dimension = self._expected_dimension or persisted_dimension
+        configured_dimension = self._expected_dimension
+        configured_profile = self._embedding_profile
+        active_embedder = self._embedder
+        expected_dimension = configured_dimension or persisted_dimension
         stored_space_valid = expected_dimension is not None
         if stored_space_valid:
             for row in rows:
@@ -1046,23 +1119,43 @@ class VaultRagIndex:
                     stored_space_valid = False
                     break
         semantic_allowed = (
-            self._embedder is not None
-            and self._profiles_match(self._embedding_profile, persisted_profile)
+            active_embedder is not None
+            and self._profiles_match(configured_profile, persisted_profile)
             and persisted_dimension == expected_dimension
             and stored_space_valid
         )
-        qvec = (
-            await self._embed(query, expected_dimension=expected_dimension)
-            if semantic_allowed else None
+        return _SearchSnapshot(
+            rows=rows,
+            expected_dimension=expected_dimension,
+            semantic_allowed=semantic_allowed,
+            embedder=active_embedder,
+            identity=self._physical_identity(
+                source_rows=source_rows,
+                chunk_rows=rows,
+                persisted_profile=persisted_profile,
+                persisted_dimension=persisted_dimension,
+            ),
         )
 
-        def kw(r: sqlite3.Row) -> float:
+    def _score_search_snapshot(
+        self,
+        snapshot: _SearchSnapshot,
+        *,
+        terms: Sequence[str],
+        qvec: Sequence[float] | None,
+        k: int,
+    ) -> list[dict[str, Any]]:
+        """Rank connection-free rows on a worker without blocking asyncio."""
+
+        rows = snapshot.rows
+
+        def kw(r: dict[str, Any]) -> float:
             if not terms:
                 return 0.0
             text = (r["content"] + " " + r["page"] + " " + (r["section"] or "")).lower()
             return sum(t in text for t in terms) / len(terms)
 
-        def vec(r: sqlite3.Row) -> float:
+        def vec(r: dict[str, Any]) -> float:
             if qvec is None or not r["embedding"]:
                 return 0.0
             stored_vector = self._decode_vector(r["embedding"])
@@ -1071,13 +1164,16 @@ class VaultRagIndex:
             return _cosine(qvec, stored_vector)
 
         semantic = qvec is not None
-        def blend(r: sqlite3.Row) -> float:
+
+        def blend(r: dict[str, Any]) -> float:
             return 0.6 * vec(r) + 0.4 * kw(r) if semantic else kw(r)
 
         scored = [(blend(r), r) for r in rows]
-        scored.sort(key=lambda p: p[0], reverse=True)
+        # Python's stable sort preserves the SQLite snapshot order for ties,
+        # matching the prior deterministic aggregation behavior.
+        scored.sort(key=lambda pair: pair[0], reverse=True)
 
-        def result(score: float, row: sqlite3.Row) -> dict[str, Any]:
+        def result(score: float, row: dict[str, Any]) -> dict[str, Any]:
             relative = str(row["path"])
             try:
                 provenance = json.loads(str(row["metadata"] or "{}"))
@@ -1094,4 +1190,43 @@ class VaultRagIndex:
                 hit["metadata"] = dict(provenance)
             return hit
 
-        return [result(s, r) for s, r in scored[:k] if s > 0]
+        return [result(score, row) for score, row in scored[:k] if score > 0]
+
+    async def search_with_identity(
+        self, query: str, k: int = 8,
+    ) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+        """Search and return identity derived from the exact same row snapshot."""
+
+        # Alphanumeric tokenization: raw split() kept trailing punctuation
+        # ('prepende?' never substring-matches), and >2 dropped acronyms like
+        # 'AI'/'ML' entirely — a lexical-only query of short terms returned
+        # nothing. Keep >=2 so acronyms score; 1-char tokens are still noise.
+        terms = [t for t in re.findall(r"[a-z0-9]+", query.lower()) if len(t) >= 2]
+        # Each prepared query gets its own worker and SQLite connection. This
+        # makes fan-out genuinely concurrent and lets asyncio.wait_for cancel a
+        # node even while its read-only worker finishes safely in the background.
+        snapshot = await asyncio.to_thread(self._read_search_snapshot)
+        if not snapshot.rows:
+            return [], dict(snapshot.identity)
+        qvec = (
+            (
+                await self._embed_many(
+                    [query],
+                    embedder=snapshot.embedder,
+                    expected_dimension=snapshot.expected_dimension,
+                )
+            )[0]
+            if snapshot.semantic_allowed else None
+        )
+        hits = await asyncio.to_thread(
+            self._score_search_snapshot,
+            snapshot,
+            terms=terms,
+            qvec=qvec,
+            k=k,
+        )
+        return hits, dict(snapshot.identity)
+
+    async def search(self, query: str, k: int = 8) -> list[dict[str, Any]]:
+        hits, _identity = await self.search_with_identity(query, k=k)
+        return hits

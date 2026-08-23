@@ -20,6 +20,7 @@ cloud project or a host for you). Everything else is one command.
    psql "$ADMIN_DATABASE_URL" -f supabase/migrations/019_engram_kernel_memory.sql
    psql "$ADMIN_DATABASE_URL" -f supabase/migrations/020_engram_kernel_queues.sql
    psql "$ADMIN_DATABASE_URL" -f supabase/migrations/021_kernel_scope_guards.sql
+   psql "$ADMIN_DATABASE_URL" -f supabase/migrations/20260823143000_engram_candidate_atomic_dedupe.sql
    # + 026/027 if the tenant will bring its own model
    ```
    Then point `.env` `DATABASE_URL` at `engram_brain` (not `postgres`).
@@ -51,7 +52,8 @@ the deterministic value printed by `namespace_for_identity`. Customer mode refus
 non-Postgres URL, `MEMORY_BACKEND=sqlite`, or a conflicting `WORKSPACE_SCOPE`.
 After preflight it forces `MEMORY_BACKEND=postgres`, so the memory factory fails
 hard instead of taking its normal SQLite fallback. It checks required migration
-files, seeds the tenant's operating discipline from the pack (`seed_tenant.py`),
+files, including the candidate-queue atomic-dedupe schema required by the
+Postgres queue, seeds the tenant's operating discipline from the pack (`seed_tenant.py`),
 optionally backfills existing SQLite memories into Postgres (`--backfill`),
 mints a connector token (`mint_tenant_token.py`), and prints the connect env.
 Applying and verifying migrations, the role, forced RLS, and database identity

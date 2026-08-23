@@ -17,9 +17,15 @@ import tempfile
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from knowledge.scoped import ScopedVaults, tenant_vault_path, validate_scope  # noqa: E402
+from knowledge.scoped import (  # noqa: E402
+    ScopedVaults,
+    retrieval_scope_binding,
+    tenant_vault_path,
+    validate_scope,
+)
 from knowledge.vault import VaultKnowledge  # noqa: E402
 from models.echo import EchoGateway  # noqa: E402
+from prepende_brain.identity import namespace_for_identity  # noqa: E402
 
 
 async def main() -> None:
@@ -96,6 +102,67 @@ async def main() -> None:
     assert "private-plan" in await a.backlinks("pricing-notes")
     assert "pricing-notes" in await a.related("private-plan")
     assert await b.related("private-plan") == []
+
+    # Rich identities bind their canonical physical namespace without reducing
+    # tenant and workspace to a caller-supplied scope label.
+    rich_scope = namespace_for_identity("tenant-rich", "workspace-rich")
+    rich = vaults.for_scope(
+        rich_scope,
+        tenant_id="tenant-rich",
+        workspace_id="workspace-rich",
+    )
+    rich_binding = retrieval_scope_binding(rich)
+    assert rich_binding is not None
+    assert rich_binding.tenant_id == "tenant-rich", rich_binding
+    assert rich_binding.workspace_id == "workspace-rich", rich_binding
+    assert rich_binding.scope_id == rich_scope, rich_binding
+    assert vaults.for_scope(
+        rich_scope,
+        tenant_id="tenant-rich",
+        workspace_id="workspace-rich",
+    ) is rich
+    for kwargs in (
+        {"tenant_id": "tenant-rich"},
+        {"tenant_id": "other-tenant", "workspace_id": "workspace-rich"},
+    ):
+        try:
+            vaults.for_scope(rich_scope, **kwargs)
+        except ValueError:
+            pass
+        else:
+            raise AssertionError(f"non-canonical rich identity was accepted: {kwargs}")
+    # The configured owner corpus is a server-owned legacy binding: its
+    # workspace may differ from its memory scope without turning the scope into
+    # a guessed composite tenant id. Only that exact default identity is exempt
+    # from the derived namespace rule.
+    owner_root = os.path.join(tmp, "owner-default")
+    owner_default = VaultKnowledge(owner_root, EchoGateway())
+    owner_vaults = ScopedVaults(
+        owner_root,
+        default_scope="owner-scope",
+        default_knowledge=owner_default,
+        default_tenant_id="owner-scope",
+        default_workspace_id="owner-workspace",
+    )
+    owner_binding = retrieval_scope_binding(owner_default)
+    assert owner_binding is not None
+    assert owner_binding.tenant_id == "owner-scope", owner_binding
+    assert owner_binding.workspace_id == "owner-workspace", owner_binding
+    assert owner_vaults.for_scope(
+        "owner-scope",
+        tenant_id="owner-scope",
+        workspace_id="owner-workspace",
+    ) is owner_default
+    try:
+        owner_vaults.for_scope(
+            "owner-scope",
+            tenant_id="different-tenant",
+            workspace_id="owner-workspace",
+        )
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("default corpus accepted a different rich identity")
 
     print("SCOPED KNOWLEDGE SMOKE: OK")
     print(f"  isolated indexes: {len(index_paths)}")

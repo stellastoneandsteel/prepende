@@ -14,11 +14,14 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 DIST = ROOT / "distribution" / "prepende"
-INPUT = (DIST / "requirements-prepende.in") if DIST.is_dir() else (ROOT / "requirements-prepende.in")
-LOCK = (DIST / "requirements-prepende.lock") if DIST.is_dir() else (ROOT / "requirements-prepende.lock")
+SOURCE_CHECKOUT = DIST.is_dir()
+INPUT = (DIST / "requirements-prepende.in") if SOURCE_CHECKOUT else (ROOT / "requirements-prepende.in")
+LOCK = (DIST / "requirements-prepende.lock") if SOURCE_CHECKOUT else (ROOT / "requirements-prepende.lock")
+PG_SMOKE_LOCK = DIST / "requirements-candidate-pg-smoke.lock"
 BOOTSTRAP = ROOT / "scripts" / "bootstrap_prepende_clone.py"
-PYPROJECT = (DIST / "pyproject.toml") if DIST.is_dir() else (ROOT / "pyproject.toml")
-DOCKERFILE = (DIST / "Dockerfile.mcp") if DIST.is_dir() else (ROOT / "Dockerfile.mcp")
+PYPROJECT = (DIST / "pyproject.toml") if SOURCE_CHECKOUT else (ROOT / "pyproject.toml")
+DOCKERFILE = (DIST / "Dockerfile.mcp") if SOURCE_CHECKOUT else (ROOT / "Dockerfile.mcp")
+SOURCE_RELEASE_GATE = ROOT / ".github" / "workflows" / "prepende-source-release-gate.yml"
 
 
 def logical_requirements(text: str) -> list[str]:
@@ -84,6 +87,28 @@ def main() -> None:
         assert "--hash=sha256:" in requirement, requirement
     for package, version in direct.items():
         assert any(row.startswith(f"{package}=={version} ") for row in locked), package
+
+    # These files govern the source-release CI environment and intentionally
+    # are not included in a history-free customer export. Keep their contract
+    # strict in a source checkout without making exported runtime checks depend
+    # on source-only distribution or workflow files.
+    if SOURCE_CHECKOUT:
+        pg_smoke_lock_text = PG_SMOKE_LOCK.read_text(encoding="utf-8")
+        assert "Intentionally single-platform: CPython 3.11 on Linux x86_64" in pg_smoke_lock_text
+        assert logical_requirements(pg_smoke_lock_text) == [
+            "asyncpg==0.31.0 "
+            "--hash=sha256:c0807be46c32c963ae40d329b3a686356e417f674c976c07fa49f1b30303f109"
+        ]
+
+        source_release_gate = SOURCE_RELEASE_GATE.read_text(encoding="utf-8")
+        pg_smoke_step = source_release_gate.split(
+            "- name: Verify candidate queue on disposable PostgreSQL", 1
+        )[1].split("- name:", 1)[0]
+        assert "--require-hashes" in pg_smoke_step
+        assert "--only-binary=:all:" in pg_smoke_step
+        assert "distribution/prepende/requirements-candidate-pg-smoke.lock" in pg_smoke_step
+        assert "requirements-api.txt" not in pg_smoke_step
+        assert "cryptography" not in pg_smoke_lock_text.lower()
 
     pyproject = PYPROJECT.read_text(encoding="utf-8")
     for package, version in direct.items():
