@@ -10,7 +10,7 @@
     {
       "mode": "0644",
       "path": ".env.example",
-      "sha256": "a4c5ae395b738f456dc0b4e37027e634faaaad5cf51d09c77581c6f1cea1b672"
+      "sha256": "fe33559145df6945d4f7a1a9e8747fdc7730979052acfe404af3d7c35adba16b"
     },
     {
       "mode": "0644",
@@ -65,7 +65,7 @@
     {
       "mode": "0755",
       "path": "bin/engram",
-      "sha256": "86ea995bc568a66d2622ce6e26d81b914177548a88af6e69766e85b68462ce75"
+      "sha256": "ca1f24e17502dd43b82162bf415172c5f748bb2fff6944a40a2c8a919be91726"
     },
     {
       "mode": "0755",
@@ -195,7 +195,7 @@
     {
       "mode": "0644",
       "path": "interface/mcp_scope.py",
-      "sha256": "18f38f73953fb948e9ceb1b8a62288ef952f956b54e00b0e6be4f5b8a09c3542"
+      "sha256": "c4f15d68024199eb0c832f55434a55038278bc316bf336bc88b249e3f1894f01"
     },
     {
       "mode": "0644",
@@ -230,7 +230,7 @@
     {
       "mode": "0644",
       "path": "kernel/contracts/durable.py",
-      "sha256": "77cbc3a536127432238439f818ec9cc33471ecb8fa69c75e2aecc6c294a734f1"
+      "sha256": "bbb01e8f197d2ba4faaafcacccc6e023e41882bb1439ee2cbcee0fa1f2eb5ed0"
     },
     {
       "mode": "0644",
@@ -395,7 +395,7 @@
     {
       "mode": "0644",
       "path": "knowledge/cli.py",
-      "sha256": "bdd03bec8696ad1ad878335ce3a889b4492e3d3f0b79bd6f8e5b307f35599d33"
+      "sha256": "53261cb7c30482ac713055396f3a9271eac9bea93f19262833e850f11f9429d1"
     },
     {
       "mode": "0644",
@@ -405,7 +405,7 @@
     {
       "mode": "0644",
       "path": "knowledge/graphify.py",
-      "sha256": "c25a5110dd1a23e57f53cb6c9b76fc69caab746412f88ed91f59b144cc2e6406"
+      "sha256": "846e2c2013ed857a427dfd4dad710700abee0352735a55439b174d929ead83c6"
     },
     {
       "mode": "0644",
@@ -465,7 +465,7 @@
     {
       "mode": "0644",
       "path": "memory/candidates.py",
-      "sha256": "b101ede86114d3099ec5321dc3b81b0f74967788d7cf2572bc54f1ea762fbccf"
+      "sha256": "b00a72ad57c125f1bb376ef2ed288164fd7150a78bb3fd530dbc623e16dd0867"
     },
     {
       "mode": "0644",
@@ -480,7 +480,7 @@
     {
       "mode": "0644",
       "path": "memory/postgres_candidates.py",
-      "sha256": "1ec48bfc1df5cb0e02d529db216a14e68202c8877bbff84f3bc4cc851b7ad14e"
+      "sha256": "17fc5cc90f6edc25838311668f975e8ab12385d32c30564e37f0cff7f38ebbb0"
     },
     {
       "mode": "0644",
@@ -560,7 +560,7 @@
     {
       "mode": "0644",
       "path": "operations/continuity.py",
-      "sha256": "ee1aeee4eddf948b40ad8a96702272654b6745af8d050c713a14724169bfe1df"
+      "sha256": "dec610cf8cfcdeb0dfa98496ab43dc9d3d05767716c378dc06c3d5c53c16de86"
     },
     {
       "mode": "0644",
@@ -590,12 +590,12 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-manifest.json",
-      "sha256": "edeab7aae8e2f254ed1a1aca8c32db735da5b90546d63b2d23c05050de6c92f5"
+      "sha256": "680830cc7131c1982b11cb086cab66cc1b2dab9c87d2c7a4e1034a14ec03e7dd"
     },
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "b180809e61392aa03113f1b418a9e3bd96159f1bb703e0be56706a6363695555"
+      "sha256": "2fdb9f3a6add54bf0b850da3bc3c3ca68456cba7e8ca7ab9a8dc8f166782fc53"
     },
     {
       "mode": "0644",
@@ -735,7 +735,7 @@
     {
       "mode": "0644",
       "path": "scripts/refresh_graphify.py",
-      "sha256": "0eaf956a96d9ca3f13875846d245a64e52de4e06814053de7c9c267ed79d6ea8"
+      "sha256": "15e4fc1c8aaac0064abb9829a8c21d0508f27e98cc01a5e15b8a264c5d1f0d23"
     },
     {
       "mode": "0644",
@@ -940,7 +940,7 @@
     {
       "mode": "0644",
       "path": "tests/smoke_graphify_recall.py",
-      "sha256": "9662d48f89ef47aa872988218a773abe78da890755afc393c0e7c1c78e845dcf"
+      "sha256": "49a0cbfebdb9307dc9fdc9b4479404421942cba97d6fe5e10af6ecfebacd3de4"
     },
     {
       "mode": "0644",
@@ -1186,7 +1186,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "b180809e61392aa03113f1b418a9e3bd96159f1bb703e0be56706a6363695555",
+  "inventorySha256": "2fdb9f3a6add54bf0b850da3bc3c3ca68456cba7e8ca7ab9a8dc8f166782fc53",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1194,10 +1194,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 236
   },
-  "reviewedInventorySha256": "0fec5164c2c87cce955d446f13e0f1dcfac3a3a313b23672457263a642219c12",
+  "reviewedInventorySha256": "375b65a7957aca7b992ec6a9deaf399878a9eee3511c81934fcfd99d430009f5",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "891de9bde6d897c4860b3687d646d00dd461c03a",
-  "sourceRevision": "7b7c72adf797fb2dc0ea18a4755f11025536770e",
+  "sourceIndexTree": "ae9cf369b253312440b5d4395567b0afda17db8a",
+  "sourceRevision": "b48ae68fc3ad9f5857923b7241699517ee7bd1bb",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "f8e5bd441b1c7f1a23a2fe6e1f18d7aad7352216f61180f434e0148a9b67707c"
+  "sourceTreeSha256": "35a4402e6b2b10677bf7bf99697fd0b7f7e8cc4a4a012a75c5fd32503b4e87c8"
 }

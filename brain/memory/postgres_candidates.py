@@ -363,6 +363,30 @@ class PostgresCandidateQueue:
                         "ORDER BY created_at DESC LIMIT $2", scope, limit)
         return [self._row(r) for r in rows]
 
+    async def list_oldest(
+        self,
+        *,
+        scope: str,
+        status: str,
+        limit: int = 200,
+    ) -> list[dict[str, Any]]:
+        """Return an oldest-first review sample for conservative age gates."""
+
+        scope = self._check_scope(scope)
+        limit = max(1, min(int(limit), 200))
+        pool = await self._ensure()
+        async with pool.acquire() as con:
+            async with con.transaction():
+                await self._scoped(con, scope)
+                rows = await con.fetch(
+                    f"SELECT * FROM {_TABLE} WHERE scope=$1 AND status=$2 "
+                    "ORDER BY created_at ASC LIMIT $3",
+                    scope,
+                    status,
+                    limit,
+                )
+        return [self._row(r) for r in rows]
+
     async def approve(self, candidate_id: str, *, scope: str, store: Any) -> dict[str, Any] | None:
         """Graduate ONE pending/deferred candidate into the MemoryStore — the only
         door from staged to durable. At-most-once via an atomic conditional UPDATE;

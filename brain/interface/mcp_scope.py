@@ -50,16 +50,24 @@ OPERATOR_SAFE_TOOLS = frozenset({
 OPERATOR_WRITE_TOOLS = frozenset({
     "operator_start", "operator_finish",
 })
+FRONTIER_SAFE_TOOLS = frozenset({
+    "goal_status", "brain_status", "daily_receipt",
+})
+FRONTIER_WRITE_TOOLS = frozenset({
+    "goal_start", "goal_resume", "goal_stop",
+})
 
 SAFE_TOOLS = frozenset({
     "chat", "pursue_goal", "memory_search", "memory_propose",
     "memory_candidates", "knowledge_search", "knowledge_related", "account",
     *PRIVATE_SAFE_TOOLS,
     *OPERATOR_SAFE_TOOLS,
+    *FRONTIER_SAFE_TOOLS,
 })
 WRITE_TOOLS = frozenset({
     "remember", "memory_reject", "run_workflow", "list_workflows",
     *OPERATOR_WRITE_TOOLS,
+    *FRONTIER_WRITE_TOOLS,
 })
 ALL_TOOLS = SAFE_TOOLS | WRITE_TOOLS
 

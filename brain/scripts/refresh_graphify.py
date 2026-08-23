@@ -15,6 +15,7 @@ Install the optional builder once in a clone:
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
 import os
@@ -25,7 +26,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_CORPUS = ROOT / "vault"
-DEFAULT_OUTPUT = ROOT / "graphify-out"
+DEFAULT_OUTPUT = ROOT / "graphify-out" / "knowledge"
 sys.path.insert(0, str(ROOT))
 
 from knowledge.graphify import (  # noqa: E402
@@ -421,6 +422,7 @@ def finalize_projection(
     directories, directory_entries = _source_tree(resolved_root)
     projection = {
         "schemaVersion": 2,
+        "projectionKind": "knowledge",
         "root": str(resolved_root),
         "scope": "owner",
         "mode": mode,
@@ -436,11 +438,28 @@ def finalize_projection(
         "extractionEvidence": extraction,
         "buildId": build_id,
     }
+    graph_data = json.loads(graph_path.read_text(encoding="utf-8"))
+    projection_manifest = {
+        "schemaVersion": "prepende-projection-manifest-v1",
+        "kind": "knowledge",
+        "sourceRoot": str(resolved_root),
+        "revision": attestation["corpusSha256"],
+        "projectionSchema": "graphify-projection-v2",
+        "generatedAt": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+        "counts": {
+            "sources": len(relative_files),
+            "nodes": len(graph_data.get("nodes") or []),
+            "edges": len(graph_data.get("links", graph_data.get("edges")) or []),
+            "hyperedges": len(graph_hyperedges(graph_data)),
+        },
+        "checksum": "sha256:" + attestation["graphSha256"],
+    }
     # projection.json is the commit marker. If a preceding atomic write is
     # interrupted, the old projection remains and its hashes fail closed.
     _atomic_text(out / ".graphify_root", str(resolved_root) + "\n")
     _atomic_text(out / ".graphify_python", python_executable or sys.executable)
     _atomic_json(out / "manifest.json", manifest)
+    _atomic_json(out / "projection-manifest.json", projection_manifest)
     if sha256_file(graph_path) != attestation["graphSha256"]:
         raise RuntimeError("graph changed while finalization was in progress")
     _atomic_json(out / "projection.json", projection)
@@ -468,7 +487,7 @@ def main() -> int:
     )
     parser.add_argument(
         "--out", default=str(DEFAULT_OUTPUT),
-        help="Graphify output directory (default: repository graphify-out)",
+        help="Graphify output directory (default: repository graphify-out/knowledge)",
     )
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument(
