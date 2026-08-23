@@ -79,7 +79,8 @@ For the existing local brain restore drill:
 
 ```bash
 MODEL_PROVIDER=echo python3 scripts/restore_drill.py
-python3 scripts/prepende_recovery_receipts.py collect-restore-drill
+python3 scripts/prepende_recovery_receipts.py collect-restore-drill \
+  --scope example-company--research
 ```
 
 The collector imports only the latest JSONL drill result and maps its backup,
@@ -90,21 +91,38 @@ memory, vault, and lexical-RAG checks to the `prepende_recovery` contract.
 Preview selection without changing the runtime manifest:
 
 ```bash
-python3 scripts/prepende_recovery_receipts.py build --dry-run
+python3 scripts/prepende_recovery_receipts.py build \
+  --scope example-company--research --dry-run
 ```
 
 When the selected receipts are correct:
 
 ```bash
-python3 scripts/prepende_recovery_receipts.py build
-python3 scripts/verify_prepende_recovery.py --json
+python3 scripts/prepende_recovery_receipts.py build \
+  --scope example-company--research
+python3 scripts/verify_prepende_recovery.py \
+  --json --scope example-company--research
 npm run prepende -- context-fast "Recovery acceptance" \
-  --json --scope prepende-operations --profile recovery
+  --json --scope example-company--research --profile recovery
 ```
 
 The build command may return nonzero while still writing a truthful partial
 manifest. That means one or more gates are failed or unknown, not that manifest
 assembly malfunctioned.
+
+Manifest selection is tenant-scoped. Receipts from another business are
+reported as ignored and can neither satisfy nor poison the selected scope.
+Use `record-gap` to replace an unknown with a fresh, evidence-bearing failure
+when a bounded rehearsal cannot perform the required external, owner-controlled,
+off-device, or replacement-host drill. A red receipt is current proof of a gap;
+it is never promoted to a pass.
+
+```bash
+python3 scripts/prepende_recovery_receipts.py record-gap \
+  --gate lost_machine_drill \
+  --scope example-company--research \
+  --summary "No replacement host was available for this rehearsal."
+```
 
 ## Hard safety boundaries
 

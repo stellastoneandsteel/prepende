@@ -64,6 +64,8 @@ def main() -> None:
             str(receipts),
             "--output",
             str(manifest),
+            "--scope",
+            "prepende-operations",
             "--dry-run",
         )
         assert proc.returncode == 1, payload
@@ -85,11 +87,30 @@ def main() -> None:
             str(receipts),
             "--output",
             str(manifest),
+            "--scope",
+            "prepende-operations",
             "--dry-run",
         )
         assert proc.returncode == 1, payload
         assert payload["gateCounts"] == {"pass": 0, "fail": 1, "unknown": 9}, payload
         assert payload["diagnostics"]["selected"][0]["status"] == "fail", payload
+
+        proc, payload = run(
+            "record-gap",
+            "--gate",
+            "lost_machine_drill",
+            "--scope",
+            "prepende-operations",
+            "--summary",
+            "No replacement host was available for this bounded fixture.",
+            "--receipts-dir",
+            str(receipts),
+        )
+        assert proc.returncode == 0, payload
+        assert payload["status"] == "fail", payload
+        gap_receipt = json.loads(Path(payload["receiptPath"]).read_text(encoding="utf-8"))
+        assert gap_receipt["scope"] == "prepende-operations", gap_receipt
+        assert all(check["status"] == "fail" for check in gap_receipt["checks"]), gap_receipt
 
         invalid = json.loads(json.dumps(template))
         invalid["proofClass"] = "responsive_cli"

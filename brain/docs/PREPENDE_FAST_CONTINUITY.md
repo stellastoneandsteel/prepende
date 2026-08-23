@@ -11,10 +11,10 @@ disaster recovery.
 ```bash
 npm run prepende -- context-fast "<goal>" --json --scope <scope>
 npm run prepende -- context-fast "<goal>" --json --scope <scope> --profile recovery
-python3 scripts/verify_prepende_recovery.py --json
+python3 scripts/verify_prepende_recovery.py --json --scope <scope>
 python3 scripts/verify_prepende_recovery.py --print-template
 python3 scripts/prepende_recovery_receipts.py template --gate netlify_recovery
-python3 scripts/prepende_recovery_receipts.py build --dry-run
+python3 scripts/prepende_recovery_receipts.py build --scope <scope> --dry-run
 ```
 
 Supported continuity profiles are `general`, `coding`, `deployment`, and
@@ -93,6 +93,10 @@ Unknown gates do not receive partial credit. Netlify deploy history is not a
 source or database backup. Supabase project health is not restore proof. Local
 archives on the same physical disk are not offsite recovery.
 
+The manifest itself is bound to one exact tenant/workspace scope. Assembly
+ignores receipts from all other scopes before validation, and continuity
+refuses a manifest whose scope does not match the requested handoff.
+
 The verifier is read-only. It validates a cached evidence manifest; it does not
 perform destructive restoration or turn fixture evidence into production proof.
 
@@ -110,13 +114,13 @@ python3 scripts/prepende_recovery_receipts.py template --gate supabase_recovery
 python3 scripts/prepende_recovery_receipts.py record --input <observation.json>
 
 # Import the latest existing isolated Prepende restore drill.
-python3 scripts/prepende_recovery_receipts.py collect-restore-drill
+python3 scripts/prepende_recovery_receipts.py collect-restore-drill --scope <scope>
 
 # Select the newest valid receipt per gate and write the cached manifest.
-python3 scripts/prepende_recovery_receipts.py build
+python3 scripts/prepende_recovery_receipts.py build --scope <scope>
 
 # Independently verify the receipt references, digests, freshness, and gates.
-python3 scripts/verify_prepende_recovery.py --json
+python3 scripts/verify_prepende_recovery.py --json --scope <scope>
 ```
 
 Every gate has a fixed proof class, allowed producer kind, and required check

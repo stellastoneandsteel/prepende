@@ -130,7 +130,7 @@
     {
       "mode": "0644",
       "path": "docs/PREPENDE_FAST_CONTINUITY.md",
-      "sha256": "67c3d682f7abfcc5416f271c89c14f8bed3dea477930697c1d85e7ba8d9e21e1"
+      "sha256": "c5e3c1cb6953aa2bae04274d30f9be72024e82edb18a2cf903dc6e47b6148319"
     },
     {
       "mode": "0644",
@@ -150,7 +150,7 @@
     {
       "mode": "0644",
       "path": "docs/PREPENDE_RECOVERY_RECEIPTS.md",
-      "sha256": "b51acad7b06ace251c5f49f7de100175511795332dc37be418bdc4cf61ad980c"
+      "sha256": "dffa871bc847c71b85f0a5f72e66032bb261aa102d3a66e1765f6b14a3da3f45"
     },
     {
       "mode": "0644",
@@ -560,7 +560,7 @@
     {
       "mode": "0644",
       "path": "operations/continuity.py",
-      "sha256": "78cc9ffac6c91219f73ebab36086395251d688cf7b24b188315575882aabedd0"
+      "sha256": "d1b63ddb2e59dbb4e7e74b7a29536742d1c2594c8d1d94973e140c91a055d4d0"
     },
     {
       "mode": "0644",
@@ -570,7 +570,7 @@
     {
       "mode": "0644",
       "path": "operations/recovery_receipts.py",
-      "sha256": "f49f65fdcf29668fcf03e6b72eebe25c6391ed2e870014f31e8f4f5e3ed86067"
+      "sha256": "96368b217f625f55e52c3cf9b5cb87e93e5abf9b14203a3068a5afd086048357"
     },
     {
       "mode": "0644",
@@ -595,7 +595,7 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "5466ec3be47f23aa7bba739350384bcd2a5c4e00ca7b3333b1c1fdeb3f4024b9"
+      "sha256": "1d58a9f25ae8fe08d013447d624cbe1677b67f613f73e6314862469e87cdfdeb"
     },
     {
       "mode": "0644",
@@ -730,7 +730,7 @@
     {
       "mode": "0644",
       "path": "scripts/prepende_recovery_receipts.py",
-      "sha256": "e6a22175d9279d7109d69d82129ca8e5b17beda705012176bcdd45550e5b814b"
+      "sha256": "c75cb8b95247dd02c9d1a03b5a811c889810cf8b731528bdb15be1e79fd08883"
     },
     {
       "mode": "0644",
@@ -760,7 +760,7 @@
     {
       "mode": "0644",
       "path": "scripts/verify_prepende_recovery.py",
-      "sha256": "4697ef7ce6dae5e1016eaa1e2c9271255cc5185ac3c0e2d17b464ad39f4e4e66"
+      "sha256": "8d01a7172dc4995dcfc9276de8f3c839a165488218d939089a289a15414b66ee"
     },
     {
       "mode": "0644",
@@ -910,7 +910,7 @@
     {
       "mode": "0644",
       "path": "tests/smoke_continuity_v2.py",
-      "sha256": "d6378baf1efe810774b01cdb64e70fcfafe9b76ad737512bffa445ee3d65f0c1"
+      "sha256": "4eface9659fb0a50a10a864fefc19bc79a02178516fe065f2092c5595f46bd47"
     },
     {
       "mode": "0644",
@@ -1045,12 +1045,12 @@
     {
       "mode": "0644",
       "path": "tests/smoke_recovery_receipt_pipeline.py",
-      "sha256": "2afc3f72760e5f6436a1e22c79e44048121d3cdc1d66e29544a5a3491574d3bd"
+      "sha256": "e234677db47902cf2ac40d3c2b18fc3117267d6e805354caabfafd11c498370b"
     },
     {
       "mode": "0644",
       "path": "tests/smoke_recovery_verifier.py",
-      "sha256": "3e9a0b116766f02dd0616db11605f53bc6fda91d0ef3abee4867ac5a7805fd0c"
+      "sha256": "b8c2ee809c56a8ee04b2dc5e108342043b0c2b9b313209e7dcf899eefeea32bf"
     },
     {
       "mode": "0755",
@@ -1166,7 +1166,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "5466ec3be47f23aa7bba739350384bcd2a5c4e00ca7b3333b1c1fdeb3f4024b9",
+  "inventorySha256": "1d58a9f25ae8fe08d013447d624cbe1677b67f613f73e6314862469e87cdfdeb",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1174,10 +1174,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 232
   },
-  "reviewedInventorySha256": "ac59a35eac21fa76f73223febf925da30563f724e76178861f96cc4dc4581010",
+  "reviewedInventorySha256": "898aa1049372ab0d655cc7d8d80c7df72607b5b3ed7b6a442ae629f5dac0b77f",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "de6cc32f4380da291d0d419164c2c29da9da8935",
-  "sourceRevision": "1669613771795f1c155c745305a18160051baa56",
+  "sourceIndexTree": "2e526d0d716744c6b432b0c82ee1b37a0bb028fc",
+  "sourceRevision": "38d923e681e1c1f364a81fed113fe78f6419f563",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "bbc1190af69c35e12c1a13553d2fb62b19ae65d8c262e52fa7b17e5ed5ac6f9a"
+  "sourceTreeSha256": "742300898e82aa1167bc17fd006a06edbdd34fafcecfcb985c15ef58f0d1bc80"
 }

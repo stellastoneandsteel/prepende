@@ -52,6 +52,7 @@ def template() -> dict:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--manifest", help="Recovery manifest path; defaults to PREPENDE_RECOVERY_MANIFEST or the repo-local cache")
+    parser.add_argument("--scope", help="Require the manifest to belong to this exact tenant/workspace scope")
     parser.add_argument("--json", action="store_true", help="Print the complete machine-readable result")
     parser.add_argument("--print-template", action="store_true", help="Print an unproven manifest template and exit")
     args = parser.parse_args()
@@ -70,7 +71,11 @@ def main() -> int:
             manifest = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as exc:
             error = f"{type(exc).__name__}: {exc}"
-    result = evaluate_recovery_manifest(manifest, manifest_dir=path.parent)
+    result = evaluate_recovery_manifest(
+        manifest,
+        manifest_dir=path.parent,
+        expected_scope=args.scope,
+    )
     if error:
         result["status"] = "unreadable"
         result["reasons"] = [f"recovery_manifest_unreadable:{error}"]
