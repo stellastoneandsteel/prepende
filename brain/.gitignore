@@ -1,0 +1,72 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+node_modules/
+.python-version
+
+# Env / secrets — never commit. Prepende uses its own keys; no
+# credential of any kind belongs in this repo. (See SEPARATION.md.)
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.secret
+*.local
+secrets/
+credentials*.json
+
+# Local data / indexes (the RAG index is a rebuildable projection)
+*.db
+*.sqlite
+/data/
+/.index/
+/.workspaces/
+/.engram/
+.engram_sandbox/
+# Graphify output is a local, rebuildable projection and can contain derived
+# repository/corpus structure. Keep it persistent on disk but out of git.
+/graphify-out/
+# Tenant/customer vaults and local Obsidian state are always private runtime
+# data. The trusted operator checkout may retain its existing private owner
+# corpus, but clean distributions exclude the entire vault tree.
+/vault/tenants/
+/vault/.obsidian/
+/vault/.trash/
+/prepende-data/
+
+# Run/heal logs are local artifacts — they embed absolute machine paths and are
+# rebuilt by the cadence/snapshot scripts. Keep on disk, out of git.
+*.log
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# MCP server config holds tokens — never commit
+mcp_servers.json
+.deploy-token.txt
+workflows.json
+/config/codex-security.local.json
+
+# Local Netlify folder
+.netlify
+
+# Generated deliverables / scratch — real work products live here (client
+# packages, rendered media), but they are large rebuilt-by-script artifacts,
+# not source. Keep them on disk, out of git.
+/output/
+/outreach/
+/tmp/
+
+# Local scratch dirs (X post drafts etc.) — never commit
+.tmp-*/
+
+# autopilot secrets
+autopilot/.autopilot.env
+.autopilot.env
+.newsroom.log

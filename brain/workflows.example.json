@@ -1,0 +1,15 @@
+{
+  "_comment": "Prepende workflow selector. Copy to workflows.json (gitignored — holds URLs/keys). Each workflow: name, description (the brain matches goals against this), url (n8n webhook), optional params.",
+  "workflows": [
+    {
+      "name": "send_invoice",
+      "description": "create and email an invoice to a client",
+      "url": "https://YOUR-n8n-host/webhook/send-invoice"
+    },
+    {
+      "name": "weekly_report",
+      "description": "compile and send the weekly metrics report",
+      "url": "https://YOUR-n8n-host/webhook/weekly-report"
+    }
+  ]
+}

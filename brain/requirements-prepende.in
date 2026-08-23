@@ -1,0 +1,10 @@
+# Direct dependencies for the standalone Prepende MCP/TUI runtime.
+#
+# Regenerate requirements-prepende.lock deliberately with:
+#   uv pip compile --universal --generate-hashes --no-annotate \
+#     --custom-compile-command \
+#     'uv pip compile --universal --generate-hashes requirements-prepende.in -o requirements-prepende.lock' \
+#     requirements-prepende.in -o requirements-prepende.lock
+mcp==1.28.1
+textual==6.11.0
+uvicorn==0.51.0
