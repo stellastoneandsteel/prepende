@@ -10,7 +10,7 @@
     {
       "mode": "0644",
       "path": ".env.example",
-      "sha256": "c018c2b3a30f3fbf4857e0032f43971cf8d5b230d75cdcb2b07d98142f229657"
+      "sha256": "a4c5ae395b738f456dc0b4e37027e634faaaad5cf51d09c77581c6f1cea1b672"
     },
     {
       "mode": "0644",
@@ -590,12 +590,12 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-manifest.json",
-      "sha256": "2f5e17d572d22a9ff8879aff1fed41f92abd5f1a42432602e813a6bd86370e57"
+      "sha256": "79312823cdbc5875d01dbc42d810470f6ec0959f575175d9cdb9da2b30563493"
     },
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "1d58a9f25ae8fe08d013447d624cbe1677b67f613f73e6314862469e87cdfdeb"
+      "sha256": "e377f03897ec3b66319e0b60acae59945bfe476109fc722313826f75db5a2d41"
     },
     {
       "mode": "0644",
@@ -1166,7 +1166,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "1d58a9f25ae8fe08d013447d624cbe1677b67f613f73e6314862469e87cdfdeb",
+  "inventorySha256": "e377f03897ec3b66319e0b60acae59945bfe476109fc722313826f75db5a2d41",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1174,10 +1174,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 232
   },
-  "reviewedInventorySha256": "898aa1049372ab0d655cc7d8d80c7df72607b5b3ed7b6a442ae629f5dac0b77f",
+  "reviewedInventorySha256": "92e5f992869d3451d35650cbeed30a13588770e98be624c8c7e88813b3ec5d0b",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "2e526d0d716744c6b432b0c82ee1b37a0bb028fc",
-  "sourceRevision": "38d923e681e1c1f364a81fed113fe78f6419f563",
+  "sourceIndexTree": "b27905ff8bb97c423b6e3f97292d31d19a0e05a5",
+  "sourceRevision": "5ac47a92bf123b1c4f60fef6bf8d91ee37ee18df",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "742300898e82aa1167bc17fd006a06edbdd34fafcecfcb985c15ef58f0d1bc80"
+  "sourceTreeSha256": "6a80263532a736ee0cd5a3e736c947c40a4c52697fdfa136fefdeb0fbbff3cd4"
 }
