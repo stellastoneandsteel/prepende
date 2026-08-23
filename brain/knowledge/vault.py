@@ -85,7 +85,20 @@ class VaultKnowledge(Knowledge):
     async def search(self, query: str, k: int = 8) -> Sequence[Any]:
         """Hybrid search over the vault's RAG projection. Refreshes changed
         files first so results track the markdown, never a stale index."""
+        await self.prepare_search()
+        return await self.search_prepared(query, k=k)
+
+    async def prepare_search(self) -> None:
+        """Refresh once before a bounded parallel retrieval batch.
+
+        Query-evidence graphs call this before fanning out so concurrent nodes
+        share one certified index snapshot instead of contending on one refresh
+        lock per query.
+        """
         await self.rag.refresh()
+
+    async def search_prepared(self, query: str, k: int = 8) -> Sequence[Any]:
+        """Search an index already refreshed by the current retrieval run."""
         return await self.rag.search(query, k=k)
 
     def _page_path(self, page_id: str) -> Path:

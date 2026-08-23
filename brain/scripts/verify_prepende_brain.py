@@ -51,6 +51,7 @@ SMOKES = (
     "smoke_prepende_operator_receipts.py",
     "smoke_operational_status.py",
     "smoke_prepende_dependency_lock.py",
+    "smoke_query_evidence_graph.py",
     "smoke_recovery_receipt_pipeline.py",
     "smoke_recovery_verifier.py",
     "smoke_reviewed_knowledge_bundle.py",
