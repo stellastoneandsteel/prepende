@@ -23,6 +23,13 @@ DEFAULT_PACKET_TTL_SECONDS = 300
 DEFAULT_RECOVERY_EVIDENCE_MAX_AGE_DAYS = 31
 DEFAULT_RECOVERY_MANIFEST = Path(".engram/continuity/recovery-manifest.json")
 SUPPORTED_PROFILES = frozenset({"general", "coding", "deployment", "recovery"})
+RAG_COUNT_FIELDS = (
+    "source_files",
+    "indexed_files",
+    "chunks",
+    "embedded_chunks",
+    "missing_embeddings",
+)
 
 RECOVERY_GATE_IDS = (
     "inventory",
@@ -326,6 +333,38 @@ def _add_blocker(
     )
 
 
+def _rag_continuity_state(rag: Any) -> str:
+    """Classify the scoped RAG status without upgrading an empty index to ready."""
+
+    if not isinstance(rag, dict) or not rag:
+        return "invalid"
+    counts = {field: rag.get(field) for field in RAG_COUNT_FIELDS}
+    if any(
+        not isinstance(value, int) or isinstance(value, bool) or value < 0
+        for value in counts.values()
+    ):
+        return "invalid"
+    if not isinstance(rag.get("stale"), bool) or not isinstance(
+        rag.get("lexical_ready"), bool
+    ):
+        return "invalid"
+
+    empty = all(value == 0 for value in counts.values())
+    if empty:
+        return "empty" if rag["stale"] is False and rag["lexical_ready"] is False else "invalid"
+
+    internally_consistent = (
+        counts["source_files"] > 0
+        and counts["source_files"] == counts["indexed_files"]
+        and counts["chunks"] > 0
+        and counts["embedded_chunks"] <= counts["chunks"]
+        and counts["embedded_chunks"] + counts["missing_embeddings"] == counts["chunks"]
+    )
+    if rag["lexical_ready"] is True and rag["stale"] is False and internally_consistent:
+        return "ready"
+    return "unavailable"
+
+
 def build_continuity_packet(
     *,
     root: Path,
@@ -360,10 +399,36 @@ def build_continuity_packet(
 
     status = status_payload if isinstance(status_payload, dict) else {}
     knowledge = status.get("knowledge") if isinstance(status.get("knowledge"), dict) else {}
-    rag = knowledge.get("rag") if isinstance(knowledge.get("rag"), dict) else {}
+    rag = knowledge.get("rag")
     graph = knowledge.get("graphify") if isinstance(knowledge.get("graphify"), dict) else {}
-    if transport_ok and rag and not bool(rag.get("lexical_ready")):
-        _add_blocker(blockers, "rag_lexical_unavailable", "critical", "The rebuildable lexical knowledge path is unavailable.", blocks=("continuity", "plan"), source_id="prepende-status")
+    if transport_ok:
+        rag_state = _rag_continuity_state(rag)
+        if rag_state == "empty" and normalized_profile == "coding":
+            _add_blocker(
+                blockers,
+                "rag_empty_coding_scope",
+                "advisory",
+                "The tenant knowledge index is truthfully empty; coding work may proceed without knowledge recall.",
+                source_id="prepende-status",
+            )
+        elif rag_state == "invalid":
+            _add_blocker(
+                blockers,
+                "rag_status_invalid",
+                "critical",
+                "The scoped RAG status is missing, malformed, or internally inconsistent.",
+                blocks=("continuity", "plan"),
+                source_id="prepende-status",
+            )
+        elif rag_state != "ready":
+            _add_blocker(
+                blockers,
+                "rag_lexical_unavailable",
+                "critical",
+                "The rebuildable lexical knowledge path is unavailable.",
+                blocks=("continuity", "plan"),
+                source_id="prepende-status",
+            )
     if graph and not bool(graph.get("ready")):
         _add_blocker(blockers, "graph_projection_stale", "advisory", f"Graphify is optional and currently unavailable: {graph.get('reason') or 'unknown'}.", source_id="prepende-status")
     connectors = status.get("connectors") if isinstance(status.get("connectors"), dict) else {}

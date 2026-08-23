@@ -74,14 +74,19 @@ def validate_operator_finish(
     if terminal_status not in TERMINAL_STATES:
         raise ValueError("status must be succeeded, blocked, or failed")
     evidence_items = _string_list(evidence, "evidence")
+    check_items = _string_list(checks, "check")
     executed_actions = normalize_external_actions(external_actions)
     if executed_actions and not evidence_items:
         raise ValueError("external actions require at least one evidence entry")
+    if terminal_status == "succeeded" and not evidence_items:
+        raise ValueError("a succeeded operator receipt requires artifact evidence")
+    if terminal_status == "succeeded" and not check_items:
+        raise ValueError("a succeeded operator receipt requires at least one check")
     return {
         "status": terminal_status,
         "outcome": _bounded(outcome, "outcome", 4000),
         "evidence": evidence_items,
-        "checks": _string_list(checks, "check"),
+        "checks": check_items,
         "externalActions": executed_actions,
         "actionExecuted": bool(executed_actions),
     }
@@ -139,6 +144,7 @@ class OperatorReceiptStore:
             raise ValueError("lane must be direct or sandbox")
         operator = _bounded(operator, "operator", 80)
         preflight_json = json.dumps(preflight, sort_keys=True, separators=(",", ":"), default=str)
+        preflight_verdict = preflight.get("verdict") if isinstance(preflight.get("verdict"), dict) else {}
         receipt_id = "op_" + uuid.uuid4().hex[:20]
         now = _iso()
         receipt = {
@@ -158,6 +164,12 @@ class OperatorReceiptStore:
                 "command": "context-fast",
                 "ok": bool(preflight.get("ok")),
                 "scope": preflight.get("scope"),
+                "profile": preflight.get("profile"),
+                "ready": bool(preflight.get("ready")),
+                "transportOk": bool(preflight_verdict.get("transportOk")),
+                "continuityReady": bool(preflight_verdict.get("continuityReady")),
+                "planReady": bool(preflight_verdict.get("planReady")),
+                "recoveryProven": bool(preflight_verdict.get("recoveryProven")),
                 "receiptDigest": "sha256:" + hashlib.sha256(preflight_json.encode("utf-8")).hexdigest(),
                 "externalActions": preflight.get("externalActions", []),
                 "actionExecuted": bool(preflight.get("actionExecuted")),

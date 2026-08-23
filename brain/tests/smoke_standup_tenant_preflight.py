@@ -23,10 +23,16 @@ MIGRATIONS = (
     "019_engram_kernel_memory.sql",
     "020_engram_kernel_queues.sql",
     "021_kernel_scope_guards.sql",
+    "20260823143000_engram_candidate_atomic_dedupe.sql",
 )
 
 
-def fixture(env_text: str, *, migrations: bool = True) -> tuple[Path, Path, dict[str, str]]:
+def fixture(
+    env_text: str,
+    *,
+    migrations: bool = True,
+    omitted_migrations: tuple[str, ...] = (),
+) -> tuple[Path, Path, dict[str, str]]:
     root = Path(tempfile.mkdtemp(prefix="prepende_standup_preflight_"))
     for relative in ("scripts", "packs", "supabase/migrations", "bin", "prepende_brain"):
         (root / relative).mkdir(parents=True, exist_ok=True)
@@ -41,6 +47,8 @@ def fixture(env_text: str, *, migrations: bool = True) -> tuple[Path, Path, dict
     (root / ".env").write_text(env_text, encoding="utf-8")
     if migrations:
         for name in MIGRATIONS:
+            if name in omitted_migrations:
+                continue
             (root / "supabase" / "migrations" / name).write_text(
                 "-- fixture\n", encoding="utf-8"
             )
@@ -151,6 +159,19 @@ def main() -> None:
         assert proc.returncode == 1 and calls(log) == [], output(proc)
         assert "missing source migration" in output(proc)
         print("OK source preflight: missing migration stops before seed or mint")
+
+        required_dedupe_migration = (
+            "20260823143000_engram_candidate_atomic_dedupe.sql"
+        )
+        root, log, env = fixture(
+            "DATABASE_URL=postgres://fixture.invalid/db\nMEMORY_BACKEND=postgres\n",
+            omitted_migrations=(required_dedupe_migration,),
+        )
+        roots.append(root)
+        proc = run(root, env, "--scope", "tenant-a")
+        assert proc.returncode == 1 and calls(log) == [], output(proc)
+        assert required_dedupe_migration in output(proc)
+        print("OK source preflight: missing candidate-dedupe migration refuses standup")
 
         root, log, env = fixture("MEMORY_BACKEND=sqlite\n")
         roots.append(root)

@@ -30,7 +30,14 @@ import json
 import uuid
 from typing import Any
 
-from memory.candidates import _KINDS, _PROVENANCE_KEYS  # one source of truth for both
+from memory.candidates import (  # one source of truth for both
+    _KINDS,
+    _PROVENANCE_KEYS,
+    _candidate_metadata,
+    _decode_metadata,
+    _legacy_candidate_is_compatible,
+    normalize_candidate_content,
+)
 
 _TABLE = "public.engram_kernel_memory_candidates"
 
@@ -47,10 +54,47 @@ CREATE TABLE IF NOT EXISTS {_TABLE} (
     reviewed_at timestamptz,
     memory_id   text,
     reason      text,
-    metadata    jsonb NOT NULL DEFAULT '{{}}'::jsonb
+    metadata    jsonb NOT NULL DEFAULT '{{}}'::jsonb,
+    dedupe_key  text
 );
+ALTER TABLE {_TABLE} ADD COLUMN IF NOT EXISTS dedupe_key text;
+WITH valid_metadata AS (
+    SELECT id, scope, metadata->>'dedupe_key' AS metadata_key
+    FROM {_TABLE}
+    WHERE jsonb_typeof(metadata->'dedupe_key') = 'string'
+      AND metadata->>'dedupe_key' = btrim(metadata->>'dedupe_key')
+      AND char_length(metadata->>'dedupe_key') BETWEEN 1 AND 256
+), identity_rows AS (
+    SELECT id, scope, dedupe_key AS identity_key
+    FROM {_TABLE}
+    WHERE dedupe_key IS NOT NULL
+    UNION
+    SELECT id, scope, metadata_key AS identity_key
+    FROM valid_metadata
+), unambiguous AS (
+    SELECT scope, identity_key, min(id) AS id
+    FROM identity_rows
+    GROUP BY scope, identity_key
+    HAVING count(DISTINCT id) = 1
+), backfill AS (
+    SELECT valid_metadata.id, valid_metadata.scope,
+           valid_metadata.metadata_key
+    FROM valid_metadata
+    JOIN unambiguous
+      ON unambiguous.id = valid_metadata.id
+     AND unambiguous.scope = valid_metadata.scope
+     AND unambiguous.identity_key = valid_metadata.metadata_key
+)
+UPDATE {_TABLE} AS candidate
+SET dedupe_key = backfill.metadata_key
+FROM backfill
+WHERE candidate.id = backfill.id
+  AND candidate.scope = backfill.scope
+  AND candidate.dedupe_key IS NULL;
 CREATE INDEX IF NOT EXISTS engram_kernel_memory_candidates_scope_status_idx
     ON {_TABLE} (scope, status, created_at DESC);
+CREATE UNIQUE INDEX IF NOT EXISTS engram_kernel_memory_candidates_scope_dedupe_key_idx
+    ON {_TABLE} (scope, dedupe_key) WHERE dedupe_key IS NOT NULL;
 """
 
 _DECIDABLE = ("pending", "deferred")
@@ -90,6 +134,7 @@ class PostgresCandidateQueue:
             "memoryId": r["memory_id"],
             "reason": r["reason"],
             "metadata": self._meta(r["metadata"]),
+            "dedupeKey": r["dedupe_key"],
         }
 
     async def _ensure(self):
@@ -119,6 +164,21 @@ class PostgresCandidateQueue:
                     raise RuntimeError(
                         "engram_kernel_memory_candidates is missing and this role cannot create it "
                         "— apply supabase/migrations/020_engram_kernel_queues.sql as admin first")
+                dedupe_column = await con.fetchrow(
+                    "SELECT 1 FROM information_schema.columns WHERE table_schema='public' "
+                    "AND table_name='engram_kernel_memory_candidates' AND column_name='dedupe_key'")
+                if dedupe_column is None:
+                    raise RuntimeError(
+                        "engram_kernel_memory_candidates.dedupe_key is missing — apply the "
+                        "candidate dedupe migration as admin before staging ingestion candidates")
+                dedupe_index = await con.fetchrow(
+                    "SELECT 1 FROM pg_indexes WHERE schemaname='public' "
+                    "AND tablename='engram_kernel_memory_candidates' "
+                    "AND indexname='engram_kernel_memory_candidates_scope_dedupe_key_idx'")
+                if dedupe_index is None:
+                    raise RuntimeError(
+                        "candidate dedupe unique index is missing — apply the candidate dedupe "
+                        "migration as admin before staging ingestion candidates")
             self._pools[loop] = pool
             return pool
 
@@ -128,21 +188,142 @@ class PostgresCandidateQueue:
 
     async def propose(self, content: str, *, scope: str, kind: str = "semantic",
                       source: str = "unknown", metadata: dict[str, Any] | None = None) -> dict[str, Any]:
+        candidate, _created = await self._propose(
+            content,
+            scope=scope,
+            kind=kind,
+            source=source,
+            metadata=metadata,
+        )
+        return candidate
+
+    async def propose_unique(
+        self,
+        content: str,
+        *,
+        scope: str,
+        dedupe_key: str,
+        kind: str = "semantic",
+        source: str = "unknown",
+        metadata: dict[str, Any] | None = None,
+    ) -> tuple[dict[str, Any], bool]:
+        """Atomically stage once per ``(scope, dedupe_key)`` across all states."""
+
+        return await self._propose(
+            content,
+            scope=scope,
+            kind=kind,
+            source=source,
+            metadata=metadata,
+            dedupe_key=dedupe_key,
+        )
+
+    async def _propose(
+        self,
+        content: str,
+        *,
+        scope: str,
+        kind: str,
+        source: str,
+        metadata: dict[str, Any] | None,
+        dedupe_key: str | None = None,
+    ) -> tuple[dict[str, Any], bool]:
         scope = self._check_scope(scope)
-        content = (content or "").strip()[:2000]
+        content = normalize_candidate_content(content)
         if not content:
             raise ValueError("candidate content is empty")
         kind = kind if kind in _KINDS else "semantic"
+        prepared_meta, selected_key = _candidate_metadata(
+            content, metadata, dedupe_key=dedupe_key
+        )
         cid = f"cand_{uuid.uuid4().hex[:16]}"
         pool = await self._ensure()
         async with pool.acquire() as con:
             async with con.transaction():
                 await self._scoped(con, scope)
-                await con.execute(
-                    f"INSERT INTO {_TABLE} (id, scope, kind, content, source, status, metadata) "
-                    "VALUES ($1,$2,$3,$4,$5,'pending',$6::jsonb)",
-                    cid, scope, kind, content, source, json.dumps(metadata or {}))
-        return await self.get(cid, scope=scope)  # type: ignore[return-value]
+                if selected_key is not None:
+                    # Serialize the NULL-key legacy claim for this canonical
+                    # identity. Distinct identities may proceed concurrently;
+                    # row locks prevent them from claiming the same legacy row.
+                    await con.fetchval(
+                        "SELECT pg_advisory_xact_lock(hashtextextended($1, 0))",
+                        f"{scope}\x1f{selected_key}",
+                    )
+                    existing = await con.fetchrow(
+                        f"SELECT * FROM {_TABLE} "
+                        "WHERE scope=$1 AND dedupe_key=$2",
+                        scope,
+                        selected_key,
+                    )
+                    if existing is not None:
+                        return self._row(existing), False
+
+                    legacy_rows = await con.fetch(
+                        f"SELECT * FROM {_TABLE} WHERE scope=$1 "
+                        "AND dedupe_key IS NULL AND content=$2 "
+                        "AND kind=$3 AND source=$4 "
+                        "ORDER BY created_at ASC, id ASC FOR UPDATE",
+                        scope,
+                        content,
+                        kind,
+                        source,
+                    )
+                    for legacy in legacy_rows:
+                        legacy_metadata = _decode_metadata(legacy["metadata"])
+                        if legacy_metadata is None or not _legacy_candidate_is_compatible(
+                            legacy_metadata, prepared_meta, selected_key
+                        ):
+                            continue
+                        if legacy["status"] in _DECIDABLE:
+                            claimed = await con.fetchrow(
+                                f"UPDATE {_TABLE} SET dedupe_key=$1, "
+                                "metadata=metadata || jsonb_build_object("
+                                "'content_hash', $2::text, 'dedupe_key', $1::text) "
+                                "WHERE id=$3 AND scope=$4 AND dedupe_key IS NULL "
+                                "RETURNING *",
+                                selected_key,
+                                prepared_meta["content_hash"],
+                                legacy["id"],
+                                scope,
+                            )
+                        else:
+                            claimed = await con.fetchrow(
+                                f"UPDATE {_TABLE} SET dedupe_key=$1 "
+                                "WHERE id=$2 AND scope=$3 AND dedupe_key IS NULL "
+                                "RETURNING *",
+                                selected_key,
+                                legacy["id"],
+                                scope,
+                            )
+                        if claimed is not None:
+                            return self._row(claimed), False
+
+                row = await con.fetchrow(
+                    f"INSERT INTO {_TABLE} "
+                    "(id, scope, kind, content, source, status, metadata, dedupe_key) "
+                    "VALUES ($1,$2,$3,$4,$5,'pending',$6::jsonb,$7) "
+                    "ON CONFLICT (scope, dedupe_key) WHERE dedupe_key IS NOT NULL "
+                    "DO NOTHING RETURNING *",
+                    cid,
+                    scope,
+                    kind,
+                    content,
+                    source,
+                    json.dumps(prepared_meta),
+                    selected_key,
+                )
+                if row is not None:
+                    return self._row(row), True
+                if selected_key is None:  # pragma: no cover - no matching conflict target
+                    raise RuntimeError("candidate insert returned no row without a dedupe key")
+                existing = await con.fetchrow(
+                    f"SELECT * FROM {_TABLE} WHERE scope=$1 AND dedupe_key=$2",
+                    scope,
+                    selected_key,
+                )
+                if existing is None:  # pragma: no cover - unique conflict row must exist
+                    raise RuntimeError("candidate dedupe conflict row was not readable")
+                return self._row(existing), False
 
     async def get(self, candidate_id: str, *, scope: str) -> dict[str, Any] | None:
         scope = self._check_scope(scope)
@@ -197,6 +378,11 @@ class PostgresCandidateQueue:
             raise ValueError(
                 "content_hash mismatch: candidate %s content changed since propose; refusing to promote"
                 % candidate_id)
+        if cand.get("dedupeKey") and cand_meta.get("dedupe_key") != cand.get("dedupeKey"):
+            raise ValueError(
+                "dedupe_key mismatch: candidate %s metadata changed since propose; refusing to promote"
+                % candidate_id
+            )
         pool = await self._ensure()
         async with pool.acquire() as con:
             async with con.transaction():

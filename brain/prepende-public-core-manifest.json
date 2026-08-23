@@ -30,6 +30,7 @@
     "kernel/core/tooluse.py",
     "kernel/core/types.py",
     "kernel/core/verifier.py",
+    "memory/ledger.py",
     "models/provenance.py",
     "prepende-export-manifest.json",
     "prepende-export-reviewed-inventory.json",
@@ -133,6 +134,10 @@
     "scripts/update_prepende_public_core_inventory.py",
     "scripts/verify_prepende_brain.py",
     "scripts/verify_prepende_recovery.py",
+    "supabase/migrations/019_engram_kernel_memory.sql",
+    "supabase/migrations/020_engram_kernel_queues.sql",
+    "supabase/migrations/021_kernel_scope_guards.sql",
+    "supabase/migrations/20260823143000_engram_candidate_atomic_dedupe.sql",
     "tests/smoke_cli_gateway.py",
     "tests/smoke_clone_bootstrap.py",
     "tests/smoke_clone_env.py",
@@ -196,7 +201,6 @@
     "operations/receipts/",
     "recovery/",
     "sites/",
-    "supabase/",
     "vault/"
   ],
   "excludeFiles": [

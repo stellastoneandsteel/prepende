@@ -54,6 +54,18 @@ not copy it into a customer-safe clone.
 | `lost_machine_drill` | Replacement-host acceptance | Starting from an isolated or replacement host, restore source and Prepende, reconnect hosted services through owner-controlled credentials, and run the acceptance suite. |
 | `failure_detection` | Alert canary | Induce safe backup and restore failures, prove detection, alert delivery, owner acknowledgement, and persistent receipt creation. |
 
+Hosted automation may emit bounded candidate evidence, but provider job success
+is not a passed recovery drill. A candidate cannot independently establish the
+replacement host lifecycle, complete service reconnection, isolated database
+restore, credential lifecycle, artifact readback, or owner recovery path, and
+it must not invoke the recorder as passing evidence.
+
+A passing lost-machine receipt requires an independently authenticated
+collector to bind provider execution and artifact evidence to every terminal
+check. Provider-specific workflow and evaluator instructions belong in the
+installation's private operator runbook. Without that binding, terminal checks
+remain failed or pending and the candidate is ineligible for a passing receipt.
+
 ## Producing a receipt
 
 Generate the exact observation skeleton:

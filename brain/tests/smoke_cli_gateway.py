@@ -138,6 +138,7 @@ def main() -> None:
             system="SYSTEM SENTINEL", output_schema=schema, tool_policy="none",
         ))
         assert answer == '{"ok":true}'
+        assert codex.resolved_model == "gpt-test", codex.resolved_model
         codex_call = structured_calls[-1]
         assert codex_call["schema"] == schema
         assert "--output-schema" in codex_call["cmd"]

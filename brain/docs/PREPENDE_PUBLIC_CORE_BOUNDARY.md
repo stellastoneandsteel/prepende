@@ -16,6 +16,11 @@ operator vault, runtime index, local database, graph projection, environment,
 secret, tenant material, product-specific adapter, operational receipt,
 recovery artifact, deployment state, or machine path.
 
+The product-neutral PostgreSQL memory and candidate queues ship with their exact
+required schema chain: migrations 019, 020, 021, and the additive candidate
+atomic-dedupe migration. No other `supabase/` source is admitted by the
+public-core manifest unless separately and explicitly reviewed.
+
 The private repository is an overlay. It may contain tenant configuration,
 operator receipts, recovery evidence, and private adapters, but it must pin the
 public brain to one exact public commit. A public snapshot is accepted only

@@ -22,9 +22,14 @@ FORBIDDEN = (
     "operations/receipts",
     "recovery",
     "sites",
-    "supabase",
     "vault",
 )
+REQUIRED_SQL = {
+    "supabase/migrations/019_engram_kernel_memory.sql",
+    "supabase/migrations/020_engram_kernel_queues.sql",
+    "supabase/migrations/021_kernel_scope_guards.sql",
+    "supabase/migrations/20260823143000_engram_candidate_atomic_dedupe.sql",
+}
 
 
 def main() -> None:
@@ -75,8 +80,22 @@ def main() -> None:
         )
         for relative in FORBIDDEN:
             assert not (destination / relative).exists(), relative
-        assert not any(destination.rglob("*.sql"))
+        exported_sql = {
+            path.relative_to(destination).as_posix()
+            for path in destination.rglob("*.sql")
+        }
+        assert exported_sql == REQUIRED_SQL, exported_sql
+        assert (destination / "memory" / "postgres_candidates.py").is_file()
         assert not any(destination.rglob("netlify*"))
+        exported_lock = subprocess.run(
+            [sys.executable, "tests/smoke_prepende_dependency_lock.py"],
+            cwd=destination,
+            text=True,
+            capture_output=True,
+            check=False,
+        )
+        assert exported_lock.returncode == 0, exported_lock.stdout + exported_lock.stderr
+        assert "smoke_prepende_dependency_lock: ALL OK" in exported_lock.stdout
     print("PREPENDE PUBLIC CORE EXPORT: OK")
 
 

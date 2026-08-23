@@ -32,7 +32,10 @@ async def main() -> None:
         "VAULT_PATH": os.path.join(tmp, "vault"),
         "VAULT_INDEX_PATH": os.path.join(tmp, "state", "owner-rag.db"),
         "MEMORY_SCOPE": "operator",
-        "WORKSPACE_SCOPE": "operator",
+        # The legacy owner corpus has no independent tenant-id setting. A
+        # distinct workspace identity must not prevent the composition root
+        # from starting or silently relabel its physical vault scope.
+        "WORKSPACE_SCOPE": "operator-workspace",
         "GRAPHIFY_GRAPH_PATH": os.path.join(tmp, "graphify", "graph.json"),
     })
 
@@ -43,6 +46,12 @@ async def main() -> None:
     engram_api._loop = engram_api._cfg = None
 
     owner = v1_api._brain()
+    owner_binding = owner.scoped_vaults.for_scope(
+        "operator",
+        tenant_id="operator",
+        workspace_id="operator-workspace",
+    )
+    assert owner_binding is owner.knowledge
     await owner.knowledge.write_page(
         "owner-secret", "# Owner Secret\n\noperator-only-nebula must stay private.\n"
     )

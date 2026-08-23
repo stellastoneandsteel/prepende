@@ -29,6 +29,7 @@ RetrievalStopReason = Literal[
     "partial",
     "no_evidence",
     "required_node_failed",
+    "identity_mismatch",
 ]
 
 _RUN_CONDITIONS = frozenset({
@@ -40,6 +41,7 @@ _RUN_CONDITIONS = frozenset({
 _NODE_STATUSES = frozenset({"succeeded", "failed", "skipped"})
 _STOP_REASONS = frozenset({
     "pass", "partial", "no_evidence", "required_node_failed",
+    "identity_mismatch",
 })
 _STABLE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$")
 _SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
@@ -90,6 +92,91 @@ def _bounded_text(label: str, value: str, maximum: int) -> str:
     if len(value) > maximum:
         raise ValueError(f"{label} must be at most {maximum} characters")
     return value.strip()
+
+
+@dataclass(frozen=True)
+class RetrievalIdentity:
+    """Server-owned binding between a logical scope and one physical index.
+
+    The hashes deliberately reveal neither a filesystem path nor corpus data.
+    ``index_revision`` changes when the certified index snapshot changes, while
+    the corpus and index hashes identify the physical handles that produced it.
+    """
+
+    tenant_id: str
+    workspace_id: str
+    scope_id: str
+    corpus_root_hash: str
+    index_path_hash: str
+    index_revision: str
+    source_files: int
+    chunks: int
+
+    def __post_init__(self) -> None:
+        for label in ("tenant_id", "workspace_id", "scope_id"):
+            object.__setattr__(self, label, _stable_id(label, getattr(self, label)))
+        for label in ("corpus_root_hash", "index_path_hash", "index_revision"):
+            value = getattr(self, label)
+            if not isinstance(value, str) or not _SHA256.fullmatch(value):
+                raise ValueError(f"{label} must be a sha256 content hash")
+        for label in ("source_files", "chunks"):
+            value = getattr(self, label)
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{label} must be a non-negative integer")
+
+    @classmethod
+    def from_mapping(cls, value: Mapping[str, Any]) -> "RetrievalIdentity":
+        if not isinstance(value, Mapping):
+            raise TypeError("retrieval identity must be an object")
+        aliases = {
+            "tenant_id": ("tenantId", "tenant_id"),
+            "workspace_id": ("workspaceId", "workspace_id"),
+            "scope_id": ("scopeId", "scope_id"),
+            "corpus_root_hash": ("corpusRootHash", "corpus_root_hash"),
+            "index_path_hash": ("indexPathHash", "index_path_hash"),
+            "index_revision": ("indexRevision", "index_revision"),
+            "source_files": ("sourceFiles", "source_files"),
+            "chunks": ("chunks",),
+        }
+        parsed: dict[str, Any] = {}
+        for target, names in aliases.items():
+            present = [value[name] for name in names if name in value]
+            if not present:
+                raise ValueError(f"retrieval identity is missing {names[0]}")
+            if any(item != present[0] for item in present[1:]):
+                raise ValueError(f"retrieval identity aliases disagree for {names[0]}")
+            parsed[target] = present[0]
+        return cls(**parsed)
+
+    @property
+    def identity_hash(self) -> str:
+        return canonical_hash(self)
+
+    def as_dict(self) -> dict[str, Any]:
+        return {
+            "tenantId": self.tenant_id,
+            "workspaceId": self.workspace_id,
+            "scopeId": self.scope_id,
+            "corpusRootHash": self.corpus_root_hash,
+            "indexPathHash": self.index_path_hash,
+            "indexRevision": self.index_revision,
+            "sourceFiles": self.source_files,
+            "chunks": self.chunks,
+        }
+
+
+@dataclass(frozen=True)
+class RetrievalSearchResult:
+    """One search response bound to the physical snapshot that produced it."""
+
+    hits: tuple[Any, ...]
+    identity: RetrievalIdentity
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.hits, tuple):
+            raise TypeError("retrieval search hits must be a tuple")
+        if not isinstance(self.identity, RetrievalIdentity):
+            raise TypeError("retrieval search identity is required")
 
 
 @dataclass(frozen=True)
@@ -144,6 +231,9 @@ class RetrievalPlan:
     max_parallelism: int = 4
     max_rounds: int = 2
     max_hits: int = 16
+    max_content_chars: int = 128_000
+    max_metadata_bytes: int = 64_000
+    identity: RetrievalIdentity | None = None
 
     def __post_init__(self) -> None:
         for label in ("plan_id", "tenant_id", "workspace_id"):
@@ -178,6 +268,26 @@ class RetrievalPlan:
             or not 1 <= self.max_hits <= 64
         ):
             raise ValueError("max_hits must be between one and 64")
+        if (
+            isinstance(self.max_content_chars, bool)
+            or not isinstance(self.max_content_chars, int)
+            or not 1 <= self.max_content_chars <= 512_000
+        ):
+            raise ValueError("max_content_chars must be between one and 512000")
+        if (
+            isinstance(self.max_metadata_bytes, bool)
+            or not isinstance(self.max_metadata_bytes, int)
+            or not 1 <= self.max_metadata_bytes <= 256_000
+        ):
+            raise ValueError("max_metadata_bytes must be between one and 256000")
+        if self.identity is not None:
+            if not isinstance(self.identity, RetrievalIdentity):
+                raise TypeError("identity must be a RetrievalIdentity")
+            if (
+                self.identity.tenant_id != self.tenant_id
+                or self.identity.workspace_id != self.workspace_id
+            ):
+                raise ValueError("retrieval plan identity does not match its logical scope")
 
         by_id = {item.node_id: item for item in self.nodes}
         visiting: set[str] = set()
@@ -218,6 +328,12 @@ class RetrievalNodeReceipt:
     rejected: int
     output_hash: str
     error: str = ""
+    requested_k: int = 5
+    invalid_rejected: int = 0
+    provenance_rejected: int = 0
+    budget_rejected: int = 0
+    identity_verified: bool = False
+    executed: bool | None = None
 
     def __post_init__(self) -> None:
         _stable_id("node_id", self.node_id)
@@ -231,11 +347,41 @@ class RetrievalNodeReceipt:
             raise ValueError("invalid retrieval run condition")
         if not isinstance(self.required, bool):
             raise TypeError("receipt required must be boolean")
-        for value in (self.retrieved, self.accepted, self.rejected):
+        for value in (
+            self.retrieved,
+            self.accepted,
+            self.rejected,
+            self.invalid_rejected,
+            self.provenance_rejected,
+            self.budget_rejected,
+        ):
             if isinstance(value, bool) or not isinstance(value, int) or value < 0:
                 raise ValueError("retrieval counts must be non-negative integers")
         if self.accepted + self.rejected != self.retrieved:
             raise ValueError("accepted plus rejected must equal retrieved")
+        if (
+            self.invalid_rejected
+            + self.provenance_rejected
+            + self.budget_rejected
+            > self.rejected
+        ):
+            raise ValueError("rejection categories cannot exceed rejected hits")
+        if (
+            isinstance(self.requested_k, bool)
+            or not isinstance(self.requested_k, int)
+            or not 1 <= self.requested_k <= 25
+        ):
+            raise ValueError("requested_k must be between one and 25")
+        if not isinstance(self.identity_verified, bool):
+            raise TypeError("identity_verified must be boolean")
+        if self.executed is None:
+            object.__setattr__(self, "executed", self.status != "skipped")
+        if not isinstance(self.executed, bool):
+            raise TypeError("executed must be boolean")
+        if self.status == "succeeded" and not self.executed:
+            raise ValueError("a succeeded node must have executed")
+        if self.status == "skipped" and self.executed:
+            raise ValueError("a skipped node cannot have executed")
         for label, value in (("query_hash", self.query_hash), ("output_hash", self.output_hash)):
             if not isinstance(value, str) or not _SHA256.fullmatch(value):
                 raise ValueError(f"{label} must be a sha256 content hash")
@@ -261,6 +407,13 @@ class RetrievalGraphReceipt:
     rounds_used: int
     returned_hits: int
     duplicates_dropped: int
+    budget_dropped: int = 0
+    returned_content_chars: int = 0
+    returned_metadata_bytes: int = 0
+    branches_covered: tuple[str, ...] = ()
+    branches_starved: tuple[str, ...] = ()
+    retrieval_identity: RetrievalIdentity | None = None
+    identity_verified: bool = False
 
     def __post_init__(self) -> None:
         for label in ("plan_id", "tenant_id", "workspace_id"):
@@ -272,12 +425,30 @@ class RetrievalGraphReceipt:
         node_ids = [item.node_id for item in self.nodes]
         if len(node_ids) != len(set(node_ids)):
             raise ValueError("retrieval graph receipt node ids must be unique")
-        if not 1 <= self.max_observed_parallelism <= self.max_parallelism <= 8:
+        if not 0 <= self.max_observed_parallelism <= self.max_parallelism <= 8:
             raise ValueError("invalid observed retrieval parallelism")
-        if not 1 <= self.rounds_used <= 2:
+        if not 0 <= self.rounds_used <= 2:
             raise ValueError("invalid retrieval rounds_used")
-        if self.returned_hits < 0 or self.duplicates_dropped < 0:
+        if (
+            self.returned_hits < 0
+            or self.duplicates_dropped < 0
+            or self.budget_dropped < 0
+            or self.returned_content_chars < 0
+            or self.returned_metadata_bytes < 0
+        ):
             raise ValueError("retrieval graph counts must be non-negative")
+        if not isinstance(self.identity_verified, bool):
+            raise TypeError("identity_verified must be boolean")
+        if self.retrieval_identity is not None:
+            if not isinstance(self.retrieval_identity, RetrievalIdentity):
+                raise TypeError("retrieval_identity must be a RetrievalIdentity")
+            if (
+                self.retrieval_identity.tenant_id != self.tenant_id
+                or self.retrieval_identity.workspace_id != self.workspace_id
+            ):
+                raise ValueError("receipt identity does not match its logical scope")
+        elif self.identity_verified:
+            raise ValueError("identity_verified requires a retrieval identity")
         for label, value in (("plan_hash", self.plan_hash),):
             if not isinstance(value, str) or not _SHA256.fullmatch(value):
                 raise ValueError(f"{label} must be a sha256 content hash")
@@ -298,13 +469,15 @@ class RetrievalGraphReceipt:
             executed.extend(group)
         if len(executed) != len(set(executed)):
             raise ValueError("a retrieval node cannot execute in two parallel groups")
-        expected_executed = {
-            item.node_id for item in self.nodes if item.status != "skipped"
-        }
+        expected_executed = {item.node_id for item in self.nodes if item.executed}
         if set(executed) != expected_executed:
             raise ValueError("parallel groups must exactly name executed nodes")
+        if not executed and (self.rounds_used != 0 or self.max_observed_parallelism != 0):
+            raise ValueError("a graph with no executed nodes must report zero runtime work")
+        if executed and self.rounds_used == 0:
+            raise ValueError("an executed graph must report at least one round")
         if self.returned_hits == 0 and self.stop_reason not in {
-            "no_evidence", "required_node_failed",
+            "no_evidence", "required_node_failed", "identity_mismatch",
         }:
             raise ValueError("an empty retrieval result cannot pass or be partial")
         if self.stop_reason == "no_evidence" and self.returned_hits != 0:
@@ -313,18 +486,42 @@ class RetrievalGraphReceipt:
             item.status == "failed" for item in self.nodes
         ):
             raise ValueError("a passing retrieval graph cannot contain failed nodes")
-        if self.stop_reason == "partial" and not any(
-            item.status == "failed" for item in self.nodes
+        if self.stop_reason == "partial" and not (
+            any(item.status == "failed" for item in self.nodes)
+            or bool(self.branches_starved)
         ):
-            raise ValueError("a partial retrieval graph requires a failed node")
+            raise ValueError("a partial retrieval graph requires failure or budget starvation")
         if self.stop_reason == "required_node_failed" and not any(
             item.required and item.status != "succeeded" for item in self.nodes
         ):
             raise ValueError("required_node_failed requires failed required work")
-        if self.stop_reason != "required_node_failed" and any(
+        if self.stop_reason not in {"required_node_failed", "identity_mismatch"} and any(
             item.required and item.status != "succeeded" for item in self.nodes
         ):
             raise ValueError("failed required work must stop as required_node_failed")
+        if self.stop_reason == "identity_mismatch":
+            if self.returned_hits != 0:
+                raise ValueError("identity_mismatch cannot return hits")
+            if not any(
+                item.error == "retrieval_identity_mismatch"
+                or item.provenance_rejected > 0
+                for item in self.nodes
+            ):
+                raise ValueError("identity_mismatch requires rejected identity evidence")
+            if self.identity_verified:
+                raise ValueError("identity_mismatch cannot be identity verified")
+        for label, values in (
+            ("branches_covered", self.branches_covered),
+            ("branches_starved", self.branches_starved),
+        ):
+            if not isinstance(values, tuple):
+                raise TypeError(f"{label} must be a tuple")
+            if len(values) != len(set(values)) or set(values) - known:
+                raise ValueError(f"{label} contains invalid node ids")
+        if set(self.branches_covered) & set(self.branches_starved):
+            raise ValueError("covered and starved branches must be disjoint")
+        if self.stop_reason == "pass" and self.branches_starved:
+            raise ValueError("a passing graph cannot starve a successful branch")
 
     def as_dict(self) -> dict:
         return {
@@ -345,6 +542,18 @@ class RetrievalGraphReceipt:
                     "retrieved": item.retrieved,
                     "accepted": item.accepted,
                     "rejected": item.rejected,
+                    "requestedK": item.requested_k,
+                    "invalidRejected": item.invalid_rejected,
+                    "provenanceRejected": item.provenance_rejected,
+                    "budgetRejected": item.budget_rejected,
+                    "unclassifiedRejected": (
+                        item.rejected
+                        - item.invalid_rejected
+                        - item.provenance_rejected
+                        - item.budget_rejected
+                    ),
+                    "identityVerified": item.identity_verified,
+                    "executed": item.executed,
                     "outputHash": item.output_hash,
                     **({"error": item.error} if item.error else {}),
                 }
@@ -356,6 +565,16 @@ class RetrievalGraphReceipt:
             "roundsUsed": self.rounds_used,
             "returnedHits": self.returned_hits,
             "duplicatesDropped": self.duplicates_dropped,
+            "budgetDropped": self.budget_dropped,
+            "returnedContentChars": self.returned_content_chars,
+            "returnedMetadataBytes": self.returned_metadata_bytes,
+            "branchesCovered": list(self.branches_covered),
+            "branchesStarved": list(self.branches_starved),
+            "retrievalIdentity": (
+                self.retrieval_identity.as_dict()
+                if self.retrieval_identity is not None else None
+            ),
+            "identityVerified": self.identity_verified,
             "externalActions": [],
             "actionExecuted": False,
             "durableMemoryWrite": False,

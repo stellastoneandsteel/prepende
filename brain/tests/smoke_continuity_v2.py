@@ -33,6 +33,20 @@ def iso(value: datetime) -> str:
     return value.isoformat(timespec="seconds").replace("+00:00", "Z")
 
 
+def rag_status(**updates: object) -> dict:
+    status = {
+        "source_files": 0,
+        "indexed_files": 0,
+        "chunks": 0,
+        "embedded_chunks": 0,
+        "missing_embeddings": 0,
+        "lexical_ready": False,
+        "stale": False,
+    }
+    status.update(updates)
+    return status
+
+
 def healthy_manifest(now: datetime, manifest_path: Path) -> dict:
     receipts_dir = manifest_path.parent / "receipts"
     source = b"fixture evidence"
@@ -103,7 +117,13 @@ def main() -> None:
         try:
             status = {
                 "knowledge": {
-                    "rag": {"lexical_ready": True},
+                    "rag": rag_status(
+                        source_files=1,
+                        indexed_files=1,
+                        chunks=1,
+                        missing_embeddings=1,
+                        lexical_ready=True,
+                    ),
                     "graphify": {"ready": False, "reason": "source_hash_mismatch"},
                 },
                 "connectors": {"tools": 3, "ready": 0},
@@ -128,6 +148,58 @@ def main() -> None:
         assert packet["verdict"]["recoveryProven"] is True, packet
         assert any(item["id"] == "graph_projection_stale" and item["severity"] == "advisory" for item in packet["blockers"]), packet
         assert packet["packetId"].startswith("sha256:"), packet
+
+        empty_status = {"knowledge": {"rag": rag_status()}}
+        coding = build_continuity_packet(
+            root=ROOT,
+            goal="edit source without tenant knowledge",
+            scope="tenant-alpha",
+            profile="coding",
+            status_payload=empty_status,
+            transport_ok=True,
+            now=now,
+        )
+        assert coding["verdict"]["continuityReady"] is True, coding
+        assert coding["verdict"]["planReady"] is True, coding
+        assert coding["verdict"]["recoveryProven"] is coding["recovery"]["proven"], coding
+        assert any(
+            item["id"] == "rag_empty_coding_scope"
+            and item["severity"] == "advisory"
+            and item["blocks"] == []
+            for item in coding["blockers"]
+        ), coding
+
+        general = build_continuity_packet(
+            root=ROOT,
+            goal="write from tenant knowledge",
+            scope="tenant-alpha",
+            profile="general",
+            status_payload=empty_status,
+            transport_ok=True,
+            now=now,
+        )
+        assert general["verdict"]["continuityReady"] is False, general
+        assert any(item["id"] == "rag_lexical_unavailable" for item in general["blockers"]), general
+
+        for label, invalid_rag, blocker_id in (
+            ("stale empty", rag_status(stale=True), "rag_status_invalid"),
+            ("source without chunks", rag_status(source_files=1, indexed_files=1), "rag_lexical_unavailable"),
+            ("chunks without sources", rag_status(chunks=1, missing_embeddings=1, lexical_ready=True), "rag_lexical_unavailable"),
+            ("partial index", rag_status(source_files=2, indexed_files=1, chunks=1, missing_embeddings=1), "rag_lexical_unavailable"),
+            ("missing status", None, "rag_status_invalid"),
+            ("malformed status", {"lexical_ready": False, "stale": False}, "rag_status_invalid"),
+        ):
+            invalid = build_continuity_packet(
+                root=ROOT,
+                goal=f"reject {label}",
+                scope="tenant-alpha",
+                profile="coding",
+                status_payload={"knowledge": {"rag": invalid_rag}},
+                transport_ok=True,
+                now=now,
+            )
+            assert invalid["verdict"]["continuityReady"] is False, invalid
+            assert any(item["id"] == blocker_id for item in invalid["blockers"]), invalid
 
     failed = build_continuity_packet(
         root=ROOT,

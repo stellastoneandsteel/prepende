@@ -10,6 +10,7 @@ fast operational MemoryStore.
 
 from __future__ import annotations
 
+import asyncio
 import datetime
 import hashlib
 import re
@@ -100,6 +101,18 @@ class VaultKnowledge(Knowledge):
     async def search_prepared(self, query: str, k: int = 8) -> Sequence[Any]:
         """Search an index already refreshed by the current retrieval run."""
         return await self.rag.search(query, k=k)
+
+    async def search_prepared_with_identity(
+        self, query: str, k: int = 8,
+    ) -> tuple[Sequence[Any], dict[str, Any]]:
+        """Search and certify hits from the exact same prepared index snapshot."""
+
+        return await self.rag.search_with_identity(query, k=k)
+
+    async def retrieval_identity(self) -> dict[str, Any]:
+        """Return the physical corpus/index identity without caller labels."""
+
+        return await asyncio.to_thread(self.rag.retrieval_identity)
 
     def _page_path(self, page_id: str) -> Path:
         return self.wiki / f"{page_id}.md"
