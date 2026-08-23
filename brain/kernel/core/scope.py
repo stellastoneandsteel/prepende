@@ -34,3 +34,4 @@ class ScopeIdentity:
 
     def as_dict(self) -> dict[str, str]:
         return {"tenantId": self.tenant_id, "workspaceId": self.workspace_id}
+

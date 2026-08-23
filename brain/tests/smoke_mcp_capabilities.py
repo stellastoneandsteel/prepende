@@ -57,20 +57,28 @@ def test_logic():
 def test_guard_present():
     """Every tool must use the one mechanical dispatch-time wrapper."""
     from interface import mcp_scope
-    src = (ROOT / "interface" / "mcp_server.py").read_text()
-    tree = ast.parse(src)
     tools: set[str] = set()
     unguarded: set[str] = set()
-    for node in ast.walk(tree):
-        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            continue
-        decorators = [d.func if isinstance(d, ast.Call) else d for d in node.decorator_list]
-        if any(isinstance(d, ast.Name) and d.id == "_capability_tool" for d in decorators):
-            tools.add(node.name)
-        elif any(
-            isinstance(d, ast.Attribute) and d.attr == "tool" for d in decorators
-        ):
-            unguarded.add(node.name)
+    sources = [ROOT / "interface" / "mcp_server.py"]
+    private_extension = ROOT / "private_extensions" / "mcp_tools.py"
+    if private_extension.is_file():
+        sources.append(private_extension)
+    for source in sources:
+        tree = ast.parse(source.read_text())
+        for node in ast.walk(tree):
+            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            decorators = [d.func if isinstance(d, ast.Call) else d for d in node.decorator_list]
+            if any(
+                isinstance(d, ast.Name)
+                and d.id in {"_capability_tool", "capability_tool"}
+                for d in decorators
+            ):
+                tools.add(node.name)
+            elif any(
+                isinstance(d, ast.Attribute) and d.attr == "tool" for d in decorators
+            ):
+                unguarded.add(node.name)
     check("no MCP tool bypasses the dispatch wrapper", not unguarded,
           "unguarded: " + ", ".join(sorted(unguarded)))
     check("dispatch wrapper covers the full declared tool set", tools == set(mcp_scope.ALL_TOOLS),

@@ -22,6 +22,7 @@ organization, and fun. Just let me know what's on your mind.
 - Do not answer the question.
 - Do not offer a menu.
 - End with `Prepende readiness: no`.
+
 ## Fixture 2: Embedded Assistant Plan
 
 ### Raw Input
@@ -101,3 +102,4 @@ raw capture should be reviewed before promotion.
 - Flag direct Prepende write instruction as a risk.
 - Extract the review-before-promotion claim.
 - End with `Prepende readiness: no`.
+

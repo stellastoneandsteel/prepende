@@ -53,15 +53,13 @@ for key in (
     os.environ.pop(key, None)
 
 from interface import mcp_server  # noqa: E402
+from interface import mcp_scope  # noqa: E402
 
 
 async def main() -> None:
     tools = await mcp_server.mcp.list_tools()
     names = {t.name for t in tools}
-    expected = {"chat", "pursue_goal", "memory_search", "remember", "memory_propose",
-                "memory_candidates", "memory_reject",
-                "account", "list_workflows", "run_workflow",
-                "knowledge_search", "knowledge_related"}
+    expected = set(mcp_scope.ALL_TOOLS)
     assert names == expected, names
     assert not hasattr(mcp_server, "memory_approve"), "approval must not be an MCP function"
     assert not hasattr(mcp_server, "ingest_knowledge"), "import must not be an MCP function"
@@ -69,19 +67,7 @@ async def main() -> None:
 
     # A token with exactly four capabilities must receive a mechanical 403 from
     # every other registered tool before any tool body can run.
-    from interface import mcp_scope
     four_caps = {"account", "chat", "memory_search", "knowledge_search"}
-    denied_calls = {
-        "pursue_goal": lambda: mcp_server.pursue_goal("plan a harmless fixture"),
-        "remember": lambda: mcp_server.remember("a long enough fixture fact"),
-        "memory_propose": lambda: mcp_server.memory_propose("a harmless proposed fact"),
-        "memory_candidates": lambda: mcp_server.memory_candidates(),
-        "memory_reject": lambda: mcp_server.memory_reject("fixture-id"),
-        "list_workflows": lambda: mcp_server.list_workflows(),
-        "run_workflow": lambda: mcp_server.run_workflow(workflow="fixture"),
-        "knowledge_related": lambda: mcp_server.knowledge_related("fixture-page"),
-    }
-    assert set(denied_calls) == names - four_caps, (set(denied_calls), names - four_caps)
     principal_token = mcp_scope.set_principal({
         "tenant": "steel-buildings",
         "workspace": "steel-buildings-sales",
@@ -89,8 +75,10 @@ async def main() -> None:
         "capabilities": four_caps,
     })
     try:
-        for tool_name, invoke in denied_calls.items():
-            denied = await invoke()
+        for tool_name in names - four_caps:
+            registered = mcp_server.mcp._tool_manager.get_tool(tool_name)
+            assert registered is not None, tool_name
+            denied = await registered.fn()
             assert isinstance(denied, dict), (tool_name, denied)
             assert denied.get("httpStatus") == 403 and denied.get("capability") == tool_name, (
                 tool_name, denied,

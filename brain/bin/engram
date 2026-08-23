@@ -26,7 +26,6 @@ PYTHON = ROOT / ".venv" / "bin" / "python3"
 DEFAULT_SCOPE = "default"
 DEFAULT_CAPABILITIES = "safe"
 DEFAULT_CONTEXT_TIMEOUT_SECONDS = 60
-DEFAULT_CONTEXT_FAST_TIMEOUT_SECONDS = 8
 DEFAULT_STATUS_TIMEOUT_SECONDS = 15
 
 if os.name == "posix":
@@ -347,6 +346,7 @@ def context_fast(args: list[str]) -> int:
         SUPPORTED_PROFILES,
         build_continuity_packet,
     )
+    from operations.operational_status import build_fast_context_status
 
     profile = str(
         pop_value(args, "--profile", os.environ.get("PREPENDE_CONTINUITY_PROFILE", "general"))
@@ -364,40 +364,21 @@ def context_fast(args: list[str]) -> int:
     if not goal:
         return die("context-fast requires a goal")
 
-    status_timeout = env_timeout_alias(
-        "PREPENDE_CONTEXT_FAST_TIMEOUT",
-        "ENGRAM_CONTEXT_FAST_TIMEOUT",
-        DEFAULT_CONTEXT_FAST_TIMEOUT_SECONDS,
-    )
     status_payload = None
     status_stderr = None
     status_ok = False
     try:
-        status_proc = run_kernel(
-            ["--status", "--context-fast", "--scope", str(opts["scope"])],
-            capture=True,
-            timeout=status_timeout,
+        status_payload = build_fast_context_status(
+            root=ROOT,
+            scope=str(opts["scope"]),
         )
-        status_payload = parse_json(status_proc.stdout) or {
-            "ok": status_proc.returncode == 0,
-            "exitCode": status_proc.returncode,
-            "stdout": status_proc.stdout.strip()[-4000:] or None,
-            "stderr": status_proc.stderr.strip()[-4000:] or None,
-        }
-        status_stderr = status_proc.stderr.strip()[-4000:] or None
-        status_ok = status_proc.returncode == 0
-    except subprocess.TimeoutExpired as exc:
-        status_stderr = (
-            (exc.stderr or "")
-            if isinstance(exc.stderr, str)
-            else (exc.stderr or b"").decode("utf-8", "replace")
-        )
+        status_ok = True
+    except Exception as exc:
+        status_stderr = f"{type(exc).__name__}: {exc}"
         status_payload = {
             "ok": False,
-            "exitCode": 124,
-            "error": "Prepende status timed out",
-            "timeoutSeconds": status_timeout,
-            "stderr": status_stderr.strip()[-4000:] or None,
+            "error": "Prepende fast status failed",
+            "stderr": status_stderr[-4000:],
         }
 
     continuity = build_continuity_packet(
@@ -561,8 +542,12 @@ def mcp(args: list[str]) -> int:
         env["PREPENDE_MCP_PORT"] = port
         env["ENGRAM_MCP_PORT"] = port
     module = "interface.mcp_preflight" if preflight else "interface.mcp_server"
-    proc = subprocess.run([str(PYTHON), "-m", module], cwd=ROOT, env=env)
-    return proc.returncode
+    # MCP clients own this process through stdio or explicit HTTP lifecycle
+    # signals. Replace the compatibility CLI in-place so a client EOF or
+    # terminate reaches the actual server instead of stranding a child behind
+    # a waiting wrapper.
+    os.chdir(ROOT)
+    os.execve(str(PYTHON), [str(PYTHON), "-m", module], env)
 
 
 def knowledge(args: list[str]) -> int:

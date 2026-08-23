@@ -26,6 +26,7 @@ never transit this surface. Requires `mcp` (python >= 3.10): use the repo
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import functools
 import json
@@ -33,6 +34,7 @@ import os
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
+from mcp.types import ToolAnnotations
 
 from interface import prepende_runtime as runtime
 from interface.mcp_scope import (
@@ -42,12 +44,20 @@ from interface.mcp_scope import (
     is_allowed,
     startup_scope_guard,
 )
+from interface.operator_receipts import LANES, TERMINAL_STATES, OperatorReceiptStore
 from kernel.core.intake import scan_intake
 from knowledge.scoped import ScopedVaults, validate_scope
 from memory.candidates import default_queue
 from prepende_brain.identity import require_identity_namespace
 from prepende_brain.env import brand_env
 from prepende_brain.private_fs import enforce_private_umask
+
+try:
+    from private_extensions import mcp_tools as _private_mcp_tools
+except ModuleNotFoundError as exc:
+    if not (exc.name or "").startswith("private_extensions"):
+        raise
+    _private_mcp_tools = None
 
 # Importing this module is the earliest common entry for both stdio and HTTP.
 # Reassert in main as well in case an embedding host changed its process umask.
@@ -56,6 +66,214 @@ enforce_private_umask()
 mcp = FastMCP("prepende")
 
 _MEMORY_KINDS = ("episodic", "semantic", "procedural")
+
+_TOOL_CONTRACTS: dict[str, dict[str, Any]] = {
+    "account": {
+        "title": "Verify Prepende account",
+        "description": (
+            "Use this when a client must verify the server-owned tenant, workspace, "
+            "scope, capabilities, model lane, and approval posture before any other call."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    },
+    "chat": {
+        "title": "Chat with Prepende",
+        "description": (
+            "Use this when the user wants Prepende to route a conversational request "
+            "through fast chat, the Goal Loop, or an approval-required refusal. This may "
+            "call the configured model and create receipts or review candidates, but it "
+            "never performs an external action."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=True,
+        ),
+    },
+    "knowledge_related": {
+        "title": "Find related Prepende knowledge",
+        "description": (
+            "Use this when the user wants read-only backlinks and nearby pages from the "
+            "current tenant's reviewed knowledge graph."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    },
+    "knowledge_search": {
+        "title": "Search Prepende knowledge",
+        "description": (
+            "Use this when the user wants read-only hybrid search over the current "
+            "tenant's reviewed vault and RAG projection."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    },
+    "list_workflows": {
+        "title": "List Prepende workflows",
+        "description": (
+            "Use this when the user wants the names and descriptions of workflows "
+            "registered for the current tenant; private endpoints are never returned."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    },
+    "memory_candidates": {
+        "title": "List Prepende memory candidates",
+        "description": (
+            "Use this when the user wants to review pending, tenant-scoped memory "
+            "candidates without approving, rejecting, or promoting them."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    },
+    "memory_propose": {
+        "title": "Propose a Prepende memory candidate",
+        "description": (
+            "Use this when an inferred or derived learning should enter the tenant's "
+            "review queue as a candidate. This persists a candidate only and never "
+            "promotes durable memory."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    },
+    "memory_reject": {
+        "title": "Reject a Prepende memory candidate",
+        "description": (
+            "Use this when the user explicitly wants one pending candidate rejected "
+            "within the current tenant."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=True,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    },
+    "memory_search": {
+        "title": "Search Prepende memory",
+        "description": (
+            "Use this when the user wants read-only recall from the current tenant's "
+            "scoped durable memory."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    },
+    "pursue_goal": {
+        "title": "Run the Prepende Goal Loop",
+        "description": (
+            "Use this when the user wants Prepende itself to complete a goal through the "
+            "full strategist, tactic, and resolver loop and return the answer plus a "
+            "truthful model/run receipt. This may call the configured model and create "
+            "receipts or review candidates, but it never grants an external action."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=True,
+        ),
+    },
+    "remember": {
+        "title": "Write an explicit Prepende memory",
+        "description": (
+            "Use this when relaying a user's explicit request to remember one statement "
+            "inside the current tenant; otherwise use memory_propose."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    },
+    "run_workflow": {
+        "title": "Stage a Prepende workflow",
+        "description": (
+            "Use this when the user wants a registered workflow prepared as a dry run. "
+            "The result always requires separate approval and performs no external action."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    },
+    "operator_start": {
+        "title": "Start Prepende operator session",
+        "description": (
+            "Use this when starting an operator task to initialize a tracked session "
+            "with a goal, creating an active operator receipt before scoped work."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    },
+    "operator_finish": {
+        "title": "Finish Prepende operator session",
+        "description": (
+            "Use this when completing an operator session to record terminal status, "
+            "outcome, evidence, checks, and stage candidate learnings into the review queue."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=False,
+            destructiveHint=False,
+            idempotentHint=False,
+            openWorldHint=False,
+        ),
+    },
+    "operator_status": {
+        "title": "Get Prepende operator session status",
+        "description": (
+            "Use this when inspecting recent operator receipts, active sessions, and continuity handoffs."
+        ),
+        "annotations": ToolAnnotations(
+            readOnlyHint=True,
+            destructiveHint=False,
+            idempotentHint=True,
+            openWorldHint=False,
+        ),
+    },
+}
+
+if _private_mcp_tools is not None:
+    _TOOL_CONTRACTS.update(_private_mcp_tools.TOOL_CONTRACTS)
+
+if set(_TOOL_CONTRACTS) != set(ALL_TOOLS):
+    raise RuntimeError("Every Prepende MCP tool must have one explicit client contract")
 
 _scoped_vaults: ScopedVaults | None = None
 
@@ -174,7 +392,13 @@ def _gate(tool: str) -> dict[str, Any] | None:
 
 
 def _capability_tool(capability: str | None = None):
-    """Register an MCP tool with a mandatory dispatch-time capability gate."""
+    """Register an MCP tool with least-privilege discovery and dispatch.
+
+    A stdio process has one host-pinned capability set, so tools outside that
+    set are omitted from discovery entirely. HTTP keeps the full registry
+    because its bearer principal and capabilities are resolved per request;
+    the dispatch-time guard remains mandatory on both transports.
+    """
 
     def decorate(function):
         required = capability or function.__name__
@@ -186,7 +410,15 @@ def _capability_tool(capability: str | None = None):
                 return denied
             return await function(*args, **kwargs)
 
-        registered = mcp.tool()(secured)
+        if (_mcp_env("TRANSPORT") or "stdio").lower() == "stdio" and not is_allowed(required):
+            return secured
+
+        contract = _TOOL_CONTRACTS[function.__name__]
+        registered = mcp.tool(
+            title=contract["title"],
+            description=contract["description"],
+            annotations=contract["annotations"],
+        )(secured)
         # FastMCP/Pydantic otherwise ignores undeclared inputs.  That makes an
         # attempted caller-supplied ``scope`` look successful even though
         # identity is server-owned.  Fail closed on every unknown argument and
@@ -212,6 +444,9 @@ def _capability_resource(uri: str, capability: str):
             if denied:
                 return json.dumps(denied, sort_keys=True)
             return await function(*args, **kwargs)
+
+        if (_mcp_env("TRANSPORT") or "stdio").lower() == "stdio" and not is_allowed(capability):
+            return secured
 
         return mcp.resource(uri)(secured)
     return decorate
@@ -464,6 +699,147 @@ async def memory_recent() -> str:
         return ""
     hits = await loop.memory.search("", scope=_scope(), k=10)
     return "\n\n".join(h["content"] for h in hits)
+
+
+@_capability_tool()
+async def operator_start(goal: str, lane: str = "direct") -> dict[str, Any]:
+    """Start an operator session and create an active operator receipt before
+    doing scoped repository or writing work."""
+    denied = _gate("operator_start")
+    if denied:
+        return denied
+    goal = goal.strip()
+    if not goal:
+        return {"error": "empty goal"}
+    lane = lane.strip().lower()
+    if lane not in LANES:
+        return {"error": f"lane must be one of {sorted(LANES)}"}
+    identity = _identity()
+    store = OperatorReceiptStore()
+    try:
+        # Reuse the canonical CLI preflight rather than manufacturing a green
+        # receipt. Running it in a worker keeps the async MCP server responsive.
+        from scripts.prepende_operator import _preflight
+
+        preflight = await asyncio.to_thread(_preflight, goal, identity["scope"])
+        if preflight.get("scope") != identity["scope"]:
+            preflight["ok"] = False
+            preflight["error"] = "context-fast returned a mismatched scope"
+        receipt = store.start(
+            goal=goal,
+            scope=identity["scope"],
+            workspace=identity["workspace"],
+            lane=lane,
+            operator=f"mcp-{identity['tenant']}",
+            preflight=preflight,
+            cwd=os.getcwd(),
+        )
+        return receipt
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@_capability_tool()
+async def operator_finish(
+    receipt_id: str,
+    status: str,
+    outcome: str,
+    learning: str = "",
+    evidence: list[str] | None = None,
+    checks: list[str] | None = None,
+    external_actions: list[str] | None = None,
+) -> dict[str, Any]:
+    """Complete an active operator session with terminal status, outcome, evidence,
+    and stage candidate learnings into the review queue."""
+    denied = _gate("operator_finish")
+    if denied:
+        return denied
+    receipt_id = receipt_id.strip()
+    if not receipt_id:
+        return {"error": "receipt_id is required"}
+    status = status.strip().lower()
+    if status not in TERMINAL_STATES:
+        return {"error": f"status must be one of {sorted(TERMINAL_STATES)}"}
+
+    identity = _identity()
+    store = OperatorReceiptStore()
+    try:
+        current = store.get(receipt_id)
+    except Exception as exc:
+        return {"error": str(exc)}
+    if current is None or any(
+        current.get(field) != identity[field] for field in ("scope", "workspace")
+    ):
+        return {"error": "operator receipt not found", "httpStatus": 404}
+    if current.get("status") in TERMINAL_STATES:
+        return current
+
+    try:
+        from interface.operator_receipts import validate_operator_finish
+
+        validate_operator_finish(
+            status=status,
+            outcome=outcome,
+            evidence=evidence or [],
+            checks=checks or [],
+            external_actions=external_actions or [],
+        )
+    except Exception as exc:
+        return {"error": str(exc)}
+
+    learning_obj: dict[str, Any] = {
+        "candidateId": None,
+        "status": "not_staged",
+        "durableMemoryWrite": False,
+        "promotionRequired": True,
+    }
+    clean_learning = (learning or "").strip()
+    if clean_learning:
+        from scripts.prepende_operator import _stage_learning
+
+        try:
+            learning_obj = await _stage_learning(identity["scope"], receipt_id, clean_learning)
+        except Exception as exc:
+            return {"error": str(exc)}
+
+    try:
+        receipt = store.finish(
+            receipt_id,
+            status=status,
+            outcome=outcome,
+            evidence=evidence or [],
+            checks=checks or [],
+            learning=learning_obj,
+            external_actions=external_actions or [],
+        )
+        return receipt
+    except Exception as e:
+        return {"error": str(e)}
+
+
+@_capability_tool()
+async def operator_status(receipt_id: str = "", limit: int = 5) -> dict[str, Any]:
+    """Inspect recent operator receipts and continuity state."""
+    store = OperatorReceiptStore()
+    identity = _identity()
+    if receipt_id.strip():
+        receipt = store.get(receipt_id.strip())
+        if receipt is None or any(
+            receipt.get(field) != identity[field] for field in ("scope", "workspace")
+        ):
+            return {"error": f"receipt '{receipt_id}' not found"}
+        return receipt
+    return {
+        "receipts": store.latest(
+            limit=max(1, min(50, limit)),
+            scope=identity["scope"],
+            workspace=identity["workspace"],
+        )
+    }
+
+
+if _private_mcp_tools is not None:
+    globals().update(_private_mcp_tools.install(_capability_tool, _identity))
 
 
 def _transport() -> str:

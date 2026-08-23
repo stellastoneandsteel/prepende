@@ -26,18 +26,40 @@ from typing import Any, Mapping
 from prepende_brain.identity import require_identity_namespace
 from prepende_brain.env import brand_env
 
+try:
+    from private_extensions import mcp_tools as _private_mcp_tools
+except ModuleNotFoundError as exc:
+    if not (exc.name or "").startswith("private_extensions"):
+        raise
+    _private_mcp_tools = None
+
 # ---- capability scoping (threat T2) -----------------------------------------
 # Least-privilege per connection. The READ/PROPOSE set is safe for an untrusted
 # agent; the WRITE/ACTION set must be opt-in. Candidate approval and knowledge
 # import are intentionally not MCP capabilities at all: owners use the separate
 # approval surface and reviewed-bundle CLI. Default (unset) = every registered
 # MCP tool; an operator running an untrusted client uses ``safe`` or a comma-list.
+PRIVATE_SAFE_TOOLS = (
+    frozenset(_private_mcp_tools.SAFE_TOOLS)
+    if _private_mcp_tools is not None
+    else frozenset()
+)
+OPERATOR_SAFE_TOOLS = frozenset({
+    "operator_status",
+})
+OPERATOR_WRITE_TOOLS = frozenset({
+    "operator_start", "operator_finish",
+})
+
 SAFE_TOOLS = frozenset({
     "chat", "pursue_goal", "memory_search", "memory_propose",
     "memory_candidates", "knowledge_search", "knowledge_related", "account",
+    *PRIVATE_SAFE_TOOLS,
+    *OPERATOR_SAFE_TOOLS,
 })
 WRITE_TOOLS = frozenset({
     "remember", "memory_reject", "run_workflow", "list_workflows",
+    *OPERATOR_WRITE_TOOLS,
 })
 ALL_TOOLS = SAFE_TOOLS | WRITE_TOOLS
 
