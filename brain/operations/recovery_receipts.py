@@ -598,6 +598,7 @@ def build_manifest(
     *,
     receipts_dir: Path,
     output_path: Path,
+    scope: str = "prepende-operations",
     now: datetime | None = None,
     write: bool = True,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
@@ -606,6 +607,7 @@ def build_manifest(
     receipt_root = receipts_dir.expanduser().resolve()
     valid_receipts: list[tuple[datetime, dict[str, Any], Path]] = []
     invalid_receipts: list[dict[str, Any]] = []
+    other_scope_receipts: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     if receipt_root.is_dir():
         for path in sorted(receipt_root.glob("rr_*.json")):
@@ -613,6 +615,18 @@ def build_manifest(
                 receipt = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError) as exc:
                 invalid_receipts.append({"path": str(path), "reasons": [f"unreadable:{type(exc).__name__}"]})
+                continue
+            # Scope is part of the receipt envelope, so reject other tenants
+            # before schema/freshness validation. An expired or legacy receipt
+            # from another business must not poison this scope's manifest.
+            if isinstance(receipt, dict) and receipt.get("scope") != scope:
+                other_scope_receipts.append(
+                    {
+                        "path": str(path),
+                        "receiptId": receipt.get("receiptId"),
+                        "scope": receipt.get("scope"),
+                    }
+                )
                 continue
             valid, reasons = validate_receipt(receipt, now=observed_now)
             receipt_id = receipt.get("receiptId") if isinstance(receipt, dict) else None
@@ -646,6 +660,7 @@ def build_manifest(
     expires_at = min([maximum_expiry, *expiries]) if expiries else maximum_expiry
     manifest = {
         "schemaVersion": RECOVERY_SCHEMA_VERSION,
+        "scope": scope,
         "generatedAt": _iso(observed_now),
         "expiresAt": _iso(expires_at),
         "receiptSet": {
@@ -657,6 +672,8 @@ def build_manifest(
     diagnostics = {
         "validReceiptCount": len(valid_receipts),
         "invalidReceiptCount": len(invalid_receipts),
+        "ignoredOtherScopeCount": len(other_scope_receipts),
+        "ignoredOtherScopeReceipts": other_scope_receipts,
         "invalidReceipts": invalid_receipts,
         "selected": selected,
     }

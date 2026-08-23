@@ -20,10 +20,15 @@ if str(ROOT) not in sys.path:
 from operations.continuity import RECOVERY_GATE_IDS, recovery_manifest_path  # noqa: E402
 from operations.recovery_receipts import (  # noqa: E402
     DEFAULT_RECEIPTS_DIR,
+    GATE_POLICIES,
     build_manifest,
+    build_receipt,
+    canonical_json,
     collect_restore_drill,
+    digest_bytes,
     observation_template,
     receipt_from_observation_path,
+    write_receipt,
 )
 
 
@@ -59,7 +64,17 @@ def main() -> int:
     build_parser = subparsers.add_parser("build", help="Build the cached ten-gate manifest from the newest valid receipts")
     build_parser.add_argument("--receipts-dir")
     build_parser.add_argument("--output", help="Manifest path; defaults to PREPENDE_RECOVERY_MANIFEST or the repo cache")
+    build_parser.add_argument("--scope", default="prepende-operations")
     build_parser.add_argument("--dry-run", action="store_true", help="Evaluate and print without writing the manifest")
+
+    gap_parser = subparsers.add_parser(
+        "record-gap",
+        help="Write a fresh fail-closed receipt for a gate not proven by the controlled rehearsal",
+    )
+    gap_parser.add_argument("--gate", choices=RECOVERY_GATE_IDS, required=True)
+    gap_parser.add_argument("--scope", required=True)
+    gap_parser.add_argument("--summary", required=True)
+    gap_parser.add_argument("--receipts-dir")
 
     args = parser.parse_args()
     try:
@@ -106,10 +121,56 @@ def main() -> int:
             )
             return 0 if receipt["status"] == "pass" else 1
 
+        if args.command == "record-gap":
+            observation = observation_template(args.gate)
+            observation["scope"] = args.scope.strip()
+            observation["producer"] = {
+                "id": "controlled-healing-rehearsal-gap",
+                "version": "1",
+                "kind": GATE_POLICIES[args.gate]["producerKinds"][0],
+            }
+            observation["summary"] = args.summary.strip()[:1000]
+            observation["checks"] = [
+                {
+                    "id": check["id"],
+                    "status": "fail",
+                    "detail": "Required proof was not produced by this bounded local rehearsal.",
+                }
+                for check in observation["checks"]
+            ]
+            observation["safety"] = {
+                "isolation": "local_fail_closed_rehearsal",
+                "productionMutated": False,
+                "secretsStored": False,
+                "externalActions": [],
+            }
+            source = canonical_json(observation).encode("utf-8")
+            receipt = build_receipt(
+                observation,
+                source_locator=f"generated://controlled-rehearsal-gap/{args.gate}",
+                source_digest=digest_bytes(source),
+                source_bytes=len(source),
+            )
+            path = write_receipt(receipt, _receipts_dir(args.receipts_dir))
+            _print(
+                {
+                    "ok": True,
+                    "command": "record-gap",
+                    "receiptId": receipt["receiptId"],
+                    "gateId": receipt["gateId"],
+                    "status": receipt["status"],
+                    "receiptPath": str(path),
+                    "durableMemoryWrite": False,
+                    "externalActions": [],
+                }
+            )
+            return 0
+
         output = _path(args.output, recovery_manifest_path(ROOT)) if args.output else recovery_manifest_path(ROOT)
         manifest, diagnostics = build_manifest(
             receipts_dir=_receipts_dir(args.receipts_dir),
             output_path=output,
+            scope=args.scope,
             write=not args.dry_run,
         )
         counts = {"pass": 0, "fail": 0, "unknown": 0}
