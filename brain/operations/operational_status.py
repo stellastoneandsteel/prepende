@@ -455,8 +455,8 @@ def _collect_pilot(
     }
 
 
-def _collect_recovery(root: Path) -> dict[str, Any]:
-    evaluation, _source = load_recovery_evaluation(root)
+def _collect_recovery(root: Path, scope: str) -> dict[str, Any]:
+    evaluation, _source = load_recovery_evaluation(root, scope=scope)
     gates = evaluation.get("gates") if isinstance(evaluation.get("gates"), list) else []
     gate_status = {
         str(item.get("id")): str(item.get("status"))
@@ -571,7 +571,7 @@ def build_operational_status(
         protocol = _collect_protocol(protocol_path, protocol_source, root)
         trust = _collect_trust(trust_path, trust_source)
         pilot = _collect_pilot(protocol_path, trust_path, interpreter)
-        recovery = _collect_recovery(root)
+        recovery = _collect_recovery(root, scope)
         pilot_artifact_path = pilot.pop("_remoteArtifactPath", None)
         online_status = _collect_online(
             online,
