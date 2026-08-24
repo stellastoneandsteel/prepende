@@ -16,7 +16,8 @@ The product is **shippable but not shipped**. Two merges (#103, #104) are
 green in CI and sitting undeployed behind an approval gate that is working as
 designed. The bias meter — the feature this session rebuilt — is correct and
 honest in code, and its real-world coverage is **UNKNOWN and currently
-unmeasurable**, which is itself the largest open risk because a locked
+unmeasurable**, which is insufficient evidence in either direction and not a
+calibration result, and is itself the largest open risk because a locked
 prediction depends on measuring it within 7 days.
 
 The most serious finding is not in the product. It is that **the published
@@ -161,7 +162,7 @@ was.
 
 ## 5. The ledger audits worse than the product
 
-### 5.1 Four open contracts, all forfeit-at-Brier-1
+### 5.1 Four open contracts, all forfeit-at-Brier-1 (not a calibration benchmark)
 
 | contract | p | due | window |
 |---|---|---|---|
@@ -180,8 +181,8 @@ data; that is a manual observation with a hard window.
 which measures through the deployed `/v1/bias/link`. **That endpoint is not
 deployed** (§2), and deployment requires owner approval. If approval does not
 land with enough margin to harvest N≥30 and measure before 2026-08-16, the
-contract forfeits at Brier 1 **for a reason unrelated to the prediction's
-accuracy**.
+contract forfeits at Brier 1 for a reason unrelated to the prediction's
+accuracy, which makes that Brier **not a calibration result**.
 
 This is a design flaw in my own lock: I bound a due date to work gated on
 another party's approval. Recorded, not corrected — the ledger is append-only
@@ -202,8 +203,8 @@ independent resolver : NO
 ```
 
 - **46.2% of the book never resolved.** A headline Brier computed over the 14
-  that did is a selected sample, and selection is not random when the
-  selector is the predictor.
+  that did is a selected sample and not a calibration benchmark, and selection
+  is not random when the selector is the predictor.
 - **n = 14 is below the project's own stated n ≥ 30 floor** for publishing an
   aggregate.
 - **UNANCHORED, self-resolved.** Timestamps are caller-supplied and hashed
