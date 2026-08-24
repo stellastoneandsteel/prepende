@@ -5,6 +5,11 @@ __pycache__/
 .venv/
 venv/
 node_modules/
+# Same three as symlinks. A trailing-slash pattern does not match a symlink, so
+# a linked .venv or node_modules gets staged by `git add -A` and breaks CI at
+# "Create isolated runtime" with [Errno 17] File exists.
+.venv
+node_modules
 .python-version
 
 # Env / secrets — never commit. Prepende uses its own keys; no
