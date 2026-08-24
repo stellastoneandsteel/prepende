@@ -361,13 +361,17 @@ def build_receipt(
     if not isinstance(summary, str) or not summary.strip() or len(summary) > 1000:
         raise ValueError("summary must be a non-empty string of at most 1000 characters")
     scope = observation.get("scope")
-    if not isinstance(scope, str) or not scope.strip():
-        raise ValueError("scope is required")
+    if (
+        not isinstance(scope, str)
+        or not scope.strip()
+        or scope != scope.strip()
+    ):
+        raise ValueError("scope must be a non-empty canonical string")
 
     material: dict[str, Any] = {
         "schemaVersion": RECEIPT_SCHEMA_VERSION,
         "gateId": gate_id,
-        "scope": scope.strip(),
+        "scope": scope,
         "proofClass": policy["proofClass"],
         "status": status,
         "observedAt": _iso(observed_at),
@@ -410,6 +414,13 @@ def validate_receipt(
     policy = GATE_POLICIES.get(gate_id)
     if policy is None:
         reasons.append("receipt_gate_invalid")
+    receipt_scope = receipt.get("scope")
+    if (
+        not isinstance(receipt_scope, str)
+        or not receipt_scope.strip()
+        or receipt_scope != receipt_scope.strip()
+    ):
+        reasons.append("receipt_scope_invalid")
     if receipt.get("receiptDigest") != receipt_digest(receipt):
         reasons.append("receipt_digest_mismatch")
     if _secret_key_paths(receipt):
@@ -427,10 +438,14 @@ def validate_receipt(
         reasons.append("receipt_too_old")
     if expires_at is None:
         reasons.append("receipt_expires_at_invalid")
-    elif require_fresh and expires_at <= observed_now:
-        reasons.append("receipt_expired")
-    elif observed_at is not None and expires_at > observed_at + timedelta(days=DEFAULT_RECOVERY_EVIDENCE_MAX_AGE_DAYS):
-        reasons.append("receipt_validity_too_long")
+    else:
+        if require_fresh and expires_at <= observed_now:
+            reasons.append("receipt_expired")
+        if observed_at is not None:
+            if expires_at <= observed_at:
+                reasons.append("receipt_validity_interval_invalid")
+            elif expires_at > observed_at + timedelta(days=DEFAULT_RECOVERY_EVIDENCE_MAX_AGE_DAYS):
+                reasons.append("receipt_validity_too_long")
 
     if policy is not None:
         if receipt.get("proofClass") != policy["proofClass"]:
@@ -551,6 +566,7 @@ def validate_receipt_reference(
     *,
     gate_id: str,
     manifest_dir: Path | None,
+    expected_scope: str | None = None,
     now: datetime | None = None,
 ) -> tuple[bool, list[str]]:
     if not isinstance(reference, dict):
@@ -580,6 +596,8 @@ def validate_receipt_reference(
     valid, reasons = validate_receipt(receipt, now=now)
     if not valid:
         return False, reasons
+    if expected_scope is not None and receipt.get("scope") != expected_scope:
+        return False, ["receipt_reference_scope_mismatch"]
     comparisons = {
         "receiptId": receipt.get("receiptId"),
         "gateId": receipt.get("gateId"),
@@ -602,10 +620,14 @@ def build_manifest(
     now: datetime | None = None,
     write: bool = True,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
+    if not isinstance(scope, str) or not scope.strip() or scope != scope.strip():
+        raise ValueError("scope must be a non-empty canonical string")
     observed_now = now or datetime.now(timezone.utc)
     output = output_path.expanduser().resolve()
     receipt_root = receipts_dir.expanduser().resolve()
     valid_receipts: list[tuple[datetime, dict[str, Any], Path]] = []
+    expired_candidates: list[tuple[datetime, dict[str, Any], Path]] = []
+    expired_receipts: list[dict[str, Any]] = []
     invalid_receipts: list[dict[str, Any]] = []
     other_scope_receipts: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
@@ -617,16 +639,38 @@ def build_manifest(
                 invalid_receipts.append({"path": str(path), "reasons": [f"unreadable:{type(exc).__name__}"]})
                 continue
             # Scope is part of the receipt envelope, so reject other tenants
-            # before schema/freshness validation. An expired or legacy receipt
-            # from another business must not poison this scope's manifest.
-            if isinstance(receipt, dict) and receipt.get("scope") != scope:
-                other_scope_receipts.append(
-                    {
-                        "path": str(path),
-                        "receiptId": receipt.get("receiptId"),
-                        "scope": receipt.get("scope"),
-                    }
+            # only after its immutable envelope passes non-freshness checks.
+            # Otherwise a scope edit could hide a digest failure as another
+            # tenant's evidence. Valid expired history from another business
+            # still cannot poison this scope's manifest.
+            receipt_scope = receipt.get("scope") if isinstance(receipt, dict) else None
+            if (
+                isinstance(receipt_scope, str)
+                and receipt_scope.strip()
+                and receipt_scope == receipt_scope.strip()
+                and receipt_scope != scope
+            ):
+                routing_valid, routing_reasons = validate_receipt(
+                    receipt,
+                    now=observed_now,
+                    require_fresh=False,
                 )
+                if routing_valid:
+                    other_scope_receipts.append(
+                        {
+                            "path": str(path),
+                            "receiptId": receipt.get("receiptId"),
+                            "scope": receipt_scope,
+                        }
+                    )
+                else:
+                    invalid_receipts.append(
+                        {
+                            "path": str(path),
+                            "receiptId": receipt.get("receiptId"),
+                            "reasons": routing_reasons,
+                        }
+                    )
                 continue
             valid, reasons = validate_receipt(receipt, now=observed_now)
             receipt_id = receipt.get("receiptId") if isinstance(receipt, dict) else None
@@ -637,6 +681,11 @@ def build_manifest(
                 seen_ids.add(receipt_id)
             observed_at = _parse_time(receipt.get("observedAt")) if isinstance(receipt, dict) else None
             if not valid or observed_at is None:
+                freshness_reasons = {"receipt_too_old", "receipt_expired"}
+                if reasons and set(reasons).issubset(freshness_reasons):
+                    expired_candidates.append((observed_at, receipt, path))
+                    expired_receipts.append({"path": str(path), "receiptId": receipt_id, "reasons": reasons})
+                    continue
                 invalid_receipts.append({"path": str(path), "receiptId": receipt_id, "reasons": reasons})
                 continue
             valid_receipts.append((observed_at, receipt, path))
@@ -645,17 +694,56 @@ def build_manifest(
     selected: list[dict[str, Any]] = []
     expiries: list[datetime] = []
     for gate_id in RECOVERY_GATE_IDS:
-        candidates = [item for item in valid_receipts if item[1].get("gateId") == gate_id]
+        candidates = [
+            (*item, False)
+            for item in valid_receipts
+            if item[1].get("gateId") == gate_id
+        ] + [
+            (*item, True)
+            for item in expired_candidates
+            if item[1].get("gateId") == gate_id
+        ]
         if not candidates:
             gates.append({"id": gate_id, "status": "unknown", "evidence": []})
             continue
-        _, receipt, path = max(candidates, key=lambda item: item[0])
+        latest_observed_at = max(item[0] for item in candidates)
+        latest_candidates = [item for item in candidates if item[0] == latest_observed_at]
+        latest_statuses = {item[1].get("status") for item in latest_candidates}
+        if len(latest_statuses) > 1:
+            gates.append({"id": gate_id, "status": "unknown", "evidence": []})
+            selected.append(
+                {
+                    "gateId": gate_id,
+                    "status": "conflict",
+                    "observedAt": _iso(latest_observed_at),
+                    "receiptIds": sorted(item[1]["receiptId"] for item in latest_candidates),
+                }
+            )
+            continue
+        # At an identical observation timestamp, expiry wins the tie so a
+        # shorter-lived result cannot silently reveal another live result.
+        _, receipt, path, expired = max(
+            latest_candidates,
+            key=lambda item: (item[3], item[1]["receiptId"]),
+        )
+        if expired:
+            gates.append({"id": gate_id, "status": "unknown", "evidence": []})
+            selected.append(
+                {
+                    "gateId": gate_id,
+                    "receiptId": receipt["receiptId"],
+                    "status": "expired",
+                    "receiptStatus": receipt["status"],
+                }
+            )
+            continue
+        for _, cohort_receipt, _, _ in latest_candidates:
+            cohort_expiry = _parse_time(cohort_receipt.get("expiresAt"))
+            if cohort_expiry is not None:
+                expiries.append(cohort_expiry)
         reference = _receipt_reference(receipt, path, output.parent)
         gates.append({"id": gate_id, "status": receipt["status"], "evidence": [reference]})
         selected.append({"gateId": gate_id, "receiptId": receipt["receiptId"], "status": receipt["status"]})
-        expires_at = _parse_time(receipt.get("expiresAt"))
-        if expires_at is not None:
-            expiries.append(expires_at)
     maximum_expiry = observed_now + timedelta(days=DEFAULT_RECOVERY_EVIDENCE_MAX_AGE_DAYS)
     expires_at = min([maximum_expiry, *expiries]) if expiries else maximum_expiry
     manifest = {
@@ -665,19 +753,37 @@ def build_manifest(
         "expiresAt": _iso(expires_at),
         "receiptSet": {
             "validCount": len(valid_receipts),
+            "expiredCount": len(expired_receipts),
             "invalidCount": len(invalid_receipts),
         },
         "gates": gates,
     }
     diagnostics = {
         "validReceiptCount": len(valid_receipts),
+        "expiredReceiptCount": len(expired_receipts),
         "invalidReceiptCount": len(invalid_receipts),
         "ignoredOtherScopeCount": len(other_scope_receipts),
         "ignoredOtherScopeReceipts": other_scope_receipts,
+        "expiredReceipts": expired_receipts,
         "invalidReceipts": invalid_receipts,
         "selected": selected,
     }
     if write:
+        if output.is_file():
+            try:
+                existing_manifest = json.loads(output.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                existing_manifest = None
+            existing_scope = (
+                existing_manifest.get("scope")
+                if isinstance(existing_manifest, dict)
+                else None
+            )
+            if isinstance(existing_scope, str) and existing_scope != scope:
+                raise ValueError(
+                    "refusing to overwrite recovery manifest for a different scope: "
+                    f"{existing_scope}"
+                )
         output.parent.mkdir(parents=True, exist_ok=True)
         temporary = output.with_name(f".{output.name}.tmp-{os.getpid()}")
         temporary.write_text(json.dumps(manifest, indent=2, sort_keys=True, ensure_ascii=True) + "\n", encoding="utf-8")

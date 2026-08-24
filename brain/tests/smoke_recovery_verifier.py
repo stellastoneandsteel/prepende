@@ -67,6 +67,7 @@ def main() -> None:
         assert proc.returncode == 1, payload
         assert payload["ok"] is False, payload
         assert payload["result"]["gateCounts"]["unknown"] == 10, payload
+        assert "recovery_expected_scope_missing" in payload["result"]["reasons"], payload
 
         receipts_dir = path.parent / "receipts"
         source = b"fixture evidence"
@@ -142,6 +143,10 @@ def main() -> None:
         assert inventory["status"] == "pass", inventory
 
         proc, payload = run(path)
+        assert proc.returncode == 1, payload
+        assert "recovery_expected_scope_missing" in payload["result"]["reasons"], payload
+
+        proc, payload = run(path, scope="prepende-operations")
         assert proc.returncode == 0, proc.stderr or payload
         assert payload["ok"] is True, payload
         assert payload["result"]["proven"] is True, payload
@@ -152,11 +157,35 @@ def main() -> None:
         assert proc.returncode == 1, payload
         assert "recovery_manifest_scope_mismatch" in payload["result"]["reasons"], payload
 
+        other_manifest_path = path.parent / "other-manifest.json"
+        other_manifest, _ = build_manifest(
+            receipts_dir=receipts_dir,
+            output_path=other_manifest_path,
+            scope="other-business",
+            now=now,
+        )
+        other_inventory = next(
+            gate for gate in other_manifest["gates"] if gate["id"] == "inventory"
+        )
+        cross_scope_manifest = json.loads(json.dumps(scoped_manifest))
+        cross_scope_inventory = next(
+            gate for gate in cross_scope_manifest["gates"] if gate["id"] == "inventory"
+        )
+        cross_scope_inventory["evidence"] = other_inventory["evidence"]
+        cross_scope_path = path.parent / "cross-scope-manifest.json"
+        cross_scope_path.write_text(json.dumps(cross_scope_manifest), encoding="utf-8")
+        proc, payload = run(cross_scope_path, scope="prepende-operations")
+        assert proc.returncode == 1, payload
+        assert (
+            "gate_receipt_invalid:inventory:receipt_reference_scope_mismatch"
+            in payload["result"]["reasons"]
+        ), payload
+
         inventory_path = path.parent / inventory["evidence"][0]["receiptPath"]
         tampered = json.loads(inventory_path.read_text(encoding="utf-8"))
         tampered["summary"] = "tampered"
         inventory_path.write_text(json.dumps(tampered), encoding="utf-8")
-        proc, payload = run(path)
+        proc, payload = run(path, scope="prepende-operations")
         assert proc.returncode == 1, payload
         assert "gate_evidence_invalid:inventory" in payload["result"]["reasons"], payload
 

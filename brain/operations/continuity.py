@@ -23,6 +23,7 @@ RECOVERY_SCHEMA_VERSION = "prepende-recovery-manifest-v1"
 DEFAULT_PACKET_TTL_SECONDS = 300
 DEFAULT_RECOVERY_EVIDENCE_MAX_AGE_DAYS = 31
 DEFAULT_RECOVERY_MANIFEST = Path(".engram/continuity/recovery-manifest.json")
+DEFAULT_SCOPED_RECOVERY_MANIFEST_PREFIX = "recovery-manifest-"
 SUPPORTED_PROFILES = frozenset({"general", "coding", "deployment", "recovery"})
 RAG_COUNT_FIELDS = (
     "source_files",
@@ -226,12 +227,40 @@ def _latest_operator_receipt(root: Path, scope: str, goal_hash: str) -> dict[str
     }
 
 
-def recovery_manifest_path(root: Path) -> Path:
+def recovery_manifest_path(root: Path, scope: str | None = None) -> Path:
     raw = os.environ.get("PREPENDE_RECOVERY_MANIFEST", "").strip()
     if raw:
         path = Path(raw).expanduser()
         return path if path.is_absolute() else root / path
+    if scope is not None:
+        if (
+            not isinstance(scope, str)
+            or not scope.strip()
+            or scope != scope.strip()
+        ):
+            raise ValueError("recovery manifest scope must be a non-empty canonical string")
+        scope_hash = hashlib.sha256(scope.encode("utf-8")).hexdigest()
+        return root / DEFAULT_RECOVERY_MANIFEST.parent / (
+            f"{DEFAULT_SCOPED_RECOVERY_MANIFEST_PREFIX}{scope_hash}.json"
+        )
     return root / DEFAULT_RECOVERY_MANIFEST
+
+
+def resolve_recovery_manifest_path(root: Path, scope: str) -> Path:
+    """Resolve one exact-scope cache without masking a broken scoped file."""
+
+    scoped = recovery_manifest_path(root, scope)
+    try:
+        scoped.lstat()
+        scoped_path_occupied = True
+    except FileNotFoundError:
+        scoped_path_occupied = False
+    except OSError:
+        scoped_path_occupied = True
+    if os.environ.get("PREPENDE_RECOVERY_MANIFEST", "").strip() or scoped_path_occupied:
+        return scoped
+    legacy = root / DEFAULT_RECOVERY_MANIFEST
+    return legacy if legacy.is_file() else scoped
 
 
 def evaluate_recovery_manifest(
@@ -254,15 +283,33 @@ def evaluate_recovery_manifest(
         }
     if manifest.get("schemaVersion") != RECOVERY_SCHEMA_VERSION:
         reasons.append("recovery_manifest_schema_mismatch")
+    expected_scope_valid = (
+        isinstance(expected_scope, str)
+        and bool(expected_scope.strip())
+        and expected_scope == expected_scope.strip()
+    )
+    if not expected_scope_valid:
+        reasons.append("recovery_expected_scope_missing")
     manifest_scope = manifest.get("scope")
-    if not isinstance(manifest_scope, str) or not manifest_scope.strip():
+    if (
+        not isinstance(manifest_scope, str)
+        or not manifest_scope.strip()
+        or manifest_scope != manifest_scope.strip()
+    ):
         reasons.append("recovery_manifest_scope_missing")
-    elif expected_scope is not None and manifest_scope != expected_scope:
+    elif expected_scope_valid and manifest_scope != expected_scope:
         reasons.append("recovery_manifest_scope_mismatch")
     receipt_set = manifest.get("receiptSet")
-    if isinstance(receipt_set, dict):
+    if not isinstance(receipt_set, dict):
+        reasons.append("recovery_receipt_set_invalid")
+    else:
         invalid_count = receipt_set.get("invalidCount", 0)
-        if not isinstance(invalid_count, int) or invalid_count < 0:
+        if (
+            not isinstance(invalid_count, int)
+            or isinstance(invalid_count, bool)
+            or invalid_count < 0
+            or "invalidCount" not in receipt_set
+        ):
             reasons.append("recovery_receipt_set_invalid")
         elif invalid_count > 0:
             reasons.append("recovery_receipt_set_contains_invalid_receipts")
@@ -319,6 +366,7 @@ def evaluate_recovery_manifest(
                     item,
                     gate_id=gate_id,
                     manifest_dir=manifest_dir,
+                    expected_scope=manifest_scope if isinstance(manifest_scope, str) else None,
                     now=observed_now,
                 )
                 if not reference_ok:
@@ -364,7 +412,7 @@ def load_recovery_evaluation(
     scope: str,
     now: datetime | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
-    path = recovery_manifest_path(root)
+    path = resolve_recovery_manifest_path(root, scope)
     source = {"id": "recovery-manifest", "path": str(path), "available": path.is_file(), "observedAt": _iso(now or datetime.now(timezone.utc))}
     if not path.is_file():
         return evaluate_recovery_manifest(None, now=now, expected_scope=scope), source
