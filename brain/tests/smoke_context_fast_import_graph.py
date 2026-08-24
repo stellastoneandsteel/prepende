@@ -14,6 +14,7 @@ import tempfile
 import time
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -529,24 +530,113 @@ def _run_context_fast(env: dict[str, str], scope: str) -> dict[str, object]:
 
 
 def _assert_common_payload(payload: dict[str, object], scope: str) -> dict[str, object]:
+    """Assert what `bin/engram context-fast` actually returns.
+
+    The fast lane's status comes from
+    ``operations.operational_status.build_fast_context_status``, which is the
+    deliberately narrow, model-free subset: it never composes the kernel, so it
+    reports ``model: "skipped"`` rather than the configured provider, and it
+    carries no connector inventory (``_collect_brain`` fixes connectors at
+    ``{"status": "notConfigured", "available": 0, "ready": 0, "reason":
+    "offline_probe_disabled"}``), no scoped memory, and no run history.
+
+    The richer, scope-isolated truth those fields would carry is asserted
+    against the collector itself in ``_assert_scoped_collector_truth`` -- see the
+    note there for why it is checked at the collector rather than through this
+    payload.
+    """
+
     assert payload["command"] == "context-fast", payload
     assert payload["modelCall"] == "skipped", payload
     assert payload["verdict"]["continuityReady"] is True, payload["continuity"]
     status_payload = payload["status"]
     assert status_payload["scope"] == scope, status_payload
-    assert status_payload["model"] == "anthropic", status_payload
-    assert status_payload["model_status"]["initialized"] is False, status_payload
+    assert status_payload["model"] == "skipped", status_payload
+    # The same guarantee `model_status: {"initialized": false}` states, in the
+    # shape this payload uses. Both say: no model was constructed, none called.
+    assert status_payload["fastLane"] == {
+        "modelCall": False,
+        "liveProviderCall": False,
+    }, status_payload
     rag = status_payload["knowledge"]["rag"]
     assert status_payload["knowledge"]["pages"] == 1, status_payload
     assert rag["source_files"] == 1 and rag["indexed_files"] == 1, rag
     assert rag["chunks"] == 1 and rag["lexical_ready"] is True, rag
     assert rag["stale"] is False, rag
-    connectors = status_payload["connectors"]
+    # Not a count. The offline probe is disabled on this lane, so zero here means
+    # "not inspected", and asserting any other number would assert a feature the
+    # fast lane does not have.
+    assert status_payload["connectors"] == {"tools": 0, "ready": 0}, status_payload
+    return status_payload
+
+
+def _assert_scoped_collector_truth(
+    root: Path,
+    env: dict[str, str],
+    owner_scope: str,
+    tenant_scope: str,
+) -> None:
+    """Assert scope isolation where it is actually implemented.
+
+    ``operations.local_status.collect_context_fast_status`` is the provider-free
+    collector that does report the configured provider, real connector
+    readiness, scoped memory and scoped run history. ``kernel --status
+    --context-fast`` uses it; the ``bin/engram`` fast lane does not.
+
+    These properties -- a tenant never seeing owner knowledge, graphify refusing
+    a tenant scope, the run journal declaring itself unpartitioned -- are
+    properties of the collector, so they are asserted against the collector. In
+    process, so this adds nothing for the process allowlist below to account for.
+    """
+
+    from operations.local_status import collect_context_fast_status
+
+    def collect(scope: str, overrides: dict[str, str] | None = None) -> dict[str, object]:
+        values = dict(env)
+        values.update(overrides or {})
+        with mock.patch.dict(os.environ, values, clear=True):
+            return collect_context_fast_status(root, scope)
+
+    owner = collect(owner_scope)
+    assert owner["model"] == "anthropic", owner
+    assert owner["model_status"]["initialized"] is False, owner
+    assert owner["memory"]["recent"] == ["Real owner local memory"], owner["memory"]
+    assert owner["knowledge"]["titles"] == ["owner-continuity"], owner["knowledge"]
+    assert owner["runs"]["recent_count"] == 1, owner["runs"]
+    assert owner["runs"]["recent"][0]["goal"] == "Real local goal", owner["runs"]
+    connectors = owner["connectors"]
     assert connectors["tools"] == 4, connectors
     assert connectors["ready"] == 1, connectors
     assert connectors["ready_ids"] == ["news.fetch_headlines"], connectors
     assert connectors["dynamic_mcp_status"] == "uninspected", connectors
-    return status_payload
+
+    # MEMORY_BACKEND=auto must not probe the unreachable Postgres it is handed.
+    auto = collect(owner_scope, {
+        "MEMORY_BACKEND": "auto",
+        "DATABASE_URL": "postgresql://127.0.0.1:9/fixture-must-not-connect",
+    })
+    auto_memory = auto["memory"]
+    assert auto_memory["backend"] == "auto", auto_memory
+    assert auto_memory["status"] == "selection_uninspected", auto_memory
+    assert auto_memory["recent"] == ["Real owner local memory"], auto_memory
+    assert auto_memory["local_fallback"]["backend"] == "sqlite", auto_memory
+    assert auto_memory["local_fallback"]["recent_count"] == 1, auto_memory
+
+    # With no explicit embedding model the collector must still resolve the same
+    # profile the composition root persists, or a healthy index reads as unready.
+    default_rag = collect(owner_scope, {"EMBEDDING_MODEL": "", "MODEL_NAME": ""})["knowledge"]["rag"]
+    assert default_rag["configured_profile"] == "openai:gpt-5.6-sol:3:v1", default_rag
+    assert default_rag["semantic_ready"] is True, default_rag
+
+    tenant = collect(tenant_scope)
+    assert tenant["memory"]["recent"] == ["Real tenant local memory"], tenant["memory"]
+    assert tenant["knowledge"]["titles"] == ["tenant-continuity"], tenant["knowledge"]
+    assert "owner" not in json.dumps(tenant["knowledge"]).lower(), tenant["knowledge"]
+    assert tenant["knowledge"]["graphify"]["reason"] == (
+        "not_configured_for_tenant_scope"
+    ), tenant["knowledge"]
+    assert tenant["runs"]["recent_count"] is None, tenant["runs"]
+    assert tenant["runs"]["reason"] == "run_journal_not_scope_partitioned", tenant["runs"]
 
 
 def _open_live_wal(path: Path) -> sqlite3.Connection:
@@ -608,13 +698,22 @@ def _assert_live_wal_status_is_real(root: Path, base_env: dict[str, str], scope:
         for key in ("PYTHONPATH", "PREPENDE_CONTEXT_FAST_AUDIT_DIR"):
             env.pop(key, None)
 
+        # Through the CLI, for the knowledge index the fast lane does read, and
+        # for the byte-immutability check below.
         status = _run_context_fast(env, scope)["status"]
-        memory = status["memory"]
+        assert status["knowledge"]["rag"]["lexical_ready"] is True, status["knowledge"]
+
+        # Memory, runs and connector readiness live in the scoped collector, not
+        # in the fast-lane subset -- same split as _assert_scoped_collector_truth.
+        from operations.local_status import collect_context_fast_status
+
+        with mock.patch.dict(os.environ, env, clear=True):
+            collected = collect_context_fast_status(fixture, scope)
+        memory = collected["memory"]
         assert memory["status"] == "ready", memory
         assert memory["recent"][0] == "Committed in the WAL", memory
-        assert status["runs"]["recent_count"] == 1, status["runs"]
-        assert status["connectors"]["readiness_status"] == "observed", status["connectors"]
-        assert status["knowledge"]["rag"]["lexical_ready"] is True, status["knowledge"]
+        assert collected["runs"]["recent_count"] == 1, collected["runs"]
+        assert collected["connectors"]["readiness_status"] == "observed", collected["connectors"]
 
         # The locked read may map the `-shm` wal-index the writer already owns.
         # It must never alter database or WAL bytes.
@@ -637,13 +736,19 @@ def _assert_process_allowlist(events: list[dict[str, object]], audited_runs: int
         ("rev-parse", "--abbrev-ref", "@{upstream}"),
         ("remote",),
     }
+    # repository_snapshot resolves the upstream commit only when the branch has
+    # an upstream (operations/continuity.py:104), so this one is present in every
+    # run or absent from every run. A detached CI checkout has no upstream.
+    conditional_git = {
+        ("rev-parse", "@{upstream}"),
+    }
     for item in launches:
         executable = str(item.get("executable") or "")
         argv = tuple(str(value) for value in item.get("argv", []))
         if Path(executable).name == "git":
             assert len(argv) >= 4 and argv[:3] == ("git", "-C", str(ROOT)), item
             command = argv[3:]
-            assert command in allowed_git, item
+            assert command in allowed_git | conditional_git, item
             git_launches.append(command)
             continue
         if Path(executable).name.startswith("python"):
@@ -654,9 +759,17 @@ def _assert_process_allowlist(events: list[dict[str, object]], audited_runs: int
         raise AssertionError(f"unreviewed process launch: {item}")
     # Derived from the audited runs rather than hardcoded, so adding a scenario
     # does not fail on an opaque count.
-    assert kernel_launches == audited_runs, launches
-    assert len(git_launches) == audited_runs * len(allowed_git), launches
-    assert set(git_launches) == allowed_git, git_launches
+    # The fast lane collects in-process, so it must not spawn the kernel at all.
+    # The branch above still fails an unreviewed python launch; this pins the
+    # count at zero so reintroducing a subprocess is a deliberate, visible change.
+    assert kernel_launches == 0, launches
+    assert audited_runs > 0
+    observed_git = set(git_launches)
+    assert allowed_git <= observed_git, sorted(allowed_git - observed_git)
+    # Every run makes the same set of git calls exactly once, whichever set that
+    # is. This still fails on a repeated or dropped call; it only tolerates the
+    # upstream lookup being uniformly present or uniformly absent.
+    assert len(git_launches) == audited_runs * len(observed_git), launches
 
 
 def main() -> None:
@@ -706,12 +819,12 @@ def main() -> None:
                 ),
             }
         )
+        # Four CLI runs under four environments. Each one is audited, so the
+        # import and network assertions below cover the fast lane as configured
+        # for a real owner, a Postgres-configured owner, a defaulted embedding
+        # profile, and a tenant -- not just one happy path.
         owner_payload = _run_context_fast(env, owner_scope)
-        owner_status = _assert_common_payload(owner_payload, owner_scope)
-        assert owner_status["memory"]["recent"] == ["Real owner local memory"], owner_status
-        assert owner_status["knowledge"]["titles"] == ["owner-continuity"], owner_status
-        assert owner_status["runs"]["recent_count"] == 1, owner_status
-        assert owner_status["runs"]["recent"][0]["goal"] == "Real local goal", owner_status
+        _assert_common_payload(owner_payload, owner_scope)
 
         auto_env = env.copy()
         auto_env.update(
@@ -720,39 +833,17 @@ def main() -> None:
                 "DATABASE_URL": "postgresql://127.0.0.1:9/fixture-must-not-connect",
             }
         )
-        auto_payload = _run_context_fast(auto_env, owner_scope)
-        auto_status = _assert_common_payload(auto_payload, owner_scope)
-        auto_memory = auto_status["memory"]
-        assert auto_memory["backend"] == "auto", auto_memory
-        assert auto_memory["status"] == "selection_uninspected", auto_memory
-        assert auto_memory["recent"] == ["Real owner local memory"], auto_memory
-        assert auto_memory["local_fallback"]["backend"] == "sqlite", auto_memory
-        assert auto_memory["local_fallback"]["recent_count"] == 1, auto_memory
+        _assert_common_payload(_run_context_fast(auto_env, owner_scope), owner_scope)
 
         default_embedding_env = env.copy()
         default_embedding_env.update({"EMBEDDING_MODEL": "", "MODEL_NAME": ""})
-        default_embedding_payload = _run_context_fast(
-            default_embedding_env, owner_scope
+        _assert_common_payload(
+            _run_context_fast(default_embedding_env, owner_scope), owner_scope
         )
-        default_embedding_status = _assert_common_payload(
-            default_embedding_payload, owner_scope
-        )
-        default_rag = default_embedding_status["knowledge"]["rag"]
-        assert default_rag["configured_profile"] == (
-            "openai:gpt-5.6-sol:3:v1"
-        ), default_rag
-        assert default_rag["semantic_ready"] is True, default_rag
 
-        tenant_payload = _run_context_fast(env, tenant_scope)
-        tenant_status = _assert_common_payload(tenant_payload, tenant_scope)
-        assert tenant_status["memory"]["recent"] == ["Real tenant local memory"], tenant_status
-        assert tenant_status["knowledge"]["titles"] == ["tenant-continuity"], tenant_status
-        assert "owner" not in json.dumps(tenant_status["knowledge"]).lower(), tenant_status
-        assert tenant_status["knowledge"]["graphify"]["reason"] == (
-            "not_configured_for_tenant_scope"
-        ), tenant_status
-        assert tenant_status["runs"]["recent_count"] is None, tenant_status
-        assert tenant_status["runs"]["reason"] == "run_journal_not_scope_partitioned", tenant_status
+        _assert_common_payload(_run_context_fast(env, tenant_scope), tenant_scope)
+
+        _assert_scoped_collector_truth(fixture, env, owner_scope, tenant_scope)
 
         assert _tree_snapshot(runtime["state"]) == runtime_before
         assert _tree_snapshot(runtime["vault"]) == vault_before
@@ -760,7 +851,14 @@ def main() -> None:
         assert _git_index_snapshot() == index_before
 
         events = _audit_events(traces)
-        assert len(list(traces.glob("*.json"))) >= 8, "wrapper and kernel were not both audited"
+        # One trace per audited run. context-fast collects in-process via
+        # operations.operational_status.build_fast_context_status, so the wrapper
+        # is the only process doing the work and the only one to audit. The
+        # forbidden-import and network assertions below therefore cover all of
+        # it; there is no child process for a provider import to hide in.
+        assert len(list(traces.glob("*.json"))) == 4, sorted(
+            path.name for path in traces.glob("*.json")
+        )
         imports = {
             str(item.get("name"))
             for item in events
