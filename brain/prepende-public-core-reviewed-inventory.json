@@ -899,7 +899,7 @@
     {
       "mode": "100644",
       "outputPath": "operations/operational_status.py",
-      "sha256": "9b03010bd5497fb61d2198594b47af5e99f4b17ab820e5e4ed0776d1240d07f9",
+      "sha256": "1d91755129fe55b57ddb1eed4c7272061fad2e3e27d0646f73780bf57522c710",
       "sourcePaths": [
         "operations/operational_status.py"
       ]
