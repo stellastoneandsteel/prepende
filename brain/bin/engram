@@ -393,6 +393,36 @@ def context_fast(args: list[str]) -> int:
         transport_ok=status_ok,
     )
     continuity_ready = bool(continuity["verdict"]["continuityReady"])
+    plan_ready = bool(continuity["verdict"]["planReady"])
+    work_ready = continuity_ready and plan_ready
+    plan_blocker_ids = [
+        str(blocker.get("id"))
+        for blocker in continuity.get("blockers", [])
+        if "plan" in blocker.get("blocks", []) and blocker.get("id")
+    ]
+    if not continuity_ready:
+        blocked_detail = "Transport or critical continuity prerequisites are not ready."
+    elif not plan_ready:
+        blocker_suffix = f": {', '.join(plan_blocker_ids)}" if plan_blocker_ids else ""
+        blocked_detail = (
+            f"The selected {profile} profile's planning prerequisites are not ready"
+            f"{blocker_suffix}."
+        )
+    else:
+        blocked_detail = None
+    proposed_detail = (
+        "Proceed with local operator work using this receipt as the handoff."
+        if work_ready
+        else (
+            "Use this packet only to resolve its planning blockers; "
+            "do not begin the requested work."
+        )
+    )
+    next_detail = (
+        "Use full `prepende context` only when slow synthesis is explicitly needed."
+        if work_ready
+        else "Resolve the selected profile's planning blockers before plan execution."
+    )
     payload = {
         "schemaVersion": PACKET_SCHEMA_VERSION,
         "ok": status_ok,
@@ -415,18 +445,10 @@ def context_fast(args: list[str]) -> int:
         "receipt": {
             "Recalled": "Pulled bounded Prepende status for the requested scope.",
             "Decided": "Skipped model synthesis to avoid preflight hangs.",
-            "Proposed": "Use this packet as the continuity handoff before local repo work.",
-            "Blocked": (
-                None
-                if continuity_ready
-                else "Transport or critical continuity prerequisites are not ready."
-            ),
+            "Proposed": proposed_detail,
+            "Blocked": blocked_detail,
             "Verified": "No durable memory writes or external actions executed.",
-            "Next": (
-                "Use full `prepende context` only when slow synthesis is explicitly needed."
-                if continuity_ready
-                else "Resolve the continuity blockers in this packet before plan execution."
-            ),
+            "Next": next_detail,
             "stages": [
                 receipt_stage(
                     "Recalled",
@@ -443,14 +465,12 @@ def context_fast(args: list[str]) -> int:
                 receipt_stage(
                     "Proposed",
                     "ok",
-                    "Proceed with local operator work using this receipt as the handoff.",
+                    proposed_detail,
                 ),
                 receipt_stage(
                     "Blocked",
-                    "none" if continuity_ready else "blocked",
-                    "No critical continuity blocker."
-                    if continuity_ready
-                    else "Transport or critical continuity prerequisites are not ready.",
+                    "none" if work_ready else "blocked",
+                    blocked_detail or "No selected-profile planning blocker.",
                 ),
                 receipt_stage(
                     "Verified",
@@ -461,9 +481,7 @@ def context_fast(args: list[str]) -> int:
                 receipt_stage(
                     "Next",
                     "ok",
-                    "Escalate to full context only for deliberate slow reasoning."
-                    if continuity_ready
-                    else "Resolve the continuity blockers in this packet before plan execution.",
+                    next_detail,
                 ),
             ],
         },
@@ -471,10 +489,15 @@ def context_fast(args: list[str]) -> int:
     }
     if opts["json"]:
         print(json.dumps(payload, indent=2, default=str))
-    elif status_ok:
+    elif status_ok and work_ready:
         print(
             "Prepende context-fast OK: model lane skipped; "
             "no durable memory writes or external actions executed."
+        )
+    elif status_ok:
+        print(
+            f"Prepende context-fast BLOCKED: {blocked_detail}",
+            file=sys.stderr,
         )
     else:
         print(json.dumps(payload, indent=2, default=str), file=sys.stderr)

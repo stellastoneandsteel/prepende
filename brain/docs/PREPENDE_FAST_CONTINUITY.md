@@ -79,13 +79,19 @@ start and sandbox commands require transport, scope, profile,
 The cached manifest defaults to:
 
 ```text
-.engram/continuity/recovery-manifest.json
+.engram/continuity/recovery-manifest-<sha256-of-exact-scope>.json
 ```
 
-`PREPENDE_RECOVERY_MANIFEST` may point to a different reviewed cache. The
-manifest is proven only when it is unexpired and every required gate is `pass`
-with at least one structured evidence receipt. Each receipt must identify its
-receipt ID, observation time, and SHA-256 digest, and must be no more than 31
+This keeps simultaneous tenant manifests separate without placing raw scope
+text in a path. If that scoped file is absent, the legacy unsuffixed cache is
+read only when its embedded scope exactly matches the request. An occupied but
+unreadable or invalid scoped path never falls back to legacy proof.
+`PREPENDE_RECOVERY_MANIFEST` is a literal highest-priority override and never
+falls back; its embedded scope is still checked. The manifest is proven only
+when an exact expected scope is supplied, it is unexpired, its receipt set is
+valid, and every required gate is `pass` with at least one structured evidence
+receipt. Each receipt must identify its receipt ID, observation time, and
+SHA-256 digest, must carry the same exact scope, and must be no more than 31
 days old:
 
 1. `inventory`

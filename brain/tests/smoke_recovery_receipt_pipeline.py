@@ -12,6 +12,18 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from operations.recovery_receipts import (
+    GATE_POLICIES,
+    build_receipt,
+    digest_bytes,
+    observation_template,
+    write_receipt,
+)
+
+
 SCRIPT = ROOT / "scripts" / "prepende_recovery_receipts.py"
 
 
@@ -119,6 +131,88 @@ def main() -> None:
         proc, payload = run("record", "--input", str(invalid_path), "--receipts-dir", str(receipts))
         assert proc.returncode == 2, payload
         assert "requires proofClass" in payload["error"], payload
+
+        full_receipts = temp / "full-receipts"
+        full_manifest = temp / "full-manifest.json"
+        source = b"full fixture evidence"
+        for gate_id, policy in GATE_POLICIES.items():
+            observation = observation_template(gate_id, now=now)
+            observation["producer"] = {
+                "id": f"full-fixture-{gate_id}",
+                "version": "1",
+                "kind": policy["producerKinds"][0],
+            }
+            observation["summary"] = f"Full fixture proof for {gate_id}."
+            observation["checks"] = [
+                {"id": check_id, "status": "pass", "detail": "fixture"}
+                for check_id in policy["checks"]
+            ]
+            observation["artifacts"] = [
+                {
+                    "id": "fixture",
+                    "locator": f"fixture://{gate_id}",
+                    "digest": digest_bytes(source),
+                    "bytes": len(source),
+                }
+            ]
+            receipt = build_receipt(
+                observation,
+                source_locator=f"fixture://{gate_id}",
+                source_digest=digest_bytes(source),
+                source_bytes=len(source),
+                now=now,
+            )
+            write_receipt(receipt, full_receipts)
+        (full_receipts / "rr_invalid_fixture.json").write_text(
+            json.dumps({"scope": "prepende-operations"}),
+            encoding="utf-8",
+        )
+        (full_receipts / "rr_missing_scope_fixture.json").write_text(
+            json.dumps({}),
+            encoding="utf-8",
+        )
+        scope_tamper_observation = observation_template("inventory", now=now)
+        scope_tamper_observation["producer"] = {
+            "id": "scope-tamper-fixture",
+            "version": "1",
+            "kind": GATE_POLICIES["inventory"]["producerKinds"][0],
+        }
+        scope_tamper_observation["summary"] = "Fixture whose scope is changed after sealing."
+        scope_tamper_observation["checks"] = [
+            {"id": check_id, "status": "pass", "detail": "fixture"}
+            for check_id in GATE_POLICIES["inventory"]["checks"]
+        ]
+        scope_tamper_observation["artifacts"] = [
+            {
+                "id": "fixture",
+                "locator": "fixture://scope-tamper",
+                "digest": digest_bytes(source),
+                "bytes": len(source),
+            }
+        ]
+        scope_tampered_receipt = build_receipt(
+            scope_tamper_observation,
+            source_locator="fixture://scope-tamper",
+            source_digest=digest_bytes(source),
+            source_bytes=len(source),
+            now=now,
+        )
+        scope_tampered_receipt["scope"] = "other-business"
+        write_receipt(scope_tampered_receipt, full_receipts)
+        proc, payload = run(
+            "build",
+            "--receipts-dir",
+            str(full_receipts),
+            "--output",
+            str(full_manifest),
+            "--scope",
+            "prepende-operations",
+            "--dry-run",
+        )
+        assert payload["gateCounts"] == {"pass": 10, "fail": 0, "unknown": 0}, payload
+        assert payload["diagnostics"]["invalidReceiptCount"] == 3, payload
+        assert proc.returncode == 1, payload
+        assert payload["ok"] is False, payload
 
     print("smoke_recovery_receipt_pipeline OK")
 

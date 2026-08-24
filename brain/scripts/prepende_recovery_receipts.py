@@ -166,19 +166,30 @@ def main() -> int:
             )
             return 0
 
-        output = _path(args.output, recovery_manifest_path(ROOT)) if args.output else recovery_manifest_path(ROOT)
+        scope = args.scope
+        if not scope.strip() or scope != scope.strip():
+            raise ValueError("scope must be a non-empty canonical string")
+        output = (
+            _path(args.output, recovery_manifest_path(ROOT, scope))
+            if args.output
+            else recovery_manifest_path(ROOT, scope)
+        )
         manifest, diagnostics = build_manifest(
             receipts_dir=_receipts_dir(args.receipts_dir),
             output_path=output,
-            scope=args.scope,
+            scope=scope,
             write=not args.dry_run,
         )
         counts = {"pass": 0, "fail": 0, "unknown": 0}
         for gate in manifest["gates"]:
             counts[gate["status"]] += 1
+        proven = (
+            counts["pass"] == len(RECOVERY_GATE_IDS)
+            and diagnostics["invalidReceiptCount"] == 0
+        )
         _print(
             {
-                "ok": counts["pass"] == len(RECOVERY_GATE_IDS),
+                "ok": proven,
                 "command": "build",
                 "wroteManifest": not args.dry_run,
                 "manifestPath": str(output),
@@ -188,7 +199,7 @@ def main() -> int:
                 "externalActions": [],
             }
         )
-        return 0 if counts["pass"] == len(RECOVERY_GATE_IDS) else 1
+        return 0 if proven else 1
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         _print(
             {

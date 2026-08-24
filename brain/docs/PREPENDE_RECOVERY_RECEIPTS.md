@@ -32,12 +32,19 @@ The default private runtime paths are:
 
 ```text
 .engram/continuity/recovery-receipts/
-.engram/continuity/recovery-manifest.json
+.engram/continuity/recovery-manifest-<sha256-of-exact-scope>.json
 ```
 
 They are runtime evidence, not Git-tracked source and not durable Prepende
 memory. Preserve the receipt directory with the recovery evidence system; do
 not copy it into a customer-safe clone.
+
+The scoped filename uses the full SHA-256 of the exact canonical scope. A
+legacy `.engram/continuity/recovery-manifest.json` is accepted only when the
+scoped path is absent and the legacy manifest declares the exact requested
+scope. An occupied, corrupt, expired, or wrong-scope scoped path never falls
+back. `PREPENDE_RECOVERY_MANIFEST` and explicit CLI paths are literal overrides,
+remain scope-checked, and never fall back.
 
 ## Gate contracts
 
@@ -124,6 +131,14 @@ assembly malfunctioned.
 
 Manifest selection is tenant-scoped. Receipts from another business are
 reported as ignored and can neither satisfy nor poison the selected scope.
+An otherwise valid same-scope receipt that has aged out is retained and
+reported as expired history, but it is not eligible for selection and does not
+count as corrupt evidence. Authority still follows observation order: when the
+newest structurally valid receipt for a gate has expired, that gate becomes
+unknown instead of reviving an older pass. A later fresh receipt can renew it.
+Same-time conflicting results are also unknown. Any same-scope receipt with an
+integrity, schema, validity-interval, or safety defect remains invalid and
+blocks recovery proof even when that receipt is also expired.
 Use `record-gap` to replace an unknown with a fresh, evidence-bearing failure
 when a bounded rehearsal cannot perform the required external, owner-controlled,
 off-device, or replacement-host drill. A red receipt is current proof of a gap;

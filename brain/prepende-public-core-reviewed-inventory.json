@@ -99,7 +99,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/engram",
-      "sha256": "ca1f24e17502dd43b82162bf415172c5f748bb2fff6944a40a2c8a919be91726",
+      "sha256": "5923707635d58743e417a752b1deb843371895ab4d8b81425d4331f94d1aed13",
       "sourcePaths": [
         "bin/engram"
       ]
@@ -203,7 +203,7 @@
     {
       "mode": "100644",
       "outputPath": "docs/PREPENDE_FAST_CONTINUITY.md",
-      "sha256": "f11585c3923b24483081d51123fa355bf8e4fed497bd806826826cda2ae877db",
+      "sha256": "17e327e8ca77cbb67981e85f9018cc7a0eef4d4bd84cff939e058b7274a16850",
       "sourcePaths": [
         "docs/PREPENDE_FAST_CONTINUITY.md"
       ]
@@ -235,7 +235,7 @@
     {
       "mode": "100644",
       "outputPath": "docs/PREPENDE_RECOVERY_RECEIPTS.md",
-      "sha256": "eeb9c37cbf42d6df2b4891f569dadea76ce35a8578dc19214cc6955498e42f9b",
+      "sha256": "0cc6a51c0857890cd8d739694401f86b53bfa242c5ced3b5f72065186179fecb",
       "sourcePaths": [
         "docs/PREPENDE_RECOVERY_RECEIPTS.md"
       ]
@@ -891,7 +891,7 @@
     {
       "mode": "100644",
       "outputPath": "operations/continuity.py",
-      "sha256": "022a8498732da3e9b709f55f7ef09c485bd1c65a14e5571ff05103b43932507d",
+      "sha256": "62722a85f534d230df2f8ff0b28230c6c9641347639a3c580d0e3a7d36f4d1f5",
       "sourcePaths": [
         "operations/continuity.py"
       ]
@@ -915,7 +915,7 @@
     {
       "mode": "100644",
       "outputPath": "operations/recovery_receipts.py",
-      "sha256": "96368b217f625f55e52c3cf9b5cb87e93e5abf9b14203a3068a5afd086048357",
+      "sha256": "49efb5f217b6af579aca20ad9b4f137320b6755aef03643170467c3034e2662f",
       "sourcePaths": [
         "operations/recovery_receipts.py"
       ]
@@ -1163,7 +1163,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/prepende_recovery_receipts.py",
-      "sha256": "c75cb8b95247dd02c9d1a03b5a811c889810cf8b731528bdb15be1e79fd08883",
+      "sha256": "7e4defa5907671905a20e3a7de97d2267fb60a80181181dcc58aac05c8c86883",
       "sourcePaths": [
         "scripts/prepende_recovery_receipts.py"
       ]
@@ -1219,7 +1219,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_recovery.py",
-      "sha256": "8d01a7172dc4995dcfc9276de8f3c839a165488218d939089a289a15414b66ee",
+      "sha256": "505f26531e962966843519512fe2ea5d803a24a16f7f4a95da7ba747d1818bc4",
       "sourcePaths": [
         "scripts/verify_prepende_recovery.py"
       ]
@@ -1483,7 +1483,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_context_fast.py",
-      "sha256": "d259f973027c2d3ec5f72ed7bf416573d1b3b1dbccdae75bdfd6b269e43dfe8b",
+      "sha256": "ddeb593ae1ea405fb3bbcc011c2718b11fa0761976cf3131d3e65a0612748768",
       "sourcePaths": [
         "tests/smoke_context_fast.py"
       ]
@@ -1499,7 +1499,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_continuity_v2.py",
-      "sha256": "2817b9401ac2b517cfdf3cab6c0dd7526cefe2cf3779f266c9427fb7fbf28972",
+      "sha256": "f6e35d40503107c3893bb8fcfbc1e16136a8ebfab71f74e76402d7e2af933a40",
       "sourcePaths": [
         "tests/smoke_continuity_v2.py"
       ]
@@ -1715,7 +1715,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_recovery_receipt_pipeline.py",
-      "sha256": "e234677db47902cf2ac40d3c2b18fc3117267d6e805354caabfafd11c498370b",
+      "sha256": "e8377e4597aadb398f349f22aec181e9ef8f22fa39aeb39917b69a37f84957d0",
       "sourcePaths": [
         "tests/smoke_recovery_receipt_pipeline.py"
       ]
@@ -1723,7 +1723,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_recovery_verifier.py",
-      "sha256": "b8c2ee809c56a8ee04b2dc5e108342043b0c2b9b313209e7dcf899eefeea32bf",
+      "sha256": "a5a774e2239abc651b2d8e3788b438cdd47266cd4120705dbf792d970d1237f1",
       "sourcePaths": [
         "tests/smoke_recovery_verifier.py"
       ]

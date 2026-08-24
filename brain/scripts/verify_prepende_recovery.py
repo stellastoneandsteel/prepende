@@ -24,6 +24,7 @@ from operations.continuity import (  # noqa: E402
     RECOVERY_SCHEMA_VERSION,
     evaluate_recovery_manifest,
     recovery_manifest_path,
+    resolve_recovery_manifest_path,
 )
 
 
@@ -37,7 +38,7 @@ def template() -> dict:
         "schemaVersion": RECOVERY_SCHEMA_VERSION,
         "generatedAt": _iso(now),
         "expiresAt": _iso(now + timedelta(days=31)),
-        "receiptSet": {"validCount": 0, "invalidCount": 0},
+        "receiptSet": {"validCount": 0, "expiredCount": 0, "invalidCount": 0},
         "gates": [
             {
                 "id": gate_id,
@@ -61,7 +62,15 @@ def main() -> int:
         print(json.dumps(template(), indent=2))
         return 0
 
-    path = Path(args.manifest).expanduser() if args.manifest else recovery_manifest_path(ROOT)
+    path = (
+        Path(args.manifest).expanduser()
+        if args.manifest
+        else (
+            resolve_recovery_manifest_path(ROOT, args.scope)
+            if args.scope
+            else recovery_manifest_path(ROOT)
+        )
+    )
     if not path.is_absolute():
         path = ROOT / path
     manifest = None
