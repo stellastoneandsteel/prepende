@@ -44,6 +44,11 @@ PRIVATE_SAFE_TOOLS = (
     if _private_mcp_tools is not None
     else frozenset()
 )
+PRIVATE_WRITE_TOOLS = (
+    frozenset(getattr(_private_mcp_tools, "WRITE_TOOLS", ()))
+    if _private_mcp_tools is not None
+    else frozenset()
+)
 OPERATOR_SAFE_TOOLS = frozenset({
     "operator_status",
 })
@@ -60,6 +65,7 @@ SAFE_TOOLS = frozenset({
 WRITE_TOOLS = frozenset({
     "remember", "memory_reject", "run_workflow", "list_workflows",
     *OPERATOR_WRITE_TOOLS,
+    *PRIVATE_WRITE_TOOLS,
 })
 ALL_TOOLS = SAFE_TOOLS | WRITE_TOOLS
 

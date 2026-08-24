@@ -11,7 +11,7 @@
     {
       "mode": "100644",
       "outputPath": ".env.example",
-      "sha256": "a4c5ae395b738f456dc0b4e37027e634faaaad5cf51d09c77581c6f1cea1b672",
+      "sha256": "fe33559145df6945d4f7a1a9e8747fdc7730979052acfe404af3d7c35adba16b",
       "sourcePaths": [
         ".env.example"
       ]
@@ -99,7 +99,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/engram",
-      "sha256": "86ea995bc568a66d2622ce6e26d81b914177548a88af6e69766e85b68462ce75",
+      "sha256": "ca1f24e17502dd43b82162bf415172c5f748bb2fff6944a40a2c8a919be91726",
       "sourcePaths": [
         "bin/engram"
       ]
@@ -307,7 +307,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_scope.py",
-      "sha256": "18f38f73953fb948e9ceb1b8a62288ef952f956b54e00b0e6be4f5b8a09c3542",
+      "sha256": "ac0b2e6b1274bf3b2c020a89fd4db665b9e87b8ad031e3c5e75717e45721019b",
       "sourcePaths": [
         "interface/mcp_scope.py"
       ]
@@ -363,7 +363,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/contracts/durable.py",
-      "sha256": "77cbc3a536127432238439f818ec9cc33471ecb8fa69c75e2aecc6c294a734f1",
+      "sha256": "bbb01e8f197d2ba4faaafcacccc6e023e41882bb1439ee2cbcee0fa1f2eb5ed0",
       "sourcePaths": [
         "kernel/contracts/durable.py"
       ]
@@ -627,7 +627,7 @@
     {
       "mode": "100644",
       "outputPath": "knowledge/cli.py",
-      "sha256": "bdd03bec8696ad1ad878335ce3a889b4492e3d3f0b79bd6f8e5b307f35599d33",
+      "sha256": "53261cb7c30482ac713055396f3a9271eac9bea93f19262833e850f11f9429d1",
       "sourcePaths": [
         "knowledge/cli.py"
       ]
@@ -643,7 +643,7 @@
     {
       "mode": "100644",
       "outputPath": "knowledge/graphify.py",
-      "sha256": "c25a5110dd1a23e57f53cb6c9b76fc69caab746412f88ed91f59b144cc2e6406",
+      "sha256": "846e2c2013ed857a427dfd4dad710700abee0352735a55439b174d929ead83c6",
       "sourcePaths": [
         "knowledge/graphify.py"
       ]
@@ -739,7 +739,7 @@
     {
       "mode": "100644",
       "outputPath": "memory/candidates.py",
-      "sha256": "b101ede86114d3099ec5321dc3b81b0f74967788d7cf2572bc54f1ea762fbccf",
+      "sha256": "b00a72ad57c125f1bb376ef2ed288164fd7150a78bb3fd530dbc623e16dd0867",
       "sourcePaths": [
         "memory/candidates.py"
       ]
@@ -763,7 +763,7 @@
     {
       "mode": "100644",
       "outputPath": "memory/postgres_candidates.py",
-      "sha256": "1ec48bfc1df5cb0e02d529db216a14e68202c8877bbff84f3bc4cc851b7ad14e",
+      "sha256": "17fc5cc90f6edc25838311668f975e8ab12385d32c30564e37f0cff7f38ebbb0",
       "sourcePaths": [
         "memory/postgres_candidates.py"
       ]
@@ -891,7 +891,7 @@
     {
       "mode": "100644",
       "outputPath": "operations/continuity.py",
-      "sha256": "0e3da1da76be90b138215ec282effb385369127cf15f9f888ba1eaae2ed2841c",
+      "sha256": "022a8498732da3e9b709f55f7ef09c485bd1c65a14e5571ff05103b43932507d",
       "sourcePaths": [
         "operations/continuity.py"
       ]
@@ -1171,7 +1171,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/refresh_graphify.py",
-      "sha256": "0eaf956a96d9ca3f13875846d245a64e52de4e06814053de7c9c267ed79d6ea8",
+      "sha256": "15e4fc1c8aaac0064abb9829a8c21d0508f27e98cc01a5e15b8a264c5d1f0d23",
       "sourcePaths": [
         "scripts/refresh_graphify.py"
       ]
@@ -1515,7 +1515,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_graphify_recall.py",
-      "sha256": "9662d48f89ef47aa872988218a773abe78da890755afc393c0e7c1c78e845dcf",
+      "sha256": "49a0cbfebdb9307dc9fdc9b4479404421942cba97d6fe5e10af6ecfebacd3de4",
       "sourcePaths": [
         "tests/smoke_graphify_recall.py"
       ]

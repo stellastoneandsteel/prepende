@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -30,6 +31,8 @@ RAG_COUNT_FIELDS = (
     "embedded_chunks",
     "missing_embeddings",
 )
+_GIT_REMOTE_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,99}$")
+_GIT_BRANCH_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._/-]{0,199}$")
 
 RECOVERY_GATE_IDS = (
     "inventory",
@@ -98,6 +101,7 @@ def repository_snapshot(root: Path) -> dict[str, Any]:
     head = _git(root, "rev-parse", "HEAD")
     status = _git(root, "status", "--porcelain=v1")
     upstream = _git(root, "rev-parse", "--abbrev-ref", "@{upstream}")
+    upstream_head = _git(root, "rev-parse", "@{upstream}") if upstream else None
     remotes = _git(root, "remote")
     dirty_entries = len(status.splitlines()) if status else 0
     return {
@@ -107,8 +111,79 @@ def repository_snapshot(root: Path) -> dict[str, Any]:
         "head": head,
         "dirtyEntries": dirty_entries,
         "upstream": upstream,
+        "upstreamHead": upstream_head,
+        "headMatchesUpstream": bool(head and upstream_head and head == upstream_head),
         "remoteConfigured": bool(remotes),
         "observedAt": _iso(datetime.now(timezone.utc)),
+    }
+
+
+def verify_remote_revision(
+    root: Path,
+    *,
+    base_ref: str = "origin/main",
+) -> dict[str, Any]:
+    """Read the configured Git remote and prove HEAD matches its branch tip.
+
+    This intentionally uses ``ls-remote`` rather than trusting a possibly stale
+    local tracking ref. It does not fetch objects or mutate the checkout.
+    """
+
+    observed_at = _iso(datetime.now(timezone.utc))
+    if "/" not in base_ref or base_ref.startswith("/") or base_ref.endswith("/"):
+        return {
+            "expectedBaseRef": base_ref,
+            "remoteVerified": False,
+            "headMatchesRemote": False,
+            "remoteVerificationReason": "expected_base_ref_invalid",
+            "remoteObservedAt": observed_at,
+        }
+    remote, branch = base_ref.split("/", 1)
+    if (
+        not _GIT_REMOTE_RE.fullmatch(remote)
+        or not _GIT_BRANCH_RE.fullmatch(branch)
+        or ".." in branch
+        or "@{" in branch
+        or any(part in {"", ".", ".."} for part in branch.split("/"))
+    ):
+        return {
+            "expectedBaseRef": base_ref,
+            "remoteVerified": False,
+            "headMatchesRemote": False,
+            "remoteVerificationReason": "expected_base_ref_invalid",
+            "remoteObservedAt": observed_at,
+        }
+    head = _git(root, "rev-parse", "HEAD")
+    local_base = _git(root, "rev-parse", base_ref)
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), "ls-remote", "--exit-code", remote, f"refs/heads/{branch}"],
+            capture_output=True,
+            text=True,
+            timeout=15.0,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        proc = None
+    remote_head = None
+    if proc is not None and proc.returncode == 0:
+        fields = proc.stdout.strip().split()
+        if len(fields) >= 2 and fields[1] == f"refs/heads/{branch}":
+            remote_head = fields[0]
+    verified = bool(
+        head
+        and local_base
+        and remote_head
+        and local_base == remote_head
+    )
+    return {
+        "expectedBaseRef": base_ref,
+        "localBaseHead": local_base,
+        "remoteHead": remote_head,
+        "remoteVerified": verified,
+        "headMatchesRemote": bool(verified and head == remote_head),
+        "remoteVerificationReason": None if verified else "remote_revision_unverified",
+        "remoteObservedAt": observed_at,
     }
 
 
