@@ -17,6 +17,37 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from operations import operational_status as status  # noqa: E402
 
 
+def _status_with_isolated_brain(
+    root: Path,
+    scope: str,
+    protocol_repo: str | None,
+    trust_repo: str | None,
+    online: bool,
+    environment: dict[str, object],
+    python: Path,
+) -> tuple[dict[str, object], int]:
+    with mock.patch.dict(
+        status.os.environ,
+        {
+            "VAULT_PATH": "vault",
+            "MEMORY_DB": ".engram/memory.db",
+            "VAULT_INDEX_PATH": ".engram/vault_index.db",
+            "GRAPHIFY_GRAPH": "graphify-out/graph.json",
+            "GRAPHIFY_GRAPH_PATH": "graphify-out/graph.json",
+        },
+        clear=False,
+    ):
+        return status.build_operational_status(
+            root=root,
+            scope=scope,
+            protocol_repo=protocol_repo,
+            trust_repo=trust_repo,
+            online=online,
+            environment=environment,
+            python=python,
+        )
+
+
 def _ready_brain(scope: str = "scope-a") -> dict:
     return {
         "status": "ready",
@@ -91,7 +122,7 @@ def _unconfigured_never_discovers_siblings(temp: Path) -> None:
         mock.patch.object(status, "_collect_brain", return_value=_ready_brain()),
         mock.patch.object(status, "_collect_recovery", return_value={"status": "ready", "proven": True}),
     ):
-        payload, code = status.build_operational_status(
+        payload, code = _status_with_isolated_brain(
             root=brain,
             scope="scope-a",
             protocol_repo=None,
@@ -122,7 +153,7 @@ def _wrong_repository_is_exit_two(temp: Path) -> None:
     private = temp / "private"
     private.mkdir()
     with mock.patch.object(status, "_collect_brain", return_value=_ready_brain()):
-        payload, code = status.build_operational_status(
+        payload, code = _status_with_isolated_brain(
             root=private,
             scope="scope-a",
             protocol_repo=str(wrong),
@@ -181,6 +212,9 @@ def _offline_brain_collection_is_byte_identical(temp: Path) -> None:
     page = temp / "vault" / "wiki" / "ready.md"
     page.parent.mkdir(parents=True)
     page.write_text("# Ready\n\nlexical status fixture\n", encoding="utf-8")
+    graph = temp / "graphify-out" / "graph.json"
+    graph.parent.mkdir(parents=True)
+    graph.write_text('{"nodes":[], "links":[]}', encoding="utf-8")
     index = temp / ".engram" / "vault_index.db"
     index.parent.mkdir(parents=True)
     payload = page.read_bytes()
@@ -216,13 +250,14 @@ def _offline_brain_collection_is_byte_identical(temp: Path) -> None:
 
     before = tree_snapshot()
     with mock.patch.dict(
-        os.environ,
+        status.os.environ,
         {
-            "VAULT_PATH": "",
-            "MEMORY_DB": "",
-            "VAULT_INDEX_PATH": "",
-            "GRAPHIFY_GRAPH": "",
+            "VAULT_PATH": "vault",
+            "VAULT_INDEX_PATH": ".engram/vault_index.db",
+            "GRAPHIFY_GRAPH": "graphify-out/graph.json",
+            "GRAPHIFY_GRAPH_PATH": "graphify-out/graph.json",
         },
+        clear=False,
     ):
         report = status._collect_brain(temp, "scope-a", Path(sys.executable))
     after = tree_snapshot()
@@ -261,7 +296,7 @@ def _scope_isolation_and_secret_redaction(temp: Path) -> None:
         mock.patch.object(status, "_collect_brain", side_effect=brain),
         mock.patch.object(status, "_collect_recovery", return_value={"status": "ready", "proven": True}),
     ):
-        payload, _code = status.build_operational_status(
+        payload, _code = _status_with_isolated_brain(
             root=private,
             scope="tenant-one",
             protocol_repo=None,

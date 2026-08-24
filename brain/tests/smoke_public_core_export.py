@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -57,6 +58,26 @@ def main() -> None:
         assert 'name = "prepende-brain-runtime"' in (
             destination / "pyproject.toml"
         ).read_text(encoding="utf-8")
+        assert (destination / "prepende-public-core-manifest.json").is_file()
+        assert not (destination / "prepende-export-manifest.json").exists()
+        assert not (destination / "prepende-export-reviewed-inventory.json").exists()
+        assert (destination / "operations" / "local_status.py").is_file()
+        sys.dont_write_bytecode = True
+        verifier_path = destination / "scripts" / "verify_prepende_brain.py"
+        spec = importlib.util.spec_from_file_location(
+            "exported_prepende_brain_verifier", verifier_path
+        )
+        assert spec is not None and spec.loader is not None
+        verifier = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(verifier)
+        registry = verifier.summarize_registry(destination)
+        assert registry["missing"] == [], registry
+        assert registry["unknown"] == [], registry
+        assert "smoke_public_core_export.py" in registry["executable"], registry
+        assert "smoke_clone_privacy.py" not in registry["executable"], registry
+        assert registry["excluded"]["smoke_clone_privacy.py"] == (
+            verifier._EXCLUSION_REASONS["smoke_clone_privacy.py"]
+        )
         for relative in FORBIDDEN:
             assert not (destination / relative).exists(), relative
         exported_sql = {

@@ -131,7 +131,7 @@
     {
       "mode": "100644",
       "outputPath": "connectors/defaults.py",
-      "sha256": "d1d928c12e591855a2eb46ea40e6f27d0539b51ee540e63ec1b8287f9d5d77a1",
+      "sha256": "5089d720e141833549ae1825fcf2624e3dfcecc22c2a00c11942d9218db68502",
       "sourcePaths": [
         "connectors/defaults.py"
       ]
@@ -891,9 +891,17 @@
     {
       "mode": "100644",
       "outputPath": "operations/continuity.py",
-      "sha256": "dec610cf8cfcdeb0dfa98496ab43dc9d3d05767716c378dc06c3d5c53c16de86",
+      "sha256": "022a8498732da3e9b709f55f7ef09c485bd1c65a14e5571ff05103b43932507d",
       "sourcePaths": [
         "operations/continuity.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "operations/local_status.py",
+      "sha256": "a840041306bb5ff9d4d9208552916946271397e67757643b3cabbe09bfffa93d",
+      "sourcePaths": [
+        "operations/local_status.py"
       ]
     },
     {
@@ -939,7 +947,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "edeab7aae8e2f254ed1a1aca8c32db735da5b90546d63b2d23c05050de6c92f5",
+      "sha256": "1a18c802efec1e0632db8eadaf3c454871d786bb097e829f835585b6350beaa6",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1043,7 +1051,7 @@
     {
       "mode": "100644",
       "outputPath": "pyproject.toml",
-      "sha256": "e41b98fd1c4cb9610950d416836e89924f1453afc5a2b25b68f7a4061fe2055b",
+      "sha256": "a41445cf022af5b7abe88eb2550b72d25781219b0e0ff5b64c6b9c078736ffd3",
       "sourcePaths": [
         "pyproject.toml"
       ]
@@ -1198,6 +1206,14 @@
       "sha256": "443fec8b0d0cef720b8b6550ba73bdc7c4f5843b966bac8811cbf11f4a575d84",
       "sourcePaths": [
         "scripts/update_prepende_public_core_inventory.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "scripts/verify_prepende_brain.py",
+      "sha256": "1f5d0f55f7e0dc7f9508cdc91a59fbb490dc7430f55e235e5521b9410ac59624",
+      "sourcePaths": [
+        "scripts/verify_prepende_brain.py"
       ]
     },
     {
@@ -1474,6 +1490,14 @@
     },
     {
       "mode": "100644",
+      "outputPath": "tests/smoke_context_fast_import_graph.py",
+      "sha256": "e8817e35b4cdd87b1da0270d74563f2ed019d0c7468ff4e087476b5a8af26b47",
+      "sourcePaths": [
+        "tests/smoke_context_fast_import_graph.py"
+      ]
+    },
+    {
+      "mode": "100644",
       "outputPath": "tests/smoke_continuity_v2.py",
       "sha256": "2817b9401ac2b517cfdf3cab6c0dd7526cefe2cf3779f266c9427fb7fbf28972",
       "sourcePaths": [
@@ -1595,7 +1619,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_operational_status.py",
-      "sha256": "5152bc06191ebbe0bafe0f428f78a5410c411728012f44edf360d9ca8ea11a97",
+      "sha256": "c92bdae25b18fb425a29ed8904bbad20a103df40fdb3a5bce06c9f9a1eac2b75",
       "sourcePaths": [
         "tests/smoke_operational_status.py"
       ]
@@ -1659,7 +1683,7 @@
     {
       "mode": "100755",
       "outputPath": "tests/smoke_public_core_export.py",
-      "sha256": "33e6d87ae310785a47a6aed662773c83d3c259c0534fab7aead305cb51571ea1",
+      "sha256": "96e6d3155eeca007d054f4ec2cca8cd0a0870269af8cfee72d729de3550b21d1",
       "sourcePaths": [
         "tests/smoke_public_core_export.py"
       ]
@@ -1710,6 +1734,14 @@
       "sha256": "9861507b5b8eca5f07df6323ac3a00747a506290eccc6cc136f0fa4b45eaf4bb",
       "sourcePaths": [
         "tests/smoke_reviewed_knowledge_bundle.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "tests/smoke_smoke_gate_completeness.py",
+      "sha256": "3c6215e6967930559f158f7034a8bc48571bca0f07a60a51b28cb0d1a28b7316",
+      "sourcePaths": [
+        "tests/smoke_smoke_gate_completeness.py"
       ]
     },
     {

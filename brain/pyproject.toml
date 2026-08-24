@@ -27,6 +27,7 @@ packages = [
   "knowledge",
   "memory",
   "models",
+  "operations",
   "prepende_brain",
   "prompts",
   "rag",

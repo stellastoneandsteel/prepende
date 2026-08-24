@@ -73,6 +73,8 @@ def _parse_time(value: Any) -> datetime | None:
 
 
 def _git(root: Path, *args: str) -> str | None:
+    env = os.environ.copy()
+    env["GIT_OPTIONAL_LOCKS"] = "0"
     try:
         proc = subprocess.run(
             ["git", "-C", str(root), *args],
@@ -80,6 +82,7 @@ def _git(root: Path, *args: str) -> str | None:
             text=True,
             timeout=1.0,
             check=False,
+            env=env,
         )
     except (OSError, subprocess.TimeoutExpired):
         return None
