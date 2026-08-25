@@ -1,6 +1,6 @@
 {
   "credentialsIncluded": false,
-  "fileCount": 236,
+  "fileCount": 240,
   "files": [
     {
       "mode": "0644",
@@ -564,6 +564,11 @@
     },
     {
       "mode": "0644",
+      "path": "operations/local_status.py",
+      "sha256": "a840041306bb5ff9d4d9208552916946271397e67757643b3cabbe09bfffa93d"
+    },
+    {
+      "mode": "0644",
       "path": "operations/operational_status.py",
       "sha256": "1d91755129fe55b57ddb1eed4c7272061fad2e3e27d0646f73780bf57522c710"
     },
@@ -590,12 +595,12 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-manifest.json",
-      "sha256": "680830cc7131c1982b11cb086cab66cc1b2dab9c87d2c7a4e1034a14ec03e7dd"
+      "sha256": "002df16063281e80b2d5d70b6819267b928fac1687a4cc4198f162f265ea057d"
     },
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "dfda78bc8fd159262d2410c2ab1ca00ef7945a1a6acb6926b31b7d391e46e936"
+      "sha256": "7d6d754c0532893b40fe06e84595cc776189a5ec881d709d2cd0987a97e28861"
     },
     {
       "mode": "0644",
@@ -756,6 +761,11 @@
       "mode": "0755",
       "path": "scripts/update_prepende_public_core_inventory.py",
       "sha256": "443fec8b0d0cef720b8b6550ba73bdc7c4f5843b966bac8811cbf11f4a575d84"
+    },
+    {
+      "mode": "0644",
+      "path": "scripts/verify_prepende_brain.py",
+      "sha256": "f0793692b241b5b234d3a64803418f09f46f9f0cef3593bf8ec217aa8886c839"
     },
     {
       "mode": "0644",
@@ -929,6 +939,11 @@
     },
     {
       "mode": "0644",
+      "path": "tests/smoke_context_fast_import_graph.py",
+      "sha256": "e8817e35b4cdd87b1da0270d74563f2ed019d0c7468ff4e087476b5a8af26b47"
+    },
+    {
+      "mode": "0644",
       "path": "tests/smoke_continuity_v2.py",
       "sha256": "f6e35d40503107c3893bb8fcfbc1e16136a8ebfab71f74e76402d7e2af933a40"
     },
@@ -1045,7 +1060,7 @@
     {
       "mode": "0755",
       "path": "tests/smoke_public_core_export.py",
-      "sha256": "33e6d87ae310785a47a6aed662773c83d3c259c0534fab7aead305cb51571ea1"
+      "sha256": "96e6d3155eeca007d054f4ec2cca8cd0a0870269af8cfee72d729de3550b21d1"
     },
     {
       "mode": "0644",
@@ -1076,6 +1091,11 @@
       "mode": "0755",
       "path": "tests/smoke_reviewed_knowledge_bundle.py",
       "sha256": "9861507b5b8eca5f07df6323ac3a00747a506290eccc6cc136f0fa4b45eaf4bb"
+    },
+    {
+      "mode": "0644",
+      "path": "tests/smoke_smoke_gate_completeness.py",
+      "sha256": "3c6215e6967930559f158f7034a8bc48571bca0f07a60a51b28cb0d1a28b7316"
     },
     {
       "mode": "0644",
@@ -1186,19 +1206,19 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "dfda78bc8fd159262d2410c2ab1ca00ef7945a1a6acb6926b31b7d391e46e936",
+  "inventorySha256": "7d6d754c0532893b40fe06e84595cc776189a5ec881d709d2cd0987a97e28861",
   "ok": true,
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
     "ok": true,
     "policy": "default-deny-v2",
-    "textFilesScanned": 236
+    "textFilesScanned": 240
   },
-  "reviewedInventorySha256": "e28ac34ac68323468f3c985d016fab563b11ff554198ba64ce2d3c299f412821",
+  "reviewedInventorySha256": "aadee22a5cd0287af1d94d5c3dfba12211a9954ffc872b09fe6ff3a43ce2c5dc",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "2fbd075a3d6f4b148aaa873ed6d4bda099dc1554",
-  "sourceRevision": "83773bd3396ff65f4710f2f28f07d488a29d7a73",
+  "sourceIndexTree": "c38a696bfa565a66b4fae5c2a2643217f08eb120",
+  "sourceRevision": "f8a3f80e633076bddd4ed96944a2b38c1a36e20f",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "eca596f5970783da5942ebc2bbe563bdab1dcf22fc36d3b73df5d0a337be8a52"
+  "sourceTreeSha256": "6742d27ed20abdaef87779f2021af283647173d0533312ab428f347ce3650275"
 }
