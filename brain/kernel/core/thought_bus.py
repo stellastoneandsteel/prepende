@@ -8,6 +8,7 @@ recurse, or require approval before any external action.
 
 from __future__ import annotations
 
+import os
 from copy import deepcopy
 from dataclasses import asdict, dataclass, field, replace
 import hashlib
@@ -331,7 +332,16 @@ class MockThoughtAgent:
 class LocalArtifactSandboxRunner:
     """Dispatches an agent and stores inspectable output in an isolated folder."""
 
-    def __init__(self, root: str | Path = ".engram_sandbox/thought_bus") -> None:
+    def __init__(self, root: str | Path | None = None) -> None:
+        # PREPENDE_SANDBOX_ROOT lets a caller put this somewhere disposable. The
+        # default writes into the working tree, so every run that dispatched an
+        # agent left artifacts behind for the next one to find -- which is how
+        # the brain gate stopped being idempotent and how smoke_clone_privacy,
+        # whose whole job is to notice runtime state in an export, started
+        # failing on the second consecutive run.
+        if root is None:
+            root = os.environ.get("PREPENDE_SANDBOX_ROOT") or ".engram_sandbox"
+            root = Path(root) / "thought_bus"
         self.root = Path(root)
 
     def dispatch(self, packet: ThoughtPacket, agent: Any) -> AgentWorkResult:
