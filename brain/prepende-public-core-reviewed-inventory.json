@@ -627,7 +627,7 @@
     {
       "mode": "100644",
       "outputPath": "knowledge/cli.py",
-      "sha256": "53261cb7c30482ac713055396f3a9271eac9bea93f19262833e850f11f9429d1",
+      "sha256": "01272e2aa0a8173f7a6ae07f800a273a63f75dc9ea2ee51d14b4f9e58a46feed",
       "sourcePaths": [
         "knowledge/cli.py"
       ]
@@ -1107,7 +1107,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/bootstrap_prepende_clone.py",
-      "sha256": "55be85c77ad9fceaa347948f6b3e748d09b3749017398c4893dee8330ab789ce",
+      "sha256": "184d50f53631220578fef17dc7eeb7467b4f77ce7e0775be6853fddbfcafa302",
       "sourcePaths": [
         "scripts/bootstrap_prepende_clone.py"
       ]
@@ -1475,7 +1475,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_clone_privacy.py",
-      "sha256": "7691ca99a2e851c1151aca3ce8dd308f8ada1e48ac97bb632d4e29b2c95e942c",
+      "sha256": "c4088b6fdccf6aa262cb95e9f2b0ddfac44d3f30be48b5cf38e2c4641dbed5a2",
       "sourcePaths": [
         "tests/smoke_clone_privacy.py"
       ]

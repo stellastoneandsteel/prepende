@@ -13,6 +13,7 @@ from pathlib import Path
 from kernel.core.config import Config
 from knowledge.bootstrap import VaultBootstrapError, initialize_vault
 from knowledge.operations import backfill, print_receipt, rebuild, search, status
+from prepende_brain.private_fs import secure_directory
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -73,8 +74,9 @@ def main(argv: list[str] | None = None) -> int:
         data_dir = Path(args.data_dir).expanduser().resolve(strict=False)
         vault = data_dir / "vault"
         try:
+            secure_directory(data_dir, repair_existing=True)
             receipt = initialize_vault(vault)
-        except VaultBootstrapError as exc:
+        except (RuntimeError, VaultBootstrapError) as exc:
             payload = {"ok": False, "operation": "init", "error": str(exc)}
             if args.json:
                 print(json.dumps(payload, indent=2))

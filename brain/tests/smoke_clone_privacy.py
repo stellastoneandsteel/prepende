@@ -380,6 +380,11 @@ def main() -> None:
             "PYTHONNOUSERSITE": "1",
         })
         Path(clean_env["HOME"]).mkdir()
+        if os.name == "posix":
+            # A managed host may create directories more permissively than the
+            # requested umask. Bootstrap must harden even a pre-existing root.
+            (exported / ".venv").mkdir(mode=0o755)
+            (exported / ".venv").chmod(0o755)
         bootstrap = subprocess.run(
             ["npm", "run", "bootstrap:prepende"],
             cwd=exported,
@@ -409,6 +414,10 @@ def main() -> None:
         assert dependency_receipt["prefix"] != dependency_receipt["base"], dependency_receipt
         shutil.copyfile(exported / ".env.example", exported / ".env")
         (exported / ".env").chmod(0o600)
+        if os.name == "posix":
+            runtime_root = exported / "prepende-data" / "default"
+            runtime_root.mkdir(parents=True, mode=0o755)
+            runtime_root.chmod(0o755)
         exported_env = (exported / ".env.example").read_text(encoding="utf-8")
         assert "PREPENDE_MCP_SCOPE=\n" in exported_env
         assert "PREPENDE_MCP_TENANT=\n" in exported_env

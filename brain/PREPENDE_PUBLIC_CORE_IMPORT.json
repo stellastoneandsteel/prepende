@@ -395,7 +395,7 @@
     {
       "mode": "0644",
       "path": "knowledge/cli.py",
-      "sha256": "53261cb7c30482ac713055396f3a9271eac9bea93f19262833e850f11f9429d1"
+      "sha256": "01272e2aa0a8173f7a6ae07f800a273a63f75dc9ea2ee51d14b4f9e58a46feed"
     },
     {
       "mode": "0644",
@@ -595,7 +595,7 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "2e0e5e9f3c1b25fbb62363dd35032a978dbee6a0421c62d6f73143eed27c2119"
+      "sha256": "dfda78bc8fd159262d2410c2ab1ca00ef7945a1a6acb6926b31b7d391e46e936"
     },
     {
       "mode": "0644",
@@ -695,7 +695,7 @@
     {
       "mode": "0644",
       "path": "scripts/bootstrap_prepende_clone.py",
-      "sha256": "55be85c77ad9fceaa347948f6b3e748d09b3749017398c4893dee8330ab789ce"
+      "sha256": "184d50f53631220578fef17dc7eeb7467b4f77ce7e0775be6853fddbfcafa302"
     },
     {
       "mode": "0644",
@@ -920,7 +920,7 @@
     {
       "mode": "0644",
       "path": "tests/smoke_clone_privacy.py",
-      "sha256": "7691ca99a2e851c1151aca3ce8dd308f8ada1e48ac97bb632d4e29b2c95e942c"
+      "sha256": "c4088b6fdccf6aa262cb95e9f2b0ddfac44d3f30be48b5cf38e2c4641dbed5a2"
     },
     {
       "mode": "0644",
@@ -1186,7 +1186,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "2e0e5e9f3c1b25fbb62363dd35032a978dbee6a0421c62d6f73143eed27c2119",
+  "inventorySha256": "dfda78bc8fd159262d2410c2ab1ca00ef7945a1a6acb6926b31b7d391e46e936",
   "ok": true,
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
@@ -1195,10 +1195,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 236
   },
-  "reviewedInventorySha256": "cd8943b704873bf8df680dd0d496e0a1c5ca543e6a4a8f4d6a64db5904e329d7",
+  "reviewedInventorySha256": "e28ac34ac68323468f3c985d016fab563b11ff554198ba64ce2d3c299f412821",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "3e4d1c4e29c2aff9b13db3aa32597ac6410141fb",
-  "sourceRevision": "bf6a8c17516a4f755b5284d3992ef655539a0745",
+  "sourceIndexTree": "2fbd075a3d6f4b148aaa873ed6d4bda099dc1554",
+  "sourceRevision": "83773bd3396ff65f4710f2f28f07d488a29d7a73",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "e738c2681bc1bb5a180c62c3472b80e957c264b28d102508fa4c12922386febb"
+  "sourceTreeSha256": "eca596f5970783da5942ebc2bbe563bdab1dcf22fc36d3b73df5d0a337be8a52"
 }
