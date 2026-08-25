@@ -595,7 +595,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/thought_bus.py",
-      "sha256": "4efbe6fae170d57b747d27ddb84fd7758ec1b5533026e3dfa98b4f4b977cb17e",
+      "sha256": "1333fc369e4917ec3230db2cc8d571e937e1566ab211cc51877f4f5329172a96",
       "sourcePaths": [
         "kernel/core/thought_bus.py"
       ]
@@ -947,7 +947,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "002df16063281e80b2d5d70b6819267b928fac1687a4cc4198f162f265ea057d",
+      "sha256": "c55cef2f3edddfa356a5ac0e2ad435f6f49bbcd3bd810d01f54b0106d66a7735",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1211,7 +1211,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "f0793692b241b5b234d3a64803418f09f46f9f0cef3593bf8ec217aa8886c839",
+      "sha256": "d28053d07573dbf7df3361ceedb2fcad545f07440f4d059b312bfc405170c390",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]

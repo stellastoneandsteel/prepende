@@ -41,6 +41,7 @@
     "models/provenance.py",
     "prepende-export-manifest.json",
     "prepende-export-reviewed-inventory.json",
+    "scripts/_private_smoke_registry.py",
     "scripts/loop_benchmark.py",
     "scripts/production_loop_benchmark.py",
     "scripts/prove_prepende_live_react.py",

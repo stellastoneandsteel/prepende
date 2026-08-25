@@ -375,7 +375,7 @@
     {
       "mode": "0644",
       "path": "kernel/core/thought_bus.py",
-      "sha256": "4efbe6fae170d57b747d27ddb84fd7758ec1b5533026e3dfa98b4f4b977cb17e"
+      "sha256": "1333fc369e4917ec3230db2cc8d571e937e1566ab211cc51877f4f5329172a96"
     },
     {
       "mode": "0644",
@@ -595,12 +595,12 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-manifest.json",
-      "sha256": "002df16063281e80b2d5d70b6819267b928fac1687a4cc4198f162f265ea057d"
+      "sha256": "c55cef2f3edddfa356a5ac0e2ad435f6f49bbcd3bd810d01f54b0106d66a7735"
     },
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "7d6d754c0532893b40fe06e84595cc776189a5ec881d709d2cd0987a97e28861"
+      "sha256": "3591aa956bdcff52e24a7dc2e859a947cbd4c89438a72e672bc803eabc7cd054"
     },
     {
       "mode": "0644",
@@ -765,7 +765,7 @@
     {
       "mode": "0644",
       "path": "scripts/verify_prepende_brain.py",
-      "sha256": "f0793692b241b5b234d3a64803418f09f46f9f0cef3593bf8ec217aa8886c839"
+      "sha256": "d28053d07573dbf7df3361ceedb2fcad545f07440f4d059b312bfc405170c390"
     },
     {
       "mode": "0644",
@@ -1206,8 +1206,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "7d6d754c0532893b40fe06e84595cc776189a5ec881d709d2cd0987a97e28861",
-  "ok": true,
+  "inventorySha256": "3591aa956bdcff52e24a7dc2e859a947cbd4c89438a72e672bc803eabc7cd054",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1215,10 +1214,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 240
   },
-  "reviewedInventorySha256": "aadee22a5cd0287af1d94d5c3dfba12211a9954ffc872b09fe6ff3a43ce2c5dc",
+  "reviewedInventorySha256": "4e4d1f639e17ea53b7bd7f45ca74d839bd4c79e67f5f7b9656d62f7dbf6014e9",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "c38a696bfa565a66b4fae5c2a2643217f08eb120",
-  "sourceRevision": "f8a3f80e633076bddd4ed96944a2b38c1a36e20f",
+  "sourceIndexTree": "47caf8abb9b8bd83283e87ff1eb31ff953a796ad",
+  "sourceRevision": "f4d97cf5bb639972b6fbd2b70b55272f064b19b4",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "6742d27ed20abdaef87779f2021af283647173d0533312ab428f347ce3650275"
+  "sourceTreeSha256": "142378c29cf237a83160d553361bcaa6b00a3b6321416953c1b2c22b01e35ea8"
 }
