@@ -72,10 +72,17 @@ def main() -> int:
     lock_file = next((path for path in LOCK_CANDIDATES if path.is_file()), None)
     if lock_file is None:
         raise SystemExit(f"Prepende dependency lock is missing from {ROOT}")
+    if VENV.is_symlink() or (VENV.exists() and not VENV.is_dir()):
+        raise SystemExit(f"Prepende virtualenv path must be a real directory: {VENV}")
     lock_sha256 = hashlib.sha256(lock_file.read_bytes()).hexdigest()
     created = not VENV_PYTHON.is_file()
     if created:
         _run([sys.executable, "-m", "venv", str(VENV)])
+    if os.name == "posix":
+        # Some managed Linux hosts do not honor the process umask for directory
+        # creation. Enforce the private root mode explicitly before installing
+        # dependencies; the root protects every file below the environment.
+        VENV.chmod(0o700)
     env = _isolated_environment()
     _run([
         str(VENV_PYTHON),
