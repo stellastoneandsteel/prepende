@@ -1155,7 +1155,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/prepende_operator.py",
-      "sha256": "aa53547d51ec9170af7a5f2592358eeb3d1b19930e6362b07aa1dbb01a809327",
+      "sha256": "6231c0d33af690f14a7132550194f0fc1d1a222665b5c965d1f6323b6945999c",
       "sourcePaths": [
         "scripts/prepende_operator.py"
       ]
@@ -1667,7 +1667,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_prepende_operator_receipts.py",
-      "sha256": "8922848e3741954633df9889b1966bae9d3447dcd1361360428dd0e285b7153b",
+      "sha256": "86ee804fdc5072189917afa7fe5e055ed0d7e65b34ec1708bd6cbccbd66a7d62",
       "sourcePaths": [
         "tests/smoke_prepende_operator_receipts.py"
       ]
