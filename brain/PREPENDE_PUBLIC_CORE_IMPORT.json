@@ -600,7 +600,7 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "3591aa956bdcff52e24a7dc2e859a947cbd4c89438a72e672bc803eabc7cd054"
+      "sha256": "b63e8a8cae6328e6cc61615f07c4ee7ad336dcaf52d8cb55e7ba8a256fff498b"
     },
     {
       "mode": "0644",
@@ -765,7 +765,7 @@
     {
       "mode": "0644",
       "path": "scripts/verify_prepende_brain.py",
-      "sha256": "d28053d07573dbf7df3361ceedb2fcad545f07440f4d059b312bfc405170c390"
+      "sha256": "9eb624b867cf126c51f80ffb17cc77343eca53df2d73e9390d0d051318d84bf2"
     },
     {
       "mode": "0644",
@@ -1040,7 +1040,7 @@
     {
       "mode": "0644",
       "path": "tests/smoke_prepende_dependency_lock.py",
-      "sha256": "80757217be584c337a973297d47a2b36e2f6588636b7a5d6fb2e5fe552b42277"
+      "sha256": "ab7dd0d68ea272d20db13022d7683dcd10106264ddc456fe47b71fdf2072fbab"
     },
     {
       "mode": "0644",
@@ -1206,7 +1206,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "3591aa956bdcff52e24a7dc2e859a947cbd4c89438a72e672bc803eabc7cd054",
+  "inventorySha256": "b63e8a8cae6328e6cc61615f07c4ee7ad336dcaf52d8cb55e7ba8a256fff498b",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1214,10 +1214,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 240
   },
-  "reviewedInventorySha256": "4e4d1f639e17ea53b7bd7f45ca74d839bd4c79e67f5f7b9656d62f7dbf6014e9",
+  "reviewedInventorySha256": "8ab1a625238adb91edb9f5558b64fcb59259949dbf1a89f16974024aba5b7192",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "47caf8abb9b8bd83283e87ff1eb31ff953a796ad",
-  "sourceRevision": "f4d97cf5bb639972b6fbd2b70b55272f064b19b4",
+  "sourceIndexTree": "6adbee4a9a216f87df2657877ebb79dee8cbcc74",
+  "sourceRevision": "776ae7dea18d38b4b8804defaa374c9b31b95ac9",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "142378c29cf237a83160d553361bcaa6b00a3b6321416953c1b2c22b01e35ea8"
+  "sourceTreeSha256": "15baf5b68033651f3449c02db85490373e5f184f3f178ec22ac31e3009b08851"
 }
