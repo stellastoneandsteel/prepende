@@ -23,6 +23,7 @@ from interface.operator_receipts import (  # noqa: E402
     OperatorReceiptStore,
     validate_operator_finish,
 )
+from kernel.core.config import load_dotenv  # noqa: E402
 from kernel.core.intake import scan_intake  # noqa: E402
 from memory.candidates import CandidateQueue, default_queue  # noqa: E402
 from operations.continuity import SUPPORTED_PROFILES  # noqa: E402
@@ -37,6 +38,7 @@ def _candidate_queue() -> Any:
     if not path:
         # Use the same sqlite/Postgres selector as MCP, GoalLoop, and the API so
         # operator learning lands in the one scoped review queue.
+        load_dotenv(str(ROOT / ".env"))
         return default_queue()
     candidate_path = Path(path)
     if not candidate_path.is_absolute():

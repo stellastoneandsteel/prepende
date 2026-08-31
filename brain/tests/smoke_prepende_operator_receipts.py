@@ -14,7 +14,9 @@ ROOT = Path(__file__).resolve().parents[1]
 import sys
 sys.path.insert(0, str(ROOT))
 
-from scripts.prepende_operator import sandbox_message
+from scripts import prepende_operator
+
+sandbox_message = prepende_operator.sandbox_message
 
 
 def run(args: list[str], env: dict[str, str], expected_returncode: int = 0) -> dict:
@@ -34,6 +36,36 @@ def main() -> None:
     message = sandbox_message("first line\nsecond line\r\nthird line")
     assert "\n" not in message and "\r" not in message
     assert "first line second line third line" in message
+
+    calls: list[str] = []
+    sentinel = object()
+    original_load_dotenv = prepende_operator.load_dotenv
+    original_default_queue = prepende_operator.default_queue
+    original_candidate_override = os.environ.pop(
+        "PREPENDE_OPERATOR_CANDIDATES_DB",
+        None,
+    )
+    try:
+        def fake_load_dotenv(path: str) -> None:
+            assert path == str(ROOT / ".env")
+            calls.append("dotenv")
+
+        def fake_default_queue():
+            calls.append("queue")
+            assert calls == ["dotenv", "queue"]
+            return sentinel
+
+        prepende_operator.load_dotenv = fake_load_dotenv
+        prepende_operator.default_queue = fake_default_queue
+        assert prepende_operator._candidate_queue() is sentinel
+    finally:
+        prepende_operator.load_dotenv = original_load_dotenv
+        prepende_operator.default_queue = original_default_queue
+        if original_candidate_override is not None:
+            os.environ["PREPENDE_OPERATOR_CANDIDATES_DB"] = (
+                original_candidate_override
+            )
+    assert calls == ["dotenv", "queue"]
 
     with tempfile.TemporaryDirectory(prefix="prepende_operator_") as tmp:
         receipts = Path(tmp) / "receipts"
