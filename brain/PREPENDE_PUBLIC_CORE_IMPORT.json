@@ -600,7 +600,7 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "240836359ca181f30ddf4bd7e51dcc87b568d1281527bbb0e7a098cb52e6cdcf"
+      "sha256": "d70193922d64e12b3c4640a9ab8fea69d5beadca649425f03aacadb04632e63e"
     },
     {
       "mode": "0644",
@@ -1040,7 +1040,7 @@
     {
       "mode": "0644",
       "path": "tests/smoke_prepende_dependency_lock.py",
-      "sha256": "80757217be584c337a973297d47a2b36e2f6588636b7a5d6fb2e5fe552b42277"
+      "sha256": "ab7dd0d68ea272d20db13022d7683dcd10106264ddc456fe47b71fdf2072fbab"
     },
     {
       "mode": "0644",
@@ -1206,7 +1206,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "240836359ca181f30ddf4bd7e51dcc87b568d1281527bbb0e7a098cb52e6cdcf",
+  "inventorySha256": "d70193922d64e12b3c4640a9ab8fea69d5beadca649425f03aacadb04632e63e",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1214,10 +1214,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 240
   },
-  "reviewedInventorySha256": "bc4245710603727fcccd5f86b5f5cfe85ca68fefcc091f8bdd5b446182a84e22",
+  "reviewedInventorySha256": "199ac59928f4a692b0d5060f193eb9ddac510baf0b046c841eae8ae3107c37a2",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "8fbe2b7b67ee990835bb9334d261440ce7572308",
-  "sourceRevision": "98caa67aafd9277c96637e24dfeffb02f06df067",
+  "sourceIndexTree": "2a036d98d2b2cc9951652a8ef3320a03c2225874",
+  "sourceRevision": "5e54b4f449be4829f6c2146c82f54f4c3c7666c1",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "91309fb505f25c0c449890ab78c9ee8021d4345802dc65025bb083623b260327"
+  "sourceTreeSha256": "0c8b268346b4662c9cc034a5c202d6f536afec327550c790722dddec029ec665"
 }

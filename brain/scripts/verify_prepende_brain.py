@@ -147,7 +147,6 @@ BASELINE_SMOKES = (
     "smoke_pg_candidate_queue_safety.py",
     "smoke_prepende_lost_machine_drill.py",
     "smoke_public_article_mode.py",
-    "smoke_recovery_backup_v2.py",
     "smoke_registry.py",
     "smoke_restore_drill.py",
     "smoke_seed_tenant.py",
@@ -155,12 +154,10 @@ BASELINE_SMOKES = (
     "smoke_selfimprove.py",
     "smoke_selfimprove_runner.py",
     "smoke_setup.py",
-    "smoke_setup_endpoint.py",
     "smoke_stella_loop_benchmark.py",
     "smoke_stella_seed.py",
     "smoke_store_concurrency.py",
     "smoke_supabase_backup_monitor.py",
-    "smoke_supabase_logical_backup.py",
     "smoke_support_http.py",
     "smoke_surface_parity.py",
     "smoke_swap_matrix.py",
@@ -291,6 +288,15 @@ _EXCLUSION_REASONS: dict[str, str] = {
     ),
     "smoke_thinking_voice.py": (
         "KNOWN FAILING, not environmental. It asserts a specific thinkingVoice state sequence and the emitted sequence no longer matches. Either the voice states changed intentionally or this regressed; that needs a decision, so it is recorded rather than registered green or quietly deleted."
+    ),
+    "smoke_recovery_backup_v2.py": (
+        "Reviewed exclusion: requires the `age` CLI (age, age-keygen) to exercise the encrypted backup lane. The CI runner does not install it, so the smoke dies with FileNotFoundError before asserting anything. It resolves the tools on PATH rather than a Homebrew prefix, so registering it here is a matter of installing age in the workflow, not of changing the smoke."
+    ),
+    "smoke_supabase_logical_backup.py": (
+        "Reviewed exclusion: requires the `age` CLI and PostgreSQL client binaries (pg_dump, pg_restore). The CI runner installs none of them. Same as smoke_recovery_backup_v2: the smoke resolves tools on PATH, so this is about what the workflow installs."
+    ),
+    "smoke_setup_endpoint.py": (
+        "KNOWN FAILING on the CI runner, not locally. It asserts that a loopback request to /v1/setup/apply with invalid input returns 400; on the runner it returns 403, so the request is not being treated as loopback there. It passes 5/5 locally, including under a deliberately bare environment, so the difference is the runner rather than shell state. Recorded rather than registered red or quietly deleted: either loopback detection is wrong on that host or the assertion is."
     ),
     "smoke_standup_tenant_preflight.py": (
         "Reviewed conditional: this smoke validates an optional tenant preflight setup and "
@@ -514,6 +520,17 @@ def smoke_environment(base: dict[str, str], state: Path) -> dict[str, str]:
         "ENGRAM_APPROVALS_LOG": str(state / "approvals.jsonl"),
         "PREPENDE_DATA_DIR": str(state / "prepende-data"),
         "PREPENDE_SANDBOX_ROOT": str(state / "sandbox"),
+        # Deterministic routing. With exploration on, the bandit picks a tactic
+        # at random, and on the echo lane the evaluator_optimizer tactic cannot
+        # verify anything -- its three judges return judge_error:ValueError, the
+        # run ends human_review_required, and the candidate is blocked. Any
+        # smoke that expected a normal answer then fails, at whatever rate the
+        # bandit happens to explore. That is one cause behind several unrelated
+        # intermittents: smoke_surface_parity 500s, smoke_http empty result,
+        # smoke_ledger narrative, smoke_v1_api mode. A gate should not be a
+        # slot machine; smokes that mean to exercise exploration turn it back on
+        # themselves.
+        "PREPENDE_ROUTING_EXPLORATION": "false",
     })
     return env
 

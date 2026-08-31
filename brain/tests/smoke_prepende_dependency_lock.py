@@ -4,10 +4,12 @@
 from __future__ import annotations
 
 import hashlib
+import json
 import re
 import subprocess
 import sys
 import tempfile
+import tomllib
 import zipfile
 from pathlib import Path
 
@@ -22,6 +24,9 @@ BOOTSTRAP = ROOT / "scripts" / "bootstrap_prepende_clone.py"
 PYPROJECT = (DIST / "pyproject.toml") if SOURCE_CHECKOUT else (ROOT / "pyproject.toml")
 DOCKERFILE = (DIST / "Dockerfile.mcp") if SOURCE_CHECKOUT else (ROOT / "Dockerfile.mcp")
 SOURCE_RELEASE_GATE = ROOT / ".github" / "workflows" / "prepende-source-release-gate.yml"
+ROOT_PACKAGE = ROOT / "package.json"
+ROOT_PYPROJECT = ROOT / "pyproject.toml"
+ROOT_MCP_REQUIREMENTS = ROOT / "requirements-mcp.txt"
 
 
 def logical_requirements(text: str) -> list[str]:
@@ -93,6 +98,25 @@ def main() -> None:
     # strict in a source checkout without making exported runtime checks depend
     # on source-only distribution or workflow files.
     if SOURCE_CHECKOUT:
+        root_project = tomllib.loads(ROOT_PYPROJECT.read_text(encoding="utf-8"))
+        assert root_project["project"]["optional-dependencies"]["mcp"] == ["mcp==1.28.1"]
+
+        root_mcp_text = ROOT_MCP_REQUIREMENTS.read_text(encoding="utf-8")
+        root_mcp_requirements = [
+            requirement
+            for requirement in logical_requirements(root_mcp_text)
+            if requirement.split("=", 1)[0] == "mcp"
+        ]
+        assert root_mcp_requirements == ["mcp==1.28.1"]
+
+        root_scripts = json.loads(ROOT_PACKAGE.read_text(encoding="utf-8"))["scripts"]
+        assert root_scripts["bootstrap:prepende"] == "python3 scripts/bootstrap_prepende_clone.py"
+        launch_steps = root_scripts["verify:prepende:launch"].split(" && ")
+        assert launch_steps[:2] == [
+            "npm run bootstrap:prepende",
+            "npm run verify:prepende:private-runtime",
+        ]
+
         pg_smoke_lock_text = PG_SMOKE_LOCK.read_text(encoding="utf-8")
         assert "Intentionally single-platform: CPython 3.11 on Linux x86_64" in pg_smoke_lock_text
         assert logical_requirements(pg_smoke_lock_text) == [
