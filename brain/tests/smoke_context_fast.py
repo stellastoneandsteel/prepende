@@ -84,6 +84,38 @@ def main() -> None:
                 "EMBEDDING_PROVIDER": "",
             }
         )
+        coding_proc = subprocess.run(
+            [
+                sys.executable,
+                str(ROOT / "bin" / "engram"),
+                "context-fast",
+                "Verify isolated research can proceed without recovery authority",
+                "--json",
+                "--scope",
+                "prepende",
+                "--profile",
+                "coding",
+            ],
+            cwd=ROOT,
+            env=recovery_env,
+            capture_output=True,
+            text=True,
+            timeout=12,
+        )
+        assert coding_proc.returncode == 0, coding_proc.stderr or coding_proc.stdout
+        coding = json.loads(coding_proc.stdout)
+        assert coding["verdict"]["transportOk"] is True, coding
+        assert coding["verdict"]["continuityReady"] is True, coding
+        assert coding["verdict"]["planReady"] is True, coding
+        assert coding["verdict"]["recoveryProven"] is False, coding
+        assert coding["receipt"]["Blocked"] is None, coding["receipt"]
+        recovery_warning = next(
+            blocker
+            for blocker in coding["continuity"]["blockers"]
+            if blocker["id"] == "recovery_unproven"
+        )
+        assert recovery_warning["blocks"] == ["recovery"], recovery_warning
+
         recovery_proc = subprocess.run(
             [
                 sys.executable,
