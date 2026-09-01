@@ -44,8 +44,6 @@ FORBIDDEN_FILES = {".env", ".deploy-token.txt", "mcp_servers.json", "workflows.j
 POLICY_PATH = "prepende-export-manifest.json"
 INVENTORY_PATH = "prepende-export-reviewed-inventory.json"
 OVERRIDES = {
-    "Dockerfile.mcp": "distribution/prepende/Dockerfile.mcp",
-    "docker-entrypoint.sh": "distribution/prepende/docker-entrypoint.sh",
     ".env.example": "distribution/prepende/.env.example",
     "README.md": "distribution/prepende/README.md",
     "package.json": "distribution/prepende/package.json",

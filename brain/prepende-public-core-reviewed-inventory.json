@@ -2,14 +2,6 @@
   "files": [
     {
       "mode": "100644",
-      "outputPath": ".dockerignore",
-      "sha256": "de60ea39d0d7215fcf04bce3be1f2d6c0ef6aaf160a40c4ff127a098fb24a333",
-      "sourcePaths": [
-        ".dockerignore"
-      ]
-    },
-    {
-      "mode": "100644",
       "outputPath": ".env.example",
       "sha256": "fe33559145df6945d4f7a1a9e8747fdc7730979052acfe404af3d7c35adba16b",
       "sourcePaths": [
@@ -38,14 +30,6 @@
       "sha256": "0bb7b84452358951348b58b84fc78e81893aed39c4cf5ab30f6dfd256b207028",
       "sourcePaths": [
         ".graphifyignore"
-      ]
-    },
-    {
-      "mode": "100644",
-      "outputPath": "Dockerfile.mcp",
-      "sha256": "738b163adaa914ff8b81e62bb80e9a8010a9e780d50dd981d5fbc4f62ae19fe5",
-      "sourcePaths": [
-        "Dockerfile.mcp"
       ]
     },
     {
@@ -185,14 +169,6 @@
       ]
     },
     {
-      "mode": "100755",
-      "outputPath": "docker-entrypoint.sh",
-      "sha256": "dd04f433bd3ede49b1aaab8a505ed1964ba368cbff4072ea73e45df90179fb92",
-      "sourcePaths": [
-        "docker-entrypoint.sh"
-      ]
-    },
-    {
       "mode": "100644",
       "outputPath": "docs/CUSTOMER_SAFE_CLONE.md",
       "sha256": "4d3a81ae72c410ea619d48f97cb47553717ebbee8f79c1d575f599aa63a5a071",
@@ -251,7 +227,7 @@
     {
       "mode": "100644",
       "outputPath": "docs/TENANT-STANDUP.md",
-      "sha256": "1f400f86f846715ba5587d84bad2000be803543b45c77223ac53d70e7dff0e74",
+      "sha256": "acf8dc84a320bfa241d142c029ec32bbd14213fa9c9e1093b0d2fa5ea280174c",
       "sourcePaths": [
         "docs/TENANT-STANDUP.md"
       ]
@@ -947,7 +923,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "c55cef2f3edddfa356a5ac0e2ad435f6f49bbcd3bd810d01f54b0106d66a7735",
+      "sha256": "ae0128102c53329742fdfb39be3947bd76bc763a439b5d1ecc6cd49c8014c80c",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1123,7 +1099,7 @@
     {
       "mode": "100755",
       "outputPath": "scripts/export_prepende_clone.py",
-      "sha256": "8d9544f71cd5306bbaead931db28871058fbe2988cb1d0f22a48adf334fba7b5",
+      "sha256": "fca40176b930c6082ddb40ab0a901da7c851329bc5f1ebb31f2e1bed57118eff",
       "sourcePaths": [
         "scripts/export_prepende_clone.py"
       ]
@@ -1187,7 +1163,7 @@
     {
       "mode": "100755",
       "outputPath": "scripts/standup_tenant.sh",
-      "sha256": "c9ea475fe63cdc870d2cea019b72698556a7883faedefe5aeaa9c877f4f6ee11",
+      "sha256": "fb2f71c191a84de6ee946f468e0fa4f85cf16c6a5ba4161dfab5c2bd7463abcd",
       "sourcePaths": [
         "scripts/standup_tenant.sh"
       ]
@@ -1195,7 +1171,7 @@
     {
       "mode": "100755",
       "outputPath": "scripts/update_prepende_export_inventory.py",
-      "sha256": "d3d3abcefdb3a61016d17e94ef151c6457344bb0bb50c8a289217134c4637576",
+      "sha256": "2ac6013c97c642e942da408de1a5e75f22366f67bc733d4926d48cc3c69b2da7",
       "sourcePaths": [
         "scripts/update_prepende_export_inventory.py"
       ]
@@ -1475,7 +1451,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_clone_privacy.py",
-      "sha256": "c4088b6fdccf6aa262cb95e9f2b0ddfac44d3f30be48b5cf38e2c4641dbed5a2",
+      "sha256": "2ab2232baca62b26e4413df8de9988824e16806c8dfbb21d31e9f16aac881159",
       "sourcePaths": [
         "tests/smoke_clone_privacy.py"
       ]
@@ -1651,7 +1627,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_prepende_dependency_lock.py",
-      "sha256": "ab7dd0d68ea272d20db13022d7683dcd10106264ddc456fe47b71fdf2072fbab",
+      "sha256": "013d844eefc99a14f665b52d4b406b6d494d943317572d3659a4b33972e39359",
       "sourcePaths": [
         "tests/smoke_prepende_dependency_lock.py"
       ]
@@ -1747,7 +1723,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_standup_tenant_preflight.py",
-      "sha256": "b358f7668bf2865f504b2d04226792b5b3ca1389b85ed91f4246c70e75a740b9",
+      "sha256": "eace9e20a38a2c9991303bbf679c5caa55bd39d9d879a2af7ae7bebad24a0fae",
       "sourcePaths": [
         "tests/smoke_standup_tenant_preflight.py"
       ]

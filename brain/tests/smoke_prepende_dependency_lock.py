@@ -22,7 +22,6 @@ LOCK = (DIST / "requirements-prepende.lock") if SOURCE_CHECKOUT else (ROOT / "re
 PG_SMOKE_LOCK = DIST / "requirements-candidate-pg-smoke.lock"
 BOOTSTRAP = ROOT / "scripts" / "bootstrap_prepende_clone.py"
 PYPROJECT = (DIST / "pyproject.toml") if SOURCE_CHECKOUT else (ROOT / "pyproject.toml")
-DOCKERFILE = (DIST / "Dockerfile.mcp") if SOURCE_CHECKOUT else (ROOT / "Dockerfile.mcp")
 SOURCE_RELEASE_GATE = ROOT / ".github" / "workflows" / "prepende-source-release-gate.yml"
 ROOT_PACKAGE = ROOT / "package.json"
 ROOT_PYPROJECT = ROOT / "pyproject.toml"
@@ -148,13 +147,6 @@ def main() -> None:
     ):
         assert contract in bootstrap, contract
     assert '"-e"' not in bootstrap and "INSTALL_SPEC" not in bootstrap
-
-    dockerfile = DOCKERFILE.read_text(encoding="utf-8")
-    assert "COPY requirements-prepende.lock" in dockerfile
-    assert "--require-hashes" in dockerfile and "--only-binary=:all:" in dockerfile
-    assert "requirements-api.txt" not in dockerfile
-    assert "requirements-mcp.txt" not in dockerfile
-    assert "pip install --upgrade" not in dockerfile
 
     # Prove pip's exact enforcement locally without network access: the same
     # --require-hashes mode accepts the real local-wheel digest and rejects a

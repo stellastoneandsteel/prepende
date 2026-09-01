@@ -20,8 +20,6 @@ ROOT = Path(__file__).resolve().parents[1]
 POLICY_PATH = ROOT / "prepende-export-manifest.json"
 INVENTORY_PATH = ROOT / "prepende-export-reviewed-inventory.json"
 OVERRIDES = {
-    "Dockerfile.mcp": "distribution/prepende/Dockerfile.mcp",
-    "docker-entrypoint.sh": "distribution/prepende/docker-entrypoint.sh",
     ".env.example": "distribution/prepende/.env.example",
     "README.md": "distribution/prepende/README.md",
     "package.json": "distribution/prepende/package.json",

@@ -102,13 +102,10 @@
     "vault-template/"
   ],
   "includeFiles": [
-    ".dockerignore",
     ".env.example",
     ".gitattributes",
     ".gitignore",
     ".graphifyignore",
-    "Dockerfile.mcp",
-    "docker-entrypoint.sh",
     "LICENSE",
     "mcp_servers.example.json",
     "packs/researcher.json",
