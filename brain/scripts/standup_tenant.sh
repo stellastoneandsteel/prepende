@@ -136,7 +136,9 @@ for m in \
   019_engram_kernel_memory \
   020_engram_kernel_queues \
   021_kernel_scope_guards \
-  20260823143000_engram_candidate_atomic_dedupe
+  20260823143000_engram_candidate_atomic_dedupe \
+  20260730120000_prepende_frontier_workspace_v1 \
+  20260901170000_prepende_hosted_mcp_runtime
 do
   if [ -f "supabase/migrations/${m}.sql" ]; then
     echo "     present: supabase/migrations/${m}.sql"
@@ -166,8 +168,8 @@ if [ "$LOCAL_DEV_SQLITE" -eq 1 ]; then
   echo "-- 5/5 LOCAL DEVELOPMENT ONLY: deployment and customer handoff are intentionally not authorized."
   echo "== local SQLite fixture complete; NOT CUSTOMER-READY =="
 else
-  echo "-- 5/5 MANUAL: deploy the MCP-HTTP cockpit only after database-owner verification:"
-  echo "     PREPENDE_MCP_TRANSPORT=http PREPENDE_MCP_HOST=0.0.0.0 with the token above in PREPENDE_TENANT_TOKENS."
-  echo "     HTTP derives identity per request; PREPENDE_MCP_SCOPE is for a one-scope stdio process only."
-  echo "== customer Postgres preflight passed; deployment and handoff remain manual approval gates =="
+  echo "-- 5/5 PROVIDER SETUP: deploy the reviewed Netlify-hosted MCP only after database-owner verification:"
+  echo "     Apply 20260901170000_prepende_hosted_mcp_runtime.sql, then configure PREPENDE_HOSTED_* Functions-only secrets."
+  echo "     The hosted bearer and canonical identity bind every request; clients connect to /api/prepende-mcp."
+  echo "== customer Postgres preflight passed; hosted deployment and handoff remain separate approval gates =="
 fi

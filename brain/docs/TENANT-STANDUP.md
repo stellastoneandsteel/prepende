@@ -4,8 +4,9 @@ Stand up a tenant on a self-hosted Prepende brain so external clients (a website
 a chat, an MCP-capable assistant) can read/propose in that tenant's isolated
 namespace over MCP. Generic by design: the scope slug is data, never in code.
 
-There are exactly **two inherently-manual infra steps** (a script can't create a
-cloud project or a host for you). Everything else is one command.
+There are exactly **two infrastructure steps** before the tenant command can
+finish. Both are provider-owned setup boundaries; neither requires a local
+always-on process.
 
 ## The two manual steps
 
@@ -25,14 +26,13 @@ cloud project or a host for you). Everything else is one command.
    ```
    Then point `.env` `DATABASE_URL` at `engram_brain` (not `postgres`).
 
-2. **Deploy the MCP-HTTP cockpit.** The host external clients connect to, with
-   `PREPENDE_MCP_TRANSPORT=http`, `PREPENDE_MCP_HOST=0.0.0.0`, and the minted
-   token in `PREPENDE_TENANT_TOKENS` (legacy `ENGRAM_*` aliases remain accepted).
-   HTTP bearer auth derives tenant, workspace, physical scope, and capabilities
-   from the token on every request. Do not set a process-wide
-   `PREPENDE_MCP_SCOPE` for a multi-tenant HTTP host; that pin is required only
-   for one-scope stdio transport. Deploy `Dockerfile.mcp` on the private host of
-   your choice; hosting credentials and source wiring remain operator-owned.
+2. **Deploy the Netlify-hosted MCP cockpit.** Apply
+   `20260901170000_prepende_hosted_mcp_runtime.sql`, store the installation's
+   unique `PREPENDE_HOSTED_*` values as Functions-only secrets, and deploy the
+   reviewed `netlify.prepende.toml` site. The hosted bearer fixes the tenant,
+   workspace, physical scope, principal, and safe tool set server-side. The
+   provider URL is `/api/prepende-mcp`; no local daemon or local machine uptime
+   is part of the customer contract. See `docs/PREPENDE_HOSTED_MCP.md`.
 
 ## The one command
 
@@ -75,10 +75,10 @@ should behave.
 
 ## Connect a downstream client
 
-The script prints these; set them where the client runs (e.g. Netlify):
+The hosted site URL and bearer are stored where the server-side client runs:
 
 ```
-ENGRAM_API_URL=https://<your-cockpit-host>/
+ENGRAM_API_URL=https://<your-prepende-site>/api/prepende-mcp
 ENGRAM_TENANT_TOKEN=<the minted token>
 ```
 
@@ -115,4 +115,5 @@ python3 tests/smoke_mint_tenant_token.py     # token shape + scope rules
 python3 tests/smoke_mcp_auth_core.py         # token identity + capability contract
 python3 tests/smoke_mcp_scope_isolation.py   # cross-tenant isolation
 python3 tests/smoke_knowledge_scoped.py      # per-tenant vault namespace
+npm run verify:prepende:hosted-mcp           # hosted auth, identity, tools, DB contract
 ```

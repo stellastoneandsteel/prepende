@@ -1,4 +1,4 @@
-"""Static privacy smoke for Git, Docker, and the reusable vault seed."""
+"""Static privacy smoke for Git, the customer export, and reusable vault seed."""
 
 from __future__ import annotations
 
@@ -141,32 +141,8 @@ def main() -> None:
     ):
         assert_gitignored(path)
 
-    dockerignore = {
-        line.strip()
-        for line in (ROOT / ".dockerignore").read_text(encoding="utf-8").splitlines()
-        if line.strip() and not line.lstrip().startswith("#")
-    }
-    for required in (
-        "vault",
-        "vault/.obsidian",
-        "vault/.trash",
-        "vault/tenants",
-        "graphify-out",
-        "prepende-data",
-    ):
-        assert required in dockerignore, f"Docker build context can include {required}"
-
     attributes = (ROOT / ".gitattributes").read_text(encoding="utf-8")
     assert "/vault/** export-ignore" in attributes, "git archives can include the owner vault"
-
-    dockerfiles = ["Dockerfile.mcp"]
-    if (ROOT / "Dockerfile").is_file():
-        dockerfiles.insert(0, "Dockerfile")
-    for name in dockerfiles:
-        dockerfile = (ROOT / name).read_text(encoding="utf-8")
-        assert "COPY vault ./vault" not in dockerfile, f"{name} copies the operator brain"
-        assert "COPY vault-template ./vault-template" in dockerfile, name
-        assert "COPY vault-template ./vault" in dockerfile, name
 
     template = ROOT / "vault-template"
     expected = {
@@ -222,7 +198,8 @@ def main() -> None:
         for forbidden in (
             ".git", ".github", ".claude", ".mcp.json", ".env", "vault",
             "graphify-out", "prepende-data", "site", "netlify", "docs/intake",
-            "n8n-workflows", "research", "writing",
+            "n8n-workflows", "research", "writing", ".dockerignore",
+            "Dockerfile", "Dockerfile.mcp", "docker-entrypoint.sh",
         ):
             assert not (exported / forbidden).exists(), f"clean export contains {forbidden}"
         for forbidden in (

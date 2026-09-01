@@ -24,6 +24,8 @@ MIGRATIONS = (
     "020_engram_kernel_queues.sql",
     "021_kernel_scope_guards.sql",
     "20260823143000_engram_candidate_atomic_dedupe.sql",
+    "20260730120000_prepende_frontier_workspace_v1.sql",
+    "20260901170000_prepende_hosted_mcp_runtime.sql",
 )
 
 
@@ -223,7 +225,7 @@ def main() -> None:
         ), customer_calls
         assert "--scope tenant-a--tenant-sales --tenant tenant-a --workspace tenant-sales" in customer_calls[1]
         assert "customer Postgres preflight passed" in output(proc)
-        assert "deployment and handoff remain manual approval gates" in output(proc)
+        assert "hosted deployment and handoff remain separate approval gates" in output(proc)
         print("OK customer mode: validated Postgres and rich identity reach seed/mint stubs")
 
         root, log, env = fixture(
