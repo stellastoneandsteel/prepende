@@ -475,7 +475,7 @@
     {
       "mode": "100644",
       "outputPath": "kernel/core/introspect.py",
-      "sha256": "b87f4754beaa636c227a8c27e2c633539fdda80d53b6eb9ed38d17d5b5db80eb",
+      "sha256": "9239ae33f7546b2fed86723047f0bd6dc0d7e2fcff4d008f79552f897dad2fe6",
       "sourcePaths": [
         "kernel/core/introspect.py"
       ]
@@ -939,7 +939,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "b7ef06fc7d7a677610834accae0b0bbc0d4c7d53055693d44b3c0159e4a1219b",
+      "sha256": "f45f334314f3832c6ccb7c78167498441a372fa2eab19aca73895b12f72bb118",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1203,7 +1203,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "1c8cfefcd36dcde2b8d8610690bcc08329020be88fb7b2bcfcb70b64dcdabc2e",
+      "sha256": "2aadf4f7c7f5d80b5795dfdfad8f58784cd9cd1c0c1f53129eb436286dff15d5",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]
@@ -1734,6 +1734,14 @@
       "sha256": "9861507b5b8eca5f07df6323ac3a00747a506290eccc6cc136f0fa4b45eaf4bb",
       "sourcePaths": [
         "tests/smoke_reviewed_knowledge_bundle.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "tests/smoke_scoped_introspect.py",
+      "sha256": "3f50ecfdda1a8e8371a7ea633bcf3200c3a94787c2719c730c8241a2d7e6f4aa",
+      "sourcePaths": [
+        "tests/smoke_scoped_introspect.py"
       ]
     },
     {

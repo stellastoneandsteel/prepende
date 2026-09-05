@@ -62,7 +62,9 @@ async def brain_state(loop: Any, scope: str = "default") -> dict:
     runs = getattr(loop, "runs", None)
     if runs is not None:
         try:
-            recent = runs.recent(5)
+            recent = runs.recent(
+                5, scope=scope, workspace_id=getattr(loop, "workspace_id", scope)
+            )
             out["runs"] = {
                 "recent_count": len(recent),
                 "recent": [{"goal": r["goal"][:80], "status": r["status"]} for r in recent],
