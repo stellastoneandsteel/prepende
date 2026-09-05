@@ -15,6 +15,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE_SMOKES = (
+    "smoke_run_scope_and_leases.py",
     "smoke_scoped_introspect.py",
     "smoke_accepted_work.py",
     "smoke_phase0.py",
@@ -175,6 +176,9 @@ BASELINE_SMOKES = (
 )
 
 _EXCLUSION_REASONS: dict[str, str] = {
+    "smoke_run_scope_and_leases.py": (
+        "Reviewed public-core exclusion: this smoke exercises the private-overlay PostgreSQL run store and lease lifecycle, which the public core does not carry."
+    ),
     "smoke_phase1_durable.py": (
         "Reviewed public-core exclusion: this smoke exercises a private-overlay surface that the public core intentionally does not carry, so it is absent from a public-core export and cannot run there."
     ),
