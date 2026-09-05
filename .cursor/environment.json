@@ -1,0 +1,4 @@
+{
+  "name": "Prepende Protocol",
+  "install": "bash .cursor/install.sh"
+}
