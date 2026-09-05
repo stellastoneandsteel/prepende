@@ -83,7 +83,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/engram",
-      "sha256": "5923707635d58743e417a752b1deb843371895ab4d8b81425d4331f94d1aed13",
+      "sha256": "558c66700270137d995ffaa6947c8e1249f81ed9ba5924e23d04b558eac5208a",
       "sourcePaths": [
         "bin/engram"
       ]
@@ -91,7 +91,7 @@
     {
       "mode": "100755",
       "outputPath": "bin/prepende",
-      "sha256": "d7ce3b754f606da90ec5492a8c3d68cfc1e170e91254b3472d520ca830297871",
+      "sha256": "4d94e7460c9ac082a627ae725baad9c2f28beee69bf74babe5258e16d51df4d1",
       "sourcePaths": [
         "bin/prepende"
       ]
@@ -939,7 +939,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "eb168ac576e850e26fa5e2dccffa5f0dc6a2bbf3bfe92f81fe6fd79c9ae18a6f",
+      "sha256": "b7ef06fc7d7a677610834accae0b0bbc0d4c7d53055693d44b3c0159e4a1219b",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1203,7 +1203,7 @@
     {
       "mode": "100644",
       "outputPath": "scripts/verify_prepende_brain.py",
-      "sha256": "6f388bd31d801e38b589899bf8e7b881f1632f4163581fbed7d72c6ede371d93",
+      "sha256": "1c8cfefcd36dcde2b8d8610690bcc08329020be88fb7b2bcfcb70b64dcdabc2e",
       "sourcePaths": [
         "scripts/verify_prepende_brain.py"
       ]
@@ -1438,6 +1438,14 @@
       "sha256": "de49b6a39c79ed75c176bed19f2c845bac20d94a57b70318df9a3b1ff2150f6d",
       "sourcePaths": [
         "tactics/__init__.py"
+      ]
+    },
+    {
+      "mode": "100644",
+      "outputPath": "tests/smoke_cli_arguments.py",
+      "sha256": "47b679b9848b73e95d825c406c25d580d2584a7f2ceda7cd76769ed54a198f90",
+      "sourcePaths": [
+        "tests/smoke_cli_arguments.py"
       ]
     },
     {

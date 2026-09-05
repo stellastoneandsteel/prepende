@@ -150,6 +150,7 @@
     "supabase/migrations/20260823143000_engram_candidate_atomic_dedupe.sql",
     "tests/smoke_cli_gateway.py",
     "tests/smoke_clone_bootstrap.py",
+    "tests/smoke_cli_arguments.py",
     "tests/smoke_clone_env.py",
     "tests/smoke_clone_privacy.py",
     "tests/smoke_context_fast.py",
