@@ -78,6 +78,7 @@ def main() -> None:
         recovery_env.update(
             {
                 "VAULT_PATH": str(vault),
+                "MEMORY_SCOPE": "prepende",
                 "MEMORY_DB": str(temp / "memory.db"),
                 "VAULT_INDEX_PATH": str(temp / "vault_index.db"),
                 "PREPENDE_RECOVERY_MANIFEST": str(temp / "missing-recovery.json"),

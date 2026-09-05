@@ -23,7 +23,6 @@ is computed over its own pages only.
 from __future__ import annotations
 
 from dataclasses import dataclass
-import re
 import threading
 import weakref
 from pathlib import Path
@@ -37,7 +36,7 @@ from prepende_brain.identity import (
 
 # Same spirit as memory/postgres_store._check_scope: a scope is a short lowercase
 # slug. Stricter here because the scope becomes a directory name.
-_SCOPE_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
+from knowledge.paths import tenant_vault_path, validate_scope
 
 
 @dataclass(frozen=True)
@@ -100,22 +99,6 @@ def retrieval_scope_binding(knowledge: Any) -> RetrievalScopeBinding | None:
             return None
 
 
-def validate_scope(scope: str) -> str:
-    s = str(scope or "").strip()
-    if not _SCOPE_RE.fullmatch(s):
-        raise ValueError(
-            "invalid vault scope %r: must be a lowercase slug ([a-z0-9_-], 1-64 chars)" % scope
-        )
-    return s
-
-
-def tenant_vault_path(base: str | Path, scope: str) -> Path:
-    """The vault root for a validated tenant scope, always under <base>/tenants/."""
-    root = (Path(base) / "tenants" / validate_scope(scope)).resolve()
-    tenants_root = (Path(base) / "tenants").resolve()
-    if tenants_root not in root.parents:
-        raise ValueError("scope escapes the tenants directory: %r" % scope)
-    return root
 
 
 class ScopedVaults:

@@ -20,6 +20,7 @@
     "kernel/core/brain.py",
     "kernel/core/compaction.py",
     "kernel/core/config.py",
+    "kernel/core/entrypoint.py",
     "kernel/core/evaluator_optimizer.py",
     "kernel/core/evidence.py",
     "kernel/core/human_feedback.py",
@@ -56,6 +57,7 @@
     "tactics/react.py",
     "tactics/resolver.py",
     "tactics/solo.py",
+    "tests/smoke_accepted_work.py",
     "tests/smoke_adaptive_routing.py",
     "tests/smoke_embedding_opt_in.py",
     "tests/smoke_evaluator_optimizer.py",
@@ -70,6 +72,7 @@
     "tests/smoke_model_route.py",
     "tests/smoke_orchestrator_workers.py",
     "tests/smoke_phase1_durable.py",
+    "tests/smoke_prepende_entrypoint.py",
     "tests/smoke_prepende_mcp_http.py",
     "tests/smoke_prepende_mcp_stdio.py",
     "tests/smoke_production_loop_benchmark.py",
@@ -195,7 +198,8 @@
     "tests/smoke_support_loop.py",
     "tests/smoke_tenant_chat_rag.py",
     "tests/smoke_thought_bus.py",
-    "tests/smoke_vault_rag.py"
+    "tests/smoke_vault_rag.py",
+    "docs/CORPUS_COVERAGE.md"
   ],
   "excludePrefixes": [
     ".github/",

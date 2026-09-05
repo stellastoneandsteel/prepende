@@ -81,6 +81,7 @@ def main() -> None:
             **os.environ,
             "MODEL_PROVIDER": "echo",
             "MEMORY_BACKEND": "sqlite",
+            "MEMORY_SCOPE": "tenant-alpha",
             "MEMORY_DB": str(Path(tmp) / "memory.db"),
             "RUNS_DB": str(Path(tmp) / "runs.db"),
             "WORKSPACE_ROOT": str(Path(tmp) / "workspaces"),

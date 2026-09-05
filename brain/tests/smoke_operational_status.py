@@ -30,6 +30,7 @@ def _status_with_isolated_brain(
         status.os.environ,
         {
             "VAULT_PATH": "vault",
+            "MEMORY_SCOPE": "scope-a",
             "MEMORY_DB": ".engram/memory.db",
             "VAULT_INDEX_PATH": ".engram/vault_index.db",
             "GRAPHIFY_GRAPH": "graphify-out/graph.json",
@@ -253,6 +254,7 @@ def _offline_brain_collection_is_byte_identical(temp: Path) -> None:
         status.os.environ,
         {
             "VAULT_PATH": "vault",
+            "MEMORY_SCOPE": "scope-a",
             "VAULT_INDEX_PATH": ".engram/vault_index.db",
             "GRAPHIFY_GRAPH": "graphify-out/graph.json",
             "GRAPHIFY_GRAPH_PATH": "graphify-out/graph.json",
@@ -263,6 +265,106 @@ def _offline_brain_collection_is_byte_identical(temp: Path) -> None:
     after = tree_snapshot()
     assert report["status"] == "ready", report
     assert before == after, "offline brain collector changed repository/runtime bytes"
+
+
+def _scoped_corpus_coverage(temp: Path) -> None:
+    import asyncio
+    from knowledge.rag import VaultRagIndex
+    from knowledge.scoped import tenant_vault_path
+    from operations.continuity import _rag_continuity_state
+
+    temp.mkdir(parents=True)
+    base = temp / "vault"
+    tenant = tenant_vault_path(base, "tenant-one")
+    for vault, text in ((base, "private owner content"), (tenant, "approved tenant content")):
+        (vault / "wiki").mkdir(parents=True)
+        (vault / "wiki" / "source.md").write_text(text)
+    env = {"VAULT_PATH": str(base), "MEMORY_DB": str(temp / "state" / "memory.db"),
+           "MEMORY_SCOPE": "owner", "PREPENDE_DOTENV_POLICY": "disabled"}
+    with mock.patch.dict(os.environ, env, clear=True):
+        owner_index = VaultRagIndex(str(base))
+        tenant_index = VaultRagIndex(str(tenant))
+        asyncio.run(owner_index.refresh())
+        asyncio.run(tenant_index.refresh())
+        report = status.build_fast_context_status(root=temp, scope="tenant-one")
+        rag = report["knowledge"]["rag"]
+        coverage = report["knowledge"]["contextCoverage"]
+        assert rag["source_files"] == rag["indexed_files"] == 1, report
+        assert rag["chunks"] == tenant_index.status()["chunks"]
+        assert _rag_continuity_state(rag) == "ready"
+        assert coverage["scope"] == "tenant-one" and coverage["namespace"] == "tenant"
+        assert coverage["manifestStatus"] == "notConfigured"
+        assert coverage["voiceStatus"] == "notPinned"
+        assert coverage["observedSha256"] == coverage["indexedSha256"]
+        owner_coverage = status.build_fast_context_status(root=temp, scope="owner")["knowledge"]["contextCoverage"]
+        assert owner_coverage["observedSha256"] != coverage["observedSha256"]
+        assert report["knowledge"]["graphify"]["reason"] == "owner_graph_excluded_from_tenant_scope"
+        absent = status.build_fast_context_status(root=temp, scope="tenant-absent")
+        assert absent["knowledge"]["rag"]["source_files"] == 0
+        assert not absent["knowledge"]["rag"]["lexical_ready"]
+        assert not (base / "tenants" / "tenant-absent").exists(), "read-only status created a vault"
+        (base / "tenants" / "tenant-alias").symlink_to(tenant, target_is_directory=True)
+        try:
+            status.build_fast_context_status(root=temp, scope="tenant-alias")
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("sibling tenant symlink relabeled another corpus")
+        try:
+            status.build_fast_context_status(root=temp, scope="../owner")
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("invalid scope accepted")
+
+        manifest = {"schemaVersion": "prepende-corpus-manifest-v1", "scope": "tenant-one",
+                    "revision": "v1", "approvalRef": "fixture-owner-approval",
+                    "sources": [{"path": "wiki/source.md", "purpose": "voice",
+                                 "sha256": hashlib.sha256(b"approved tenant content").hexdigest()}]}
+        path = temp / "manifest.json"
+        path.write_text(json.dumps(manifest))
+        os.environ["PREPENDE_CORPUS_MANIFEST"] = str(path)
+        matched = status.build_fast_context_status(root=temp, scope="tenant-one")
+        assert matched["knowledge"]["contextCoverage"]["manifestStatus"] == "matched"
+        assert matched["knowledge"]["contextCoverage"]["voiceStatus"] == "matched"
+        (tenant / "wiki" / "source.md").write_text("edited without approval")
+        asyncio.run(tenant_index.refresh())
+        changed = status.build_fast_context_status(root=temp, scope="tenant-one")
+        assert changed["knowledge"]["contextCoverage"]["changedSources"] == 1
+        assert changed["knowledge"]["contextCoverage"]["voiceStatus"] == "mismatch"
+        assert _rag_continuity_state(changed["knowledge"]["rag"]) == "corpus_mismatch"
+        assert not changed["knowledge"]["ready"]
+        (tenant / "wiki" / "source.md").unlink()
+        (tenant / "wiki" / "unexpected.md").write_text("unexpected")
+        missing = status.build_fast_context_status(root=temp, scope="tenant-one")["knowledge"]["contextCoverage"]
+        assert missing["missingSources"] == missing["unexpectedSources"] == 1
+        wrong_scope = status.build_fast_context_status(root=temp, scope="tenant-two")["knowledge"]["contextCoverage"]
+        assert wrong_scope["manifestStatus"] == "scopeMismatch"
+        # Do not leak another scope's manifest inventory or an approval reference.
+        assert wrong_scope["expectedSources"] is None
+        assert "fixture-owner-approval" not in json.dumps(matched)
+        for invalid in ({**manifest, "sources": manifest["sources"] * 2},
+                        {**manifest, "approvalRef": ""},
+                        {**manifest, "sources": [{**manifest["sources"][0], "path": "wiki/../secret.md"}]}):
+            path.write_text(json.dumps(invalid))
+            bad = status.build_fast_context_status(root=temp, scope="tenant-one")
+            assert bad["knowledge"]["contextCoverage"]["manifestStatus"] == "invalid"
+        (tenant / "raw").symlink_to(base / "wiki", target_is_directory=True)
+        assert "raw/source.md" not in status._source_snapshot(tenant)
+
+    # Fast status reads only allowed nonsecret settings, without changing env.
+    (temp / ".env").write_text('MEMORY_SCOPE="tenant-default" # scope\nVAULT_PATH=elsewhere\nUNRELATED_TOKEN=secret\n')
+    with mock.patch.dict(os.environ, {"PREPENDE_DOTENV_POLICY": "allow:MEMORY_SCOPE,VAULT_PATH",
+                                    "VAULT_PATH": "ambient"}, clear=True):
+        before = dict(os.environ)
+        config = status._knowledge_settings(temp)
+        assert config == {"MEMORY_SCOPE": "tenant-default", "VAULT_PATH": "ambient"}
+        assert dict(os.environ) == before
+        (temp / ".env").write_text("MEMORY_SCOPE=owner\nMEMORY_SCOPE=tenant-other\nVAULT_PATH=\nVAULT_PATH=first\nVAULT_PATH=second\n")
+        os.environ.pop("VAULT_PATH")
+        assert status._knowledge_settings(temp) == {"MEMORY_SCOPE": "owner", "VAULT_PATH": "first"}
+        os.environ["PREPENDE_DOTENV_POLICY"] = "disabled"
+        assert status._knowledge_settings(temp) == {}
 
 
 def _online_failures_remain_unknown() -> None:
@@ -326,6 +428,7 @@ def main() -> None:
     _embedded_v02_is_never_authoritative(root / "embedded")
     _pilot_projection_is_authoritatively_compared(root / "pilot")
     _offline_brain_collection_is_byte_identical(root / "read-only")
+    _scoped_corpus_coverage(root / "coverage")
     _online_failures_remain_unknown()
     _scope_isolation_and_secret_redaction(root / "redaction")
     _invalid_arguments_return_two(root / "args")
