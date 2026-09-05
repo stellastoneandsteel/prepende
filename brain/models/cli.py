@@ -271,6 +271,7 @@ class CliGateway(ModelGateway):
         output_schema: dict[str, Any] | None = None,
         system_prompt: str = "",
         tool_policy: str = "",
+        reasoning_effort: str = "",
     ) -> str:
         command = self._command_for_model(model)
         exe = command[0]
@@ -288,7 +289,8 @@ class CliGateway(ModelGateway):
                     + prompt
                 )
             return self._run_codex_exec(
-                prompt, timeout, command, output_schema=output_schema
+                prompt, timeout, command, output_schema=output_schema,
+                reasoning_effort=reasoning_effort,
             )
         if exe == "claude":
             if system_prompt:
@@ -374,6 +376,7 @@ class CliGateway(ModelGateway):
         output_schema: dict[str, Any] | None = None,
         system_prompt: str = "",
         tool_policy: str = "",
+        reasoning_effort: str = "",
     ) -> tuple[str, str | None]:
         candidates = tuple(model for model in (self.requested_model, *self.fallback_models) if model != "cli-managed")
         if not candidates:
@@ -384,6 +387,7 @@ class CliGateway(ModelGateway):
                 answer = self._run_once(
                     prompt, timeout, candidate, output_schema=output_schema,
                     system_prompt=system_prompt, tool_policy=tool_policy,
+                    reasoning_effort=reasoning_effort,
                 )
                 # The candidate is placed explicitly on the CLI command line,
                 # so a successful call proves the actual model even when it is
@@ -409,6 +413,7 @@ class CliGateway(ModelGateway):
         command: list[str] | None = None,
         *,
         output_schema: dict[str, Any] | None = None,
+        reasoning_effort: str = "",
     ) -> str:
         """Run Codex as a plain subscription-backed model, not as a repo agent.
 
@@ -430,6 +435,7 @@ class CliGateway(ModelGateway):
                 schema_args = ["--output-schema", str(schema_path)]
             cmd = [
                 *(command or self.command),
+                *(["-c", "model_reasoning_effort=" + json.dumps(reasoning_effort)] if reasoning_effort else []),
                 "--ephemeral",
                 "--ignore-user-config",
                 "--ignore-rules",
@@ -487,6 +493,11 @@ class CliGateway(ModelGateway):
         output_schema = opts.get("output_schema")
         system = str(opts.get("system") or "").strip()
         tool_policy = str(opts.get("tool_policy") or "").strip().lower()
+        reasoning_effort = opts.get("reasoning_effort", "")
+        if reasoning_effort not in {"", "none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"}:
+            raise ValueError("invalid reasoning effort")
+        if reasoning_effort and self.command[:2] != ["codex", "exec"]:
+            raise ValueError("explicit reasoning effort is not supported by this CLI adapter")
         answer, resolved = await asyncio.to_thread(
             self._run_with_resolution,
             prompt,
@@ -494,6 +505,7 @@ class CliGateway(ModelGateway):
             output_schema,
             system,
             tool_policy,
+            reasoning_effort,
         )
         self._record_resolution(resolved)
         return answer
