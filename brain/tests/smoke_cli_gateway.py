@@ -12,6 +12,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
+import tempfile
+import time
 import subprocess
 import sys
 from pathlib import Path
@@ -29,9 +32,62 @@ class _Proc:
     stderr = ""
 
 
+async def cancellation_contract() -> None:
+    # Real OS processes, no model/provider call: a cancelled request must reap
+    # the fake CLI and its descendant before returning to the MCP transport.
+    with tempfile.TemporaryDirectory(prefix="prepende-cli-cancel-") as tmp:
+        script = Path(tmp) / "fake_cli.py"
+        script.write_text(
+            "import json,os,subprocess,sys,time\n"
+            "from pathlib import Path\n"
+            "marker=Path(sys.argv[1])\n"
+            "child=subprocess.Popen([sys.executable,'-c','import time; time.sleep(60)'])\n"
+            "marker.write_text(json.dumps([os.getpid(),child.pid]))\n"
+            "time.sleep(60)\n",
+            encoding="utf-8",
+        )
+        for mode in ("cancel", "timeout"):
+            marker = Path(tmp) / (mode + ".json")
+            gateway = CliGateway([sys.executable, str(script), str(marker)])
+            gateway._record_resolution("earlier-success")
+            task = asyncio.create_task(gateway.complete([], timeout=1 if mode == "timeout" else 30))
+            deadline = time.monotonic() + 5
+            while not marker.exists():
+                assert time.monotonic() < deadline, "fake CLI did not launch"
+                await asyncio.sleep(0.01)
+            pids = json.loads(marker.read_text())
+            cancellation_started = time.monotonic()
+            if mode == "cancel":
+                task.cancel()
+                asyncio.get_running_loop().call_later(0.01, task.cancel)
+            try:
+                await task
+                raise AssertionError("interrupted inference returned success")
+            except asyncio.CancelledError:
+                assert mode == "cancel"
+            except subprocess.TimeoutExpired:
+                assert mode == "timeout"
+            assert time.monotonic() - cancellation_started < 3
+            assert gateway._last_resolved_model is None
+            deadline = time.monotonic() + 3
+            while True:
+                live = []
+                for pid in pids:
+                    check = subprocess.run(["ps", "-p", str(pid), "-o", "stat="], capture_output=True, text=True)
+                    if check.returncode == 0 and not check.stdout.strip().startswith("Z"):
+                        live.append(pid)
+                if not live:
+                    break
+                assert time.monotonic() < deadline, (mode, "orphan CLI processes", live)
+                await asyncio.sleep(0.02)
+        # An interrupted request must not poison the next independent call.
+        gateway = CliGateway([sys.executable, "-c", "print('after cancellation')"])
+        assert await gateway.complete([], timeout=2) == "after cancellation"
+
+
 def main() -> None:
     calls = []
-    old_run = cli_mod.subprocess.run
+    old_run = cli_mod._run_process
     old_which = cli_mod.shutil.which
 
     def fake_run(cmd, **kwargs):
@@ -42,10 +98,10 @@ def main() -> None:
 
     try:
         cli_mod.shutil.which = lambda exe: "/usr/bin/%s" % exe
-        cli_mod.subprocess.run = fake_run
+        cli_mod._run_process = fake_run
         answer = CliGateway(["codex", "exec"], "codex-sub")._run("answer me", timeout=12)
     finally:
-        cli_mod.subprocess.run = old_run
+        cli_mod._run_process = old_run
         cli_mod.shutil.which = old_which
 
     # Account/auth failures are terminal for the provider lane. They must not
@@ -63,7 +119,7 @@ def main() -> None:
 
     try:
         cli_mod.shutil.which = lambda exe: "/usr/bin/%s" % exe
-        cli_mod.subprocess.run = auth_failure_run
+        cli_mod._run_process = auth_failure_run
         gateway = CliGateway(
             ["claude", "-p"],
             "claude-sub",
@@ -77,7 +133,7 @@ def main() -> None:
             assert "401" in str(exc), exc
         assert auth_calls == ["claude-fable-5"], auth_calls
     finally:
-        cli_mod.subprocess.run = old_run
+        cli_mod._run_process = old_run
         cli_mod.shutil.which = old_which
 
     assert answer == "FINAL ANSWER", answer
@@ -131,7 +187,7 @@ def main() -> None:
 
     try:
         cli_mod.shutil.which = lambda exe: "/usr/bin/%s" % exe
-        cli_mod.subprocess.run = structured_run
+        cli_mod._run_process = structured_run
         codex = CliGateway(["codex", "exec"], "codex-sub", "gpt-test")
         answer = asyncio.run(codex.complete(
             [{"role": "user", "content": "PAYLOAD SENTINEL"}],
@@ -179,7 +235,7 @@ def main() -> None:
         claude_cwd = Path(claude_kwargs["cwd"]).resolve()
         assert ROOT not in (claude_cwd, *claude_cwd.parents), claude_cwd
     finally:
-        cli_mod.subprocess.run = old_run
+        cli_mod._run_process = old_run
         cli_mod.shutil.which = old_which
 
     # Codex prints `model: ...` in its banner even for an account-wide usage
@@ -201,7 +257,7 @@ def main() -> None:
 
     try:
         cli_mod.shutil.which = lambda exe: "/usr/bin/%s" % exe
-        cli_mod.subprocess.run = usage_limit_run
+        cli_mod._run_process = usage_limit_run
         gateway = CliGateway(
             ["codex", "exec"], "codex-sub", "gpt-5.6-sol",
             ("gpt-5.6-terra", "gpt-5.6-luna"),
@@ -214,7 +270,7 @@ def main() -> None:
         assert usage_calls == ["gpt-5.6-sol"], usage_calls
         assert gateway.resolved_model is None
     finally:
-        cli_mod.subprocess.run = old_run
+        cli_mod._run_process = old_run
         cli_mod.shutil.which = old_which
 
     # Non-zero subprocess failures should surface a compact error.
@@ -225,14 +281,14 @@ def main() -> None:
 
     try:
         cli_mod.shutil.which = lambda exe: "/usr/bin/%s" % exe
-        cli_mod.subprocess.run = lambda *a, **kw: BadProc()
+        cli_mod._run_process = lambda *a, **kw: BadProc()
         try:
             CliGateway(["codex", "exec"], "codex-sub")._run("bad", timeout=12)
             raise AssertionError("expected RuntimeError")
         except RuntimeError as exc:
             assert "codex failed loudly" in str(exc)
     finally:
-        cli_mod.subprocess.run = old_run
+        cli_mod._run_process = old_run
         cli_mod.shutil.which = old_which
 
     # An unavailable preferred model advances to the next provider-local CLI
@@ -255,7 +311,7 @@ def main() -> None:
 
     try:
         cli_mod.shutil.which = lambda exe: "/usr/bin/%s" % exe
-        cli_mod.subprocess.run = fallback_run
+        cli_mod._run_process = fallback_run
         gateway = CliGateway(
             ["codex", "exec"],
             "codex-sub",
@@ -266,10 +322,12 @@ def main() -> None:
         assert fallback_calls == ["gpt-5.6-sol", "gpt-5.6-terra"], fallback_calls
         assert gateway.resolved_model == "gpt-5.6-terra"
     finally:
-        cli_mod.subprocess.run = old_run
+        cli_mod._run_process = old_run
         cli_mod.shutil.which = old_which
 
+    asyncio.run(cancellation_contract())
     print("smoke_cli_gateway OK")
+    print("  cancellation   : real CLI + descendants reaped; next call succeeds")
     print("  system prompts : Codex envelope + Claude native flag")
     print("  schemas        : Codex --output-schema + Claude --json-schema")
     print("  no-tools       : Claude tools empty; Codex shell/unified tools disabled")

@@ -26,8 +26,11 @@ import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import tempfile
+import threading
+import time
 from pathlib import Path
 from typing import Any, AsyncIterator, Sequence
 
@@ -37,6 +40,46 @@ from kernel.contracts import ModelGateway
 
 
 _UNSET = object()
+_CALL_CANCELLATION: contextvars.ContextVar[threading.Event | None] = contextvars.ContextVar(
+    "prepende_cli_cancellation", default=None,
+)
+
+
+def _run_process(command, **kwargs):
+    """Reap the CLI and its process group before an interrupted call returns."""
+    cancel = _CALL_CANCELLATION.get()
+    if cancel is None:
+        return subprocess.run(command, **kwargs)
+    timeout = kwargs.pop("timeout")
+    kwargs.pop("capture_output", None)
+    if cancel.is_set():
+        raise asyncio.CancelledError()
+    with subprocess.Popen(
+        command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        start_new_session=True, **kwargs,
+    ) as proc:
+        deadline = time.monotonic() + timeout
+        try:
+            while True:
+                if cancel.is_set():
+                    raise asyncio.CancelledError()
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise subprocess.TimeoutExpired(command, timeout)
+                try:
+                    stdout, stderr = proc.communicate(timeout=min(0.1, remaining))
+                    return subprocess.CompletedProcess(command, proc.returncode, stdout, stderr)
+                except subprocess.TimeoutExpired:
+                    continue
+        except BaseException:
+            # A CLI may have started descendants. Killing only its parent leaves
+            # those consuming work or holding output pipes open after cancellation.
+            try:
+                os.killpg(proc.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            proc.communicate()
+            raise
 
 
 class CliGateway(ModelGateway):
@@ -317,7 +360,7 @@ class CliGateway(ModelGateway):
                 + "\n</SYSTEM_INSTRUCTIONS>\n\n"
                 + prompt
             )
-        proc = subprocess.run(
+        proc = _run_process(
             command + [prompt],
             capture_output=True,
             text=True,
@@ -351,7 +394,7 @@ class CliGateway(ModelGateway):
                 '--mcp-config={"mcpServers":{}}',
                 prompt,
             ]
-            proc = subprocess.run(
+            proc = _run_process(
                 cmd,
                 capture_output=True,
                 text=True,
@@ -453,7 +496,7 @@ class CliGateway(ModelGateway):
                 *schema_args,
                 prompt,
             ]
-            proc = subprocess.run(
+            proc = _run_process(
                 cmd,
                 capture_output=True,
                 text=True,
@@ -498,17 +541,41 @@ class CliGateway(ModelGateway):
             raise ValueError("invalid reasoning effort")
         if reasoning_effort and self.command[:2] != ["codex", "exec"]:
             raise ValueError("explicit reasoning effort is not supported by this CLI adapter")
-        answer, resolved = await asyncio.to_thread(
-            self._run_with_resolution,
-            prompt,
-            int(opts.get("timeout", default_timeout)),
-            output_schema,
-            system,
-            tool_policy,
-            reasoning_effort,
-        )
-        self._record_resolution(resolved)
-        return answer
+        cancel = threading.Event()
+        token = _CALL_CANCELLATION.set(cancel)
+        self._record_resolution(None)
+        try:
+            work = asyncio.create_task(asyncio.to_thread(
+                self._run_with_resolution,
+                prompt,
+                int(opts.get("timeout", default_timeout)),
+                output_schema,
+                system,
+                tool_policy,
+                reasoning_effort,
+            ))
+            try:
+                answer, resolved = await asyncio.shield(work)
+            except asyncio.CancelledError:
+                cancel.set()
+                # Shield the cleanup from repeated cancellation. The transport
+                # must not outlive a still-running subscription subprocess.
+                while not work.done():
+                    try:
+                        await asyncio.shield(work)
+                    except asyncio.CancelledError:
+                        continue
+                    except Exception:
+                        break
+                try:
+                    work.result()
+                except BaseException:
+                    pass
+                raise
+            self._record_resolution(resolved)
+            return answer
+        finally:
+            _CALL_CANCELLATION.reset(token)
 
     async def stream(self, messages: Sequence[dict[str, Any]], **opts: Any) -> AsyncIterator[str]:
         text = await self.complete(messages, **opts)
