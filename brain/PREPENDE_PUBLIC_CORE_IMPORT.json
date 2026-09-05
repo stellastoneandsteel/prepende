@@ -525,7 +525,7 @@
     {
       "mode": "0644",
       "path": "models/cli.py",
-      "sha256": "af339a64efdfb930989da58389c9759e2371bafcaeb1f634856f769def91c02c"
+      "sha256": "895dfaf006aef2669bd783f171b7533490155837078d72ba404ef6a8e80b4a81"
     },
     {
       "mode": "0644",
@@ -595,7 +595,7 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "aaa0da03eb6aeb51a13ebec36ce317498cef40ac8cce85c14eb803bcf1e1507c"
+      "sha256": "f7185926c5242ed8b1082135b98112f7a2119b474e593224c5ed9ea52fa66322"
     },
     {
       "mode": "0644",
@@ -915,7 +915,7 @@
     {
       "mode": "0644",
       "path": "tests/smoke_cli_gateway.py",
-      "sha256": "38cda086b5589be81772b605d0fb628a9a8bf8a5b94c859ce805f625a9afe25a"
+      "sha256": "38dcae0ac50ec99672ffa92031d2a3bb291aff2d1fb55c8fd4cf514e096f4a04"
     },
     {
       "mode": "0644",
@@ -1211,7 +1211,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "aaa0da03eb6aeb51a13ebec36ce317498cef40ac8cce85c14eb803bcf1e1507c",
+  "inventorySha256": "f7185926c5242ed8b1082135b98112f7a2119b474e593224c5ed9ea52fa66322",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1219,10 +1219,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 241
   },
-  "reviewedInventorySha256": "7590e43d8f0366738e609bfa1cd06329cfb467ff32708a20bc1995cef6445d3e",
+  "reviewedInventorySha256": "f7185926c5242ed8b1082135b98112f7a2119b474e593224c5ed9ea52fa66322",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "6f5f688db6587cd3c9deea989bc279f185dc6006",
-  "sourceRevision": "5ffbcfbf5297b9f52e80323abce6623f5bbd938d",
+  "sourceIndexTree": "7f682ec0440810345e70d4142e167eddb1cd691d",
+  "sourceRevision": "a8f18bb66e836aeca67f58bdd83c3af2b3c1d839",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "9eb7c4b5fb3d3132f16f86a8bdae33c7a68da20c130eb1c02305191cc62bba48"
+  "sourceTreeSha256": "0e93f62a8ca41c4b586fc09302293d660087d584268055668e642fe352804326"
 }

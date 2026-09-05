@@ -135,7 +135,7 @@ def main() -> None:
         codex = CliGateway(["codex", "exec"], "codex-sub", "gpt-test")
         answer = asyncio.run(codex.complete(
             [{"role": "user", "content": "PAYLOAD SENTINEL"}],
-            system="SYSTEM SENTINEL", output_schema=schema, tool_policy="none",
+            system="SYSTEM SENTINEL", output_schema=schema, tool_policy="none", reasoning_effort="max",
         ))
         assert answer == '{"ok":true}'
         assert codex.resolved_model == "gpt-test", codex.resolved_model
@@ -149,6 +149,10 @@ def main() -> None:
         ]
         assert ["--disable", "shell_tool"] in codex_pairs
         assert ["--disable", "unified_exec"] in codex_pairs
+        assert ["-c", 'model_reasoning_effort="max"'] in codex_pairs
+        # A later default call must not inherit an earlier call's effort.
+        asyncio.run(codex.complete([{"role": "user", "content": "default"}]))
+        assert not any("model_reasoning_effort" in part for part in structured_calls[-1]["cmd"])
         assert "SYSTEM SENTINEL" in codex_call["cmd"][-1]
         assert "PAYLOAD SENTINEL" in codex_call["cmd"][-1]
 
