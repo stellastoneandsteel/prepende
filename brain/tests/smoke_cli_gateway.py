@@ -13,6 +13,7 @@ from __future__ import annotations
 import asyncio
 import json
 import os
+import signal
 import tempfile
 import time
 import subprocess
@@ -80,6 +81,44 @@ async def cancellation_contract() -> None:
                     break
                 assert time.monotonic() < deadline, (mode, "orphan CLI processes", live)
                 await asyncio.sleep(0.02)
+        # A dedicated outer model process owns its full descendant boundary.
+        # The nested CLI must inherit that group instead of escaping into a new
+        # session. This proof uses only local Python fixtures.
+        marker = Path(tmp) / "outer.json"
+        wrapper = Path(tmp) / "outer.py"
+        wrapper.write_text(
+            "import asyncio,sys\n"
+            f"sys.path.insert(0,{str(ROOT)!r})\n"
+            "from models.cli import CliGateway,cli_in_parent_process_group\n"
+            "async def run():\n"
+            "    with cli_in_parent_process_group():\n"
+            f"        await CliGateway({[sys.executable,str(script),str(marker)]!r}).complete([],timeout=30)\n"
+            "asyncio.run(run())\n",
+        )
+        outer = subprocess.Popen([sys.executable,str(wrapper)],start_new_session=True)
+        pids = []
+        try:
+            deadline=time.monotonic()+5
+            while not marker.exists():
+                assert time.monotonic()<deadline and outer.poll() is None
+                await asyncio.sleep(.01)
+            pids=json.loads(marker.read_text())
+            for pid in pids:
+                assert os.getpgid(pid)==outer.pid, "nested CLI escaped outer kill boundary"
+            os.killpg(outer.pid,signal.SIGKILL)
+            outer.wait(timeout=3)
+            await asyncio.sleep(.1)
+            for pid in pids:
+                state=subprocess.run(["ps","-p",str(pid),"-o","stat="],capture_output=True,text=True)
+                assert state.returncode!=0 or state.stdout.strip().startswith("Z")
+        finally:
+            if outer.poll() is None:
+                os.killpg(outer.pid,signal.SIGKILL)
+                outer.wait(timeout=3)
+            for pid in pids:
+                try:os.kill(pid,signal.SIGKILL)
+                except ProcessLookupError:pass
+
         # An interrupted request must not poison the next independent call.
         gateway = CliGateway([sys.executable, "-c", "print('after cancellation')"])
         assert await gateway.complete([], timeout=2) == "after cancellation"

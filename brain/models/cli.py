@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import asyncio
 import contextvars
+from contextlib import contextmanager
 import json
 import os
 import re
@@ -44,6 +45,28 @@ _CALL_CANCELLATION: contextvars.ContextVar[threading.Event | None] = contextvars
     "prepende_cli_cancellation", default=None,
 )
 
+_PARENT_PROCESS_GROUP: contextvars.ContextVar[bool] = contextvars.ContextVar(
+    "prepende_cli_parent_process_group", default=False,
+)
+
+
+@contextmanager
+def cli_in_parent_process_group():
+    """Keep a CLI inside a dedicated outer model sandbox's kill boundary.
+
+    Only a process-group leader may opt in. On timeout/cancellation, killing
+    that group deliberately terminates this isolated model process too; its
+    outer owner retains the error/cleanup receipt. This is not a runtime env
+    switch and is never forwarded to an arbitrary subprocess.
+    """
+    if os.name != "posix" or os.getpgrp() != os.getpid():
+        raise RuntimeError("CLI containment requires a dedicated process-group leader")
+    token = _PARENT_PROCESS_GROUP.set(True)
+    try:
+        yield
+    finally:
+        _PARENT_PROCESS_GROUP.reset(token)
+
 
 def _run_process(command, **kwargs):
     """Reap the CLI and its process group before an interrupted call returns."""
@@ -54,9 +77,10 @@ def _run_process(command, **kwargs):
     kwargs.pop("capture_output", None)
     if cancel.is_set():
         raise asyncio.CancelledError()
+    inherited_group = _PARENT_PROCESS_GROUP.get()
     with subprocess.Popen(
         command, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-        start_new_session=True, **kwargs,
+        start_new_session=not inherited_group, **kwargs,
     ) as proc:
         deadline = time.monotonic() + timeout
         try:
@@ -75,7 +99,7 @@ def _run_process(command, **kwargs):
             # A CLI may have started descendants. Killing only its parent leaves
             # those consuming work or holding output pipes open after cancellation.
             try:
-                os.killpg(proc.pid, signal.SIGKILL)
+                os.killpg(os.getpgrp() if inherited_group else proc.pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
             proc.communicate()

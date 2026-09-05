@@ -525,7 +525,7 @@
     {
       "mode": "0644",
       "path": "models/cli.py",
-      "sha256": "9e00bb863f0b3bf35004df8ce7c4d4679b3857b9492803899b3b0c472cbba14f"
+      "sha256": "abab6676b1d2505344d7b6dda3f0c5505ab0ee426381b151a29db07c0ff8e6c9"
     },
     {
       "mode": "0644",
@@ -595,7 +595,7 @@
     {
       "mode": "0644",
       "path": "prepende-public-core-reviewed-inventory.json",
-      "sha256": "ec2a0fcaf79e76a9365a1a0f5b43299bb0a2d31e88381e76c1689443b0de4609"
+      "sha256": "c0352bd3fa4dae9f87febca9b0d1f54f9804d93adb68534e4f5236087f825566"
     },
     {
       "mode": "0644",
@@ -915,7 +915,7 @@
     {
       "mode": "0644",
       "path": "tests/smoke_cli_gateway.py",
-      "sha256": "c6925912246c5a2906e0ae075a358b17d39911b8e340dbfec76fd81fb8aebb7e"
+      "sha256": "7e462e793c99ba7fbdd72471dc2036d7e075ffd153b3608d2a26a78f2d0f34fc"
     },
     {
       "mode": "0644",
@@ -1211,7 +1211,7 @@
   "format": "prepende-clean-source-v2",
   "graphifyOutputIncluded": false,
   "historyIncluded": false,
-  "inventorySha256": "ec2a0fcaf79e76a9365a1a0f5b43299bb0a2d31e88381e76c1689443b0de4609",
+  "inventorySha256": "c0352bd3fa4dae9f87febca9b0d1f54f9804d93adb68534e4f5236087f825566",
   "operatorPathsIncluded": false,
   "ownerVaultIncluded": false,
   "privacyScan": {
@@ -1219,10 +1219,10 @@
     "policy": "default-deny-v2",
     "textFilesScanned": 241
   },
-  "reviewedInventorySha256": "b6a1dbadec234f93a45d4e7ea84ababef96a19ee87ac59974de57a6cd8389d80",
+  "reviewedInventorySha256": "bc09926f3dbc219bba51ec2b036d1ac2ca4f33bb1c05f66f126b01e3799dcc63",
   "runtimeStateIncluded": false,
-  "sourceIndexTree": "f832e197d0ece075a88e05858bb28f69789ae4f4",
-  "sourceRevision": "80847cafd88e3eb4227a6e0ba59235b26c220475",
+  "sourceIndexTree": "50436316db99e6482cea94f8bd0a641790aa175c",
+  "sourceRevision": "54fff1b42af36714a7ab4e8f83755161840a7f00",
   "sourceSnapshot": "git-index",
-  "sourceTreeSha256": "362af4015b5b31143be36c4a42cf0bc398c08da1819af9117f4a4be3b4a064eb"
+  "sourceTreeSha256": "865dfeae49cdbeb8d285b5dad124134dea5b9b21f180a98bb525f6a70a43071d"
 }
