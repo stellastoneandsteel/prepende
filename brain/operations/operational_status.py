@@ -12,12 +12,13 @@ import argparse
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import subprocess
 import sys
 import tomllib
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Mapping, Sequence
 
 from operations.continuity import load_recovery_evaluation, repository_snapshot
@@ -121,10 +122,10 @@ def _source_snapshot(vault: Path) -> dict[str, tuple[int, int, str]]:
     snapshot: dict[str, tuple[int, int, str]] = {}
     for directory in ("wiki", "raw"):
         base = vault / directory
-        if not base.is_dir():
+        if not base.is_dir() or base.is_symlink():
             continue
         for path in sorted(base.rglob("*.md")):
-            if not path.is_file() or path.is_symlink():
+            if not path.is_file() or any(p.is_symlink() for p in (path, *path.parents) if p != vault and vault in p.parents):
                 continue
             payload = path.read_bytes()
             stat = path.stat()
@@ -135,6 +136,111 @@ def _source_snapshot(vault: Path) -> dict[str, tuple[int, int, str]]:
                 hashlib.sha256(payload).hexdigest(),
             )
     return snapshot
+
+
+def _knowledge_settings(root: Path) -> dict[str, str]:
+    """Read only path/scope settings, respecting the launcher's dotenv policy.
+
+    No process environment is mutated and no credentials or model settings are
+    loaded. This matches Config's nonempty-environment precedence, including
+    its simple quoting/comment rules, without constructing the model runtime.
+    """
+    keys = {"VAULT_PATH", "MEMORY_DB", "MEMORY_SCOPE", "VAULT_INDEX_PATH",
+            "PREPENDE_CORPUS_MANIFEST"}
+    policy = os.environ.get("PREPENDE_DOTENV_POLICY", "").strip()
+    allowed = keys
+    if policy == "disabled":
+        allowed = set()
+    elif policy.startswith("allow:"):
+        names = {s.strip() for s in policy[6:].split(",") if s.strip()}
+        if any(not re.fullmatch(r"[A-Z][A-Z0-9_]*", s) for s in names):
+            raise ValueError("invalid dotenv allowlist")
+        allowed = keys & names
+    elif policy:
+        raise ValueError("invalid dotenv policy")
+    values: dict[str, str] = {}
+    dotenv = root / ".env"
+    if allowed and dotenv.is_file():
+        for raw in dotenv.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, val = line.split("=", 1)
+            if key.strip() in allowed and not values.get(key.strip()):
+                values[key.strip()] = val.split(" #", 1)[0].strip().strip('"').strip("'")
+    values.update({k: os.environ[k] for k in keys if os.environ.get(k)})
+    return values
+
+
+def _inventory_digest(sources: Mapping[str, tuple[int, int, str]]) -> str:
+    # Content identity remains stable when an unchanged corpus is relocated.
+    payload = [[path, row[2]] for path, row in sorted(sources.items())]
+    return hashlib.sha256(json.dumps(payload, separators=(",", ":")).encode()).hexdigest()
+
+
+def corpus_coverage(
+    *, scope: str, namespace: str, sources: Mapping[str, tuple[int, int, str]],
+    indexed: Mapping[str, tuple[int, int, str]], manifest_path: Path | None,
+) -> dict[str, Any]:
+    """Compare observed content with an explicitly configured approval manifest.
+
+    This is an attestation check, not an authorization grant. Never infer an
+    approved corpus or voice pin from files that happen to be indexed.
+    Paths, source text and approval references stay out of status responses.
+    """
+    result: dict[str, Any] = {
+        "schemaVersion": "prepende-corpus-coverage-v1", "scope": scope,
+        "namespace": namespace, "observedSha256": _inventory_digest(sources),
+        "indexedSha256": _inventory_digest(indexed),
+        "manifestStatus": "notConfigured", "manifestSha256": None,
+        "voiceStatus": "notPinned", "expectedSources": None,
+        "missingSources": None, "changedSources": None, "unexpectedSources": None,
+    }
+    if manifest_path is None:
+        return result
+    try:
+        payload = manifest_path.read_bytes()
+        manifest = json.loads(payload)
+        if not isinstance(manifest, dict) or manifest.get("schemaVersion") != "prepende-corpus-manifest-v1":
+            raise ValueError("schema")
+        if manifest.get("scope") != scope:
+            return {**result, "manifestStatus": "scopeMismatch"}
+        if any(not isinstance(manifest.get(k), str) or not manifest[k].strip() for k in ("revision", "approvalRef")):
+            raise ValueError("approval")
+        rows = manifest.get("sources")
+        if not isinstance(rows, list) or not rows:
+            raise ValueError("sources")
+        expected: dict[str, str] = {}
+        voice: set[str] = set()
+        for row in rows:
+            if not isinstance(row, dict):
+                raise ValueError("source")
+            path, digest = row.get("path"), row.get("sha256")
+            if not isinstance(path, str) or not isinstance(digest, str):
+                raise ValueError("source")
+            parts = PurePosixPath(path)
+            if (parts.is_absolute() or ".." in parts.parts or "\\" in path
+                    or parts.as_posix() != path or len(parts.parts) < 2
+                    or parts.parts[0] not in {"wiki", "raw"} or parts.suffix != ".md"
+                    or path in expected or not re.fullmatch(r"[0-9a-f]{64}", digest)
+                    or row.get("purpose") not in {"voice", "reference"}):
+                raise ValueError("source")
+            expected[path] = digest
+            if row["purpose"] == "voice":
+                voice.add(path)
+        missing = set(expected) - set(sources)
+        changed = {p for p in expected.keys() & sources.keys() if expected[p] != sources[p][2]}
+        unexpected = set(sources) - set(expected)
+        return {
+            **result, "manifestStatus": "mismatch" if missing or changed or unexpected else "matched",
+            "manifestSha256": hashlib.sha256(payload).hexdigest(),
+            "expectedSources": len(expected), "missingSources": len(missing),
+            "changedSources": len(changed), "unexpectedSources": len(unexpected),
+            "voiceStatus": ("notPinned" if not voice else
+                            "mismatch" if voice & (missing | changed) else "matched"),
+        }
+    except (OSError, ValueError, TypeError, UnicodeError):
+        return {**result, "manifestStatus": "invalid"}
 
 
 def _read_index(index_path: Path) -> dict[str, Any]:
@@ -196,10 +302,23 @@ def _graph_status(root: Path, vault: Path) -> dict[str, Any]:
 
 
 def _collect_brain(root: Path, scope: str, _python: Path) -> dict[str, Any]:
-    vault = _configured_file(root, "VAULT_PATH", "vault")
-    memory_db = _configured_file(root, "MEMORY_DB", ".engram/memory.db")
-    default_index = str(memory_db.parent / "vault_index.db")
-    index_path = _configured_file(root, "VAULT_INDEX_PATH", default_index)
+    from knowledge.paths import tenant_vault_path, validate_scope, vault_index_path
+
+    settings = _knowledge_settings(root)
+    def path_setting(key: str, default: str) -> Path:
+        path = Path(settings.get(key, "").strip() or default).expanduser()
+        return (path if path.is_absolute() else root / path).resolve()
+
+    scope = validate_scope(scope)
+    default_scope = validate_scope(settings.get("MEMORY_SCOPE", "").strip() or "default")
+    owner_vault = path_setting("VAULT_PATH", "vault")
+    is_owner = scope == default_scope
+    vault = owner_vault if is_owner else tenant_vault_path(owner_vault, scope)
+    index_path = Path(vault_index_path(
+        vault, memory_db=path_setting("MEMORY_DB", ".engram/memory.db"),
+        configured_vault=owner_vault,
+        override=str(path_setting("VAULT_INDEX_PATH", ".engram/vault_index.db")) if settings.get("VAULT_INDEX_PATH") else "",
+    ))
     try:
         discovered_sources = _source_snapshot(vault)
         index = _read_index(index_path)
@@ -215,6 +334,15 @@ def _collect_brain(root: Path, scope: str, _python: Path) -> dict[str, Any]:
     lexical_ready = discovered > 0 and chunks > 0 and not stale
     all_indexed = discovered > 0 and discovered == indexed
     brain_ready = lexical_ready and all_indexed
+    coverage = corpus_coverage(
+        scope=scope, namespace="owner" if is_owner else "tenant", sources=discovered_sources,
+        indexed=indexed_sources,
+        manifest_path=path_setting("PREPENDE_CORPUS_MANIFEST", "") if settings.get("PREPENDE_CORPUS_MANIFEST") else None,
+    )
+    # Legacy installations can inspect index readiness before approving a
+    # manifest. A configured manifest that fails must block continuity.
+    if coverage["manifestStatus"] not in {"notConfigured", "matched"}:
+        brain_ready = False
     return {
         "status": "ready" if brain_ready else "blocked",
         "scope": scope,
@@ -231,8 +359,11 @@ def _collect_brain(root: Path, scope: str, _python: Path) -> dict[str, Any]:
             "semanticReady": chunks > 0 and embedded == chunks and not stale,
             "stale": stale,
             "reason": None if index.get("available") else index.get("reason"),
+            "contextCoverage": coverage,
         },
-        "graphify": _graph_status(root, vault),
+        "graphify": _graph_status(root, vault) if is_owner else {
+            "status": "notConfigured", "reason": "owner_graph_excluded_from_tenant_scope",
+        },
         "connectors": {
             "status": "notConfigured",
             "available": 0,
@@ -257,9 +388,12 @@ def build_fast_context_status(*, root: Path, scope: str) -> dict[str, Any]:
         "scope": scope,
         "model": "skipped",
         "knowledge": {
+            "contextCoverage": knowledge.get("contextCoverage"),
+            "ready": knowledge.get("status") == "ready",
             "pages": int(knowledge.get("discoveredSources", 0) or 0),
             "titles": [],
             "rag": {
+                "context_coverage": knowledge.get("contextCoverage"),
                 "source_files": int(knowledge.get("discoveredSources", 0) or 0),
                 "indexed_files": int(knowledge.get("indexedSources", 0) or 0),
                 "chunks": int(knowledge.get("chunks", 0) or 0),

@@ -32,6 +32,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 from prepende_brain.private_fs import prepare_private_sqlite
+from knowledge.paths import vault_index_path
 
 _FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.DOTALL)
 _HEADING = re.compile(r"^#{1,4} ")
@@ -133,16 +134,15 @@ def _default_index_path(vault: Path) -> str:
     """
     memory_db = (os.environ.get("MEMORY_DB", "./.engram/memory.db")
                  or "./.engram/memory.db").strip()
-    state_dir = Path(memory_db).expanduser().resolve().parent
-    resolved_vault = vault.expanduser().resolve()
     configured_vault = Path(
         (os.environ.get("VAULT_PATH", "./vault") or "./vault").strip()
-    ).expanduser().resolve()
-    if resolved_vault == configured_vault:
-        override = (os.environ.get("VAULT_INDEX_PATH") or "").strip()
-        return str(Path(override).expanduser()) if override else str(state_dir / "vault_index.db")
-    digest = hashlib.sha256(str(resolved_vault).encode("utf-8")).hexdigest()[:16]
-    return str(state_dir / "vault_indexes" / f"{digest}.db")
+    )
+    return vault_index_path(
+        vault, memory_db=Path(memory_db), configured_vault=configured_vault,
+        override=(os.environ.get("VAULT_INDEX_PATH") or "").strip(),
+    )
+
+
 
 
 def _cosine(a: Sequence[float], b: Sequence[float]) -> float:

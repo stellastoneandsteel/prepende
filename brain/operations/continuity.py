@@ -461,6 +461,12 @@ def _rag_continuity_state(rag: Any) -> str:
 
     if not isinstance(rag, dict) or not rag:
         return "invalid"
+    coverage = rag.get("context_coverage")
+    if coverage is not None:
+        if not isinstance(coverage, dict):
+            return "invalid"
+        if coverage.get("manifestStatus") not in {"notConfigured", "matched"}:
+            return "corpus_mismatch"
     counts = {field: rag.get(field) for field in RAG_COUNT_FIELDS}
     if any(
         not isinstance(value, int) or isinstance(value, bool) or value < 0
@@ -533,6 +539,12 @@ def build_continuity_packet(
                 "advisory",
                 "The tenant knowledge index is truthfully empty; coding work may proceed without knowledge recall.",
                 source_id="prepende-status",
+            )
+        elif rag_state == "corpus_mismatch":
+            _add_blocker(
+                blockers, "corpus_manifest_mismatch", "critical",
+                "The configured corpus approval manifest is invalid, belongs to another scope, or differs from current sources; inspect contextCoverage.",
+                blocks=("continuity", "plan"), source_id="prepende-status",
             )
         elif rag_state == "invalid":
             _add_blocker(

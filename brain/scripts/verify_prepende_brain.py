@@ -15,6 +15,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 BASELINE_SMOKES = (
+    "smoke_accepted_work.py",
     "smoke_phase0.py",
     "smoke_phase1.py",
     "smoke_phase1_durable.py",
