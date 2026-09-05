@@ -32,9 +32,13 @@ if os.name == "posix":
     # This compatibility entrypoint remains directly callable, so it must hold
     # the same private-file contract as bin/prepende.
     os.umask(0o077)
-    _environment = Path.cwd() / ".env"
-    if _environment.is_file() and not _environment.is_symlink():
-        _environment.chmod(0o600)
+
+
+def protect_environment() -> None:
+    if os.name == "posix":
+        environment = Path.cwd() / ".env"
+        if environment.is_file() and not environment.is_symlink():
+            environment.chmod(0o600)
 
 
 def usage(code: int = 2) -> int:
@@ -62,6 +66,12 @@ Defaults:
   scope: default (set PREPENDE_SCOPE for a product-specific default)
   capabilities: safe
   memory policy: candidate only
+
+Goal commands (ask, context, context-fast):
+  -h / --help shows local help without running the brain.
+  Unknown options and repeated or empty scalar options are errors.
+  Use -- before literal goal words such as --help or --scope.
+  Example: prepende context --scope tenant-a -- "Explain --help"
 """,
         file=sys.stderr,
     )
@@ -80,6 +90,91 @@ def ensure_python() -> int | None:
     if PYTHON.exists():
         return None
     return die(f"missing repo virtualenv python at {PYTHON}; create .venv before invoking Prepende")
+
+
+class GoalHelp(Exception):
+    """A help option encountered outside literal text or an option value."""
+
+
+def goal_options(command: str, args: list[str]) -> tuple[dict[str, Any], str]:
+    """Parse goal commands without importing the runtime or touching state.
+
+    Unknown options cannot become model input. Everything after a literal --
+    is goal text, including strings that look like wrapper or kernel options.
+    Scalar options are single-use so tenant selection is never last-one-wins.
+    """
+    values: dict[str, str] = {}
+    words: list[str] = []
+    as_json = False
+    value_flags = {"--scope", "--memory"}
+    if command == "context-fast":
+        value_flags.add("--profile")
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--":
+            words.extend(args[i + 1:])
+            break
+        if arg in {"-h", "--help"}:
+            raise GoalHelp
+        if arg == "--json":
+            as_json = True
+        elif arg.startswith("-"):
+            flag, equals, value = arg.partition("=")
+            if flag not in value_flags:
+                raise ValueError(f"unknown {command} option: {flag}; use -- before literal goal text")
+            if flag in values:
+                raise ValueError(f"{flag} may be supplied only once")
+            if not equals:
+                i += 1
+                if i >= len(args) or args[i].startswith("-"):
+                    raise ValueError(f"{flag} requires a value")
+                value = args[i]
+            if not value.strip() or value.startswith("-"):
+                raise ValueError(f"{flag} requires a non-empty value")
+            values[flag] = value
+        else:
+            words.append(arg)
+        i += 1
+
+    from prepende_brain.identity import validate_identity_slug
+
+    scope = validate_identity_slug(
+        values.get("--scope", brand_env("SCOPE") or brand_env("MCP_SCOPE") or DEFAULT_SCOPE),
+        "scope",
+    )
+    memory = values.get("--memory", "candidate")
+    if memory != "candidate":
+        raise ValueError("this wrapper supports --memory candidate only; durable promotion requires its reviewed surface")
+    goal = " ".join(words).strip()
+    if not goal:
+        raise ValueError(f"{command} requires a goal")
+    profile = values.get("--profile", os.environ.get("PREPENDE_CONTINUITY_PROFILE") or "general").strip().lower()
+    if command == "context-fast":
+        from operations.continuity import SUPPORTED_PROFILES
+
+        if profile not in SUPPORTED_PROFILES:
+            raise ValueError(
+                f"unsupported continuity profile: {profile}; expected one of {', '.join(sorted(SUPPORTED_PROFILES))}"
+            )
+    return {
+        "scope": scope,
+        "memory": memory,
+        "json": as_json,
+        "profile": profile,
+    }, goal
+
+
+def goal_help(command: str) -> int:
+    profile = " [--profile general|coding|deployment|recovery]" if command == "context-fast" else ""
+    print(
+        f'Usage: prepende {command} "<goal>" [--json] [--scope SCOPE] [--memory candidate]{profile}\n'
+        'Use -- before literal goal text beginning with a dash. Options may precede or follow the goal.\n'
+        'Scope: --scope, then PREPENDE_SCOPE/ENGRAM_SCOPE, then PREPENDE_MCP_SCOPE/ENGRAM_MCP_SCOPE, then default.\n'
+        'Help runs locally without workspace access, model calls, or memory writes.',
+        file=sys.stderr,
+    )
+    return 0
 
 
 def pop_bool(args: list[str], flag: str) -> bool:
@@ -227,34 +322,24 @@ def status(args: list[str]) -> int:
     return proc.returncode
 
 
-def ask(args: list[str]) -> int:
+def ask(opts: dict[str, Any], goal: str) -> int:
+    protect_environment()
     err = ensure_python()
     if err is not None:
         return err
-    opts = common(args)
-    if opts.get("error"):
-        return die(str(opts["error"]))
-    goal = " ".join(args).strip()
-    if not goal:
-        return die("ask requires a goal")
     kernel_args = ["--memory", str(opts["memory"]), "--scope", str(opts["scope"])]
     if opts["json"]:
         kernel_args.append("--json")
-    kernel_args.append(goal)
+    kernel_args.extend(["--", goal])
     proc = run_kernel(kernel_args)
     return proc.returncode
 
 
-def context(args: list[str]) -> int:
+def context(opts: dict[str, Any], goal: str) -> int:
+    protect_environment()
     err = ensure_python()
     if err is not None:
         return err
-    opts = common(args)
-    if opts.get("error"):
-        return die(str(opts["error"]))
-    goal = " ".join(args).strip()
-    if not goal:
-        return die("context requires a goal")
     context_timeout = env_timeout_alias(
         "PREPENDE_CONTEXT_TIMEOUT",
         "ENGRAM_CONTEXT_TIMEOUT",
@@ -264,7 +349,7 @@ def context(args: list[str]) -> int:
     run_journal_timeout_update = None
     try:
         proc = run_kernel(
-            ["--json", "--memory", "candidate", "--scope", str(opts["scope"]), goal],
+            ["--json", "--memory", "candidate", "--scope", str(opts["scope"]), "--", goal],
             capture=True,
             timeout=context_timeout,
         )
@@ -340,32 +425,17 @@ def receipt_stage(stage: str, status: str, detail: str) -> dict[str, str]:
     return {"stage": stage, "status": status, "detail": detail}
 
 
-def context_fast(args: list[str]) -> int:
+def context_fast(opts: dict[str, Any], goal: str) -> int:
+    protect_environment()
     err = ensure_python()
     if err is not None:
         return err
     from operations.continuity import (
         PACKET_SCHEMA_VERSION,
-        SUPPORTED_PROFILES,
         build_continuity_packet,
     )
+    profile = opts["profile"]
     from operations.operational_status import build_fast_context_status
-
-    profile = str(
-        pop_value(args, "--profile", os.environ.get("PREPENDE_CONTINUITY_PROFILE", "general"))
-        or "general"
-    ).strip().lower()
-    if profile not in SUPPORTED_PROFILES:
-        return die(
-            "unsupported continuity profile: "
-            f"{profile}; expected one of {', '.join(sorted(SUPPORTED_PROFILES))}"
-        )
-    opts = common(args)
-    if opts.get("error"):
-        return die(str(opts["error"]))
-    goal = " ".join(args).strip()
-    if not goal:
-        return die("context-fast requires a goal")
 
     status_payload = None
     status_stderr = None
@@ -681,12 +751,15 @@ def main(argv: list[str]) -> int:
     if argv[0] in {"-h", "--help", "help"}:
         return usage(0)
     command = argv.pop(0)
-    if command == "ask":
-        return ask(argv)
-    if command == "context-fast":
-        return context_fast(argv)
-    if command == "context":
-        return context(argv)
+    if command in {"ask", "context-fast", "context"}:
+        try:
+            opts, goal = goal_options(command, argv)
+        except GoalHelp:
+            return goal_help(command)
+        except ValueError as exc:
+            return die(str(exc))
+        return {"ask": ask, "context-fast": context_fast, "context": context}[command](opts, goal)
+    protect_environment()
     if command == "status":
         return status(argv)
     if command == "operational-status":

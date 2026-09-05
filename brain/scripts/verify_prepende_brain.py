@@ -22,6 +22,7 @@ BASELINE_SMOKES = (
     "smoke_phase2.py",
     "smoke_kernel_cli.py",
     "smoke_cli_gateway.py",
+    "smoke_cli_arguments.py",
     "smoke_context_fast.py",
     # Private-overlay smokes: the proprietary loop the public core does not
     # carry, so they are absent from the public copy of this registry. Here they
