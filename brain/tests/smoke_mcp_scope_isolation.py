@@ -16,6 +16,7 @@ Runs on stdlib + the kernel (no `mcp` package needed):
 import ast
 import asyncio
 import os
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -153,6 +154,32 @@ def test_startup_guard():
           isinstance(startup_scope_guard(empty_token_http), str))
 
 
+def test_runtime_provenance():
+    from interface.mcp_scope import runtime_provenance
+
+    tmp = Path(tempfile.mkdtemp(prefix="prepende-provenance-"))
+    (tmp / "tracked.txt").write_text("ok\n", encoding="utf-8")
+    subprocess.run(["git", "init"], cwd=tmp, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.email", "provenance@test"], cwd=tmp, check=True, capture_output=True)
+    subprocess.run(["git", "config", "user.name", "Provenance Test"], cwd=tmp, check=True, capture_output=True)
+    subprocess.run(["git", "add", "tracked.txt"], cwd=tmp, check=True, capture_output=True)
+    subprocess.run(["git", "-c", "commit.gpgsign=false", "commit", "-m", "init"], cwd=tmp, check=True, capture_output=True)
+    head = subprocess.check_output(["git", "-C", str(tmp), "rev-parse", "HEAD"], text=True).strip()
+    clean = runtime_provenance(tmp, module_file=__file__)
+    check("provenance: clean tree attests HEAD", clean["attested"] is True and clean["gitHead"] == head)
+    check("provenance: clean tree is not dirty", clean["dirty"] is False)
+    check("provenance: module path is recorded", clean["moduleFile"] == str(Path(__file__).resolve()))
+    (tmp / "tracked.txt").write_text("changed\n", encoding="utf-8")
+    dirty = runtime_provenance(tmp)
+    check("provenance: dirty tree stays attested", dirty["attested"] is True and dirty["gitHead"] == head)
+    check("provenance: dirty tree reports dirty", dirty["dirty"] is True)
+    missing = runtime_provenance(tempfile.mkdtemp(prefix="prepende-noprove-"))
+    check(
+        "provenance: missing git root is not attested",
+        missing["attested"] is False and missing["reason"] == "git_root_unavailable",
+    )
+
+
 # --- Isolation: memory is scope-filtered -------------------------------------
 def test_memory_isolation():
     tmp = tempfile.mkdtemp(prefix="engram-smoke-")
@@ -184,6 +211,7 @@ def main():
     print("SMOKE: MCP scope isolation (Rung-2 stdio contract)")
     test_no_scope_param()
     test_startup_guard()
+    test_runtime_provenance()
     test_memory_isolation()
     if FAILS:
         print("\nFAILED: " + ", ".join(FAILS))
