@@ -112,6 +112,43 @@ def _assert_embedding_profile_parity() -> None:
         }
 
 
+def _assert_cleared_embedding_model_ignores_host_dotenv() -> None:
+    """An empty EMBEDDING_MODEL is a fixture choice, not a hole for .env.
+
+    ``Config.load_dotenv`` treats empty ambient values as unset so a blank
+    API key cannot shadow ``.env``. That same rule would refill
+    ``EMBEDDING_MODEL=""`` with a host nomic default and make a Sol-persisted
+    fixture index look semantically unready. Disable dotenv for this lane.
+    """
+
+    from kernel.core.config import Config
+    from operations.local_status import _configured_embedding_profile
+
+    here = Path.cwd()
+    with tempfile.TemporaryDirectory(prefix="prepende-dotenv-nomic-") as directory:
+        planted = Path(directory)
+        (planted / ".env").write_text(
+            "EMBEDDING_PROVIDER=local\nEMBEDDING_MODEL=nomic-embed-text\n",
+            encoding="utf-8",
+        )
+        isolated = {
+            "EMBEDDING_PROVIDER": "openai",
+            "EMBEDDING_MODEL": "",
+            "EMBEDDING_DIM": "3",
+            "MODEL_NAME": "",
+            "MODEL_PROVIDER": "echo",
+            "PREPENDE_DOTENV_POLICY": "disabled",
+        }
+        try:
+            os.chdir(planted)
+            with mock.patch.dict(os.environ, isolated, clear=True):
+                profile, reason = _configured_embedding_profile(Config())
+        finally:
+            os.chdir(here)
+    assert reason is None, reason
+    assert profile == "openai:gpt-5.6-sol:3:v1", profile
+
+
 def _assert_connector_catalog_parity() -> None:
     sys.path.insert(0, str(ROOT))
     from connectors.defaults import BUILTIN_ADAPTERS
@@ -775,6 +812,7 @@ def _assert_process_allowlist(events: list[dict[str, object]], audited_runs: int
 def main() -> None:
     _assert_connector_catalog_parity()
     _assert_embedding_profile_parity()
+    _assert_cleared_embedding_model_ignores_host_dotenv()
     owner_scope = "prepende"
     tenant_scope = "tenant-alpha"
     with tempfile.TemporaryDirectory(prefix="prepende-context-fast-real-") as directory:
@@ -817,6 +855,10 @@ def main() -> None:
                 "PREPENDE_MCP_SERVERS": json.dumps(
                     [{"name": "must-not-connect", "url": "http://127.0.0.1:9/mcp"}]
                 ),
+                # Empty EMBEDDING_MODEL/MODEL_NAME must keep the OpenAI factory
+                # default (gpt-5.6-sol). Without this, load_dotenv refills those
+                # blanks from the host .env and the Sol fixture index mismatches.
+                "PREPENDE_DOTENV_POLICY": "disabled",
             }
         )
         # Four CLI runs under four environments. Each one is audited, so the

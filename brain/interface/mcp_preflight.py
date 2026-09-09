@@ -13,6 +13,7 @@ import sys
 from interface.mcp_scope import (
     allowed_capabilities,
     deployment_revision,
+    runtime_provenance,
     startup_scope_guard,
 )
 from prepende_brain.identity import require_identity_namespace, validate_identity_slug
@@ -48,6 +49,7 @@ def receipt() -> dict[str, object]:
         "scope": scope,
         "deploymentRevision": revision or "unconfigured",
         "deploymentRevisionConfigured": revision is not None,
+        "runtimeProvenance": runtime_provenance(),
         "capabilities": sorted(allowed_capabilities()),
         "externalActions": "approval_required",
         "started": False,

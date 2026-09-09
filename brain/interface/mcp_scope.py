@@ -20,7 +20,9 @@ import hashlib
 import json
 import os
 import re
+import subprocess
 import time
+from pathlib import Path
 from typing import Any, Mapping
 
 from prepende_brain.identity import require_identity_namespace
@@ -114,6 +116,8 @@ _PRINCIPAL: contextvars.ContextVar = contextvars.ContextVar("engram_mcp_principa
 
 _IDENTITY_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 _REVISION_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
+_GIT_HEAD_RE = re.compile(r"^[0-9a-f]{40}$")
+_RUNTIME_PROVENANCE_SCHEMA = "prepende-runtime-provenance-v1"
 
 
 def _identity_slug(value: Any) -> str | None:
@@ -137,6 +141,76 @@ def deployment_revision(env: Mapping[str, str] | None = None) -> str | None:
     if not raw:
         return None
     return raw if _REVISION_RE.fullmatch(raw) else None
+
+
+def _git_root(start: Path) -> Path | None:
+    current = start if start.is_dir() else start.parent
+    for candidate in (current, *current.parents):
+        if (candidate / ".git").exists():
+            return candidate
+    return None
+
+
+def _git_text(root: Path, args: list[str]) -> str | None:
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(root), *args],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if proc.returncode != 0:
+        return None
+    return proc.stdout
+
+
+def runtime_provenance(
+    start: str | os.PathLike[str] | None = None,
+    *,
+    module_file: str | None = None,
+) -> dict[str, Any]:
+    """Attest the loaded Git revision without replacing deploymentRevision.
+
+    ``deploymentRevision`` remains the host-configured label. This receipt
+    reports the process tree's ``git rev-parse HEAD``, whether that tree is
+    dirty, and the loaded MCP module path when the caller supplies it.
+    """
+
+    receipt: dict[str, Any] = {
+        "schemaVersion": _RUNTIME_PROVENANCE_SCHEMA,
+        "attested": False,
+        "gitHead": None,
+        "dirty": None,
+        "root": None,
+        "moduleFile": None,
+        "reason": None,
+    }
+    if module_file:
+        receipt["moduleFile"] = str(Path(module_file).resolve())
+    root = _git_root(Path(start or os.getcwd()).resolve())
+    if root is None:
+        receipt["reason"] = "git_root_unavailable"
+        return receipt
+    receipt["root"] = str(root)
+    head = (_git_text(root, ["rev-parse", "HEAD"]) or "").strip()
+    if not _GIT_HEAD_RE.fullmatch(head):
+        receipt["reason"] = "git_head_unavailable"
+        return receipt
+    status = _git_text(root, ["status", "--porcelain"])
+    if status is None:
+        receipt["gitHead"] = head
+        receipt["reason"] = "git_status_unavailable"
+        return receipt
+    receipt.update({
+        "attested": True,
+        "gitHead": head,
+        "dirty": bool(status.strip()),
+        "reason": None,
+    })
+    return receipt
 
 
 def token_value_scope(value: Any) -> str | None:

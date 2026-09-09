@@ -283,7 +283,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_preflight.py",
-      "sha256": "08b19098337d6427be90ebc6dc955cc57a8d628fa3cb7cb3c8cdb1ff5fcfc30b",
+      "sha256": "10df7c4d8bf869f8095e978307d15613d759faeecee446aab98557ea8020498b",
       "sourcePaths": [
         "interface/mcp_preflight.py"
       ]
@@ -291,7 +291,7 @@
     {
       "mode": "100644",
       "outputPath": "interface/mcp_scope.py",
-      "sha256": "ac0b2e6b1274bf3b2c020a89fd4db665b9e87b8ad031e3c5e75717e45721019b",
+      "sha256": "6b868cda5cdcd3bfa5555475d3b0d4d92ed8350dfc89ba1c24df53c825073c3b",
       "sourcePaths": [
         "interface/mcp_scope.py"
       ]
@@ -939,7 +939,7 @@
     {
       "mode": "100644",
       "outputPath": "prepende-public-core-manifest.json",
-      "sha256": "f45f334314f3832c6ccb7c78167498441a372fa2eab19aca73895b12f72bb118",
+      "sha256": "8d418739c69d479483d50f46fea21c71bfcada527796d648c8b576c579d43230",
       "sourcePaths": [
         "prepende-public-core-manifest.json"
       ]
@@ -1491,7 +1491,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_context_fast_import_graph.py",
-      "sha256": "e8817e35b4cdd87b1da0270d74563f2ed019d0c7468ff4e087476b5a8af26b47",
+      "sha256": "a11eb496bc0c1720c2a5acdead5f6c124e2485fc41b05aa844cd2e2830a7251d",
       "sourcePaths": [
         "tests/smoke_context_fast_import_graph.py"
       ]
@@ -1563,7 +1563,7 @@
     {
       "mode": "100644",
       "outputPath": "tests/smoke_mcp_scope_isolation.py",
-      "sha256": "6087203f4455e1294e5f0ebb4d75facc109997fb89ce4b7a9b4198b4d9815870",
+      "sha256": "af27e7929b985f17b215824d34b9fe13ce3d5ddcc4907742248baaa059d7c3e2",
       "sourcePaths": [
         "tests/smoke_mcp_scope_isolation.py"
       ]

@@ -8,9 +8,45 @@ cost; set MODEL_PROVIDER + a key in .env to go live.
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 
 from prepende_brain.env import brand_env, mirror_brand_environment
+
+
+DOTENV_POLICY_ENV = "PREPENDE_DOTENV_POLICY"
+
+_ENV_KEY_RE = re.compile(r"^[A-Z][A-Z0-9_]*$")
+
+
+def dotenv_allowed_keys(policy: str | None = None) -> frozenset[str] | None:
+    """Resolve a repository-dotenv policy without reading any dotenv values.
+
+    ``None`` means the interactive/legacy behavior (all keys may load).
+    ``disabled`` loads none, while ``allow:A,B`` is available to a narrowly
+    scoped caller. Invalid policies fail closed rather than silently restoring
+    load-all. Deployment/job-specific inventories belong in their launch
+    definitions or private wrappers, not this exported core module.
+    """
+
+    raw = (os.environ.get(DOTENV_POLICY_ENV, "") if policy is None else policy).strip()
+    if not raw:
+        return None
+    if raw == "disabled":
+        return frozenset()
+    if raw.startswith("allow:"):
+        names = [name.strip() for name in raw.removeprefix("allow:").split(",") if name.strip()]
+        if any(not _ENV_KEY_RE.fullmatch(name) for name in names):
+            raise RuntimeError("dotenv allowlist contains an invalid environment key")
+        return frozenset(names)
+    raise RuntimeError("invalid dotenv policy; expected disabled or allow:<keys>")
+
+
+def dotenv_key_allowed(key: str, policy: str | None = None) -> bool:
+    """Return whether ``key`` may be loaded under the active dotenv policy."""
+
+    allowed = dotenv_allowed_keys(policy)
+    return allowed is None or key in allowed
 
 
 def mirror_brand_env() -> None:
@@ -20,6 +56,7 @@ def mirror_brand_env() -> None:
 
 
 def load_dotenv(path: str = ".env") -> None:
+    allowed = dotenv_allowed_keys()
     p = Path(path)
     if p.exists():
         for raw in p.read_text().splitlines():
@@ -28,6 +65,8 @@ def load_dotenv(path: str = ".env") -> None:
                 continue
             key, val = line.split("=", 1)
             key = key.strip()
+            if allowed is not None and key not in allowed:
+                continue
             if " #" in val:  # strip trailing inline comment
                 val = val.split(" #", 1)[0]
             val = val.strip().strip('"').strip("'")
